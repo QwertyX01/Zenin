@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (финальная версия с логотипом)
+--  Zenin Menu (с логотипом, обновлённая ссылка)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -35,18 +35,18 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип (твоя рабочая ссылка)
+-- Логотип (НОВАЯ ССЫЛКА)
 local logo = Instance.new("ImageLabel")
-logo.Size = UDim2.new(0, 28, 0, 28)
-logo.Position = UDim2.new(0, 6, 0.5, -14)
+logo.Size = UDim2.new(0, 28, 0, 28)              -- размер 28x28 (помещается в хедер 35)
+logo.Position = UDim2.new(0, 6, 0.5, -14)        -- слева, по центру вертикали
 logo.BackgroundTransparency = 1
-logo.Image = "https://i.ibb.co/KcgtJDSj/Chat-GPT-Image-30-2026-02-49-06.png"
+logo.Image = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"  -- новая ссылка
 logo.Parent = header
 
--- Текст
+-- Текст "Zenin.cs" (со сдвигом вправо, чтобы не наезжать на логотип)
 local headerText = Instance.new("TextLabel")
-headerText.Size = UDim2.new(1, -45, 1, 0)
-headerText.Position = UDim2.new(0, 40, 0, 0)
+headerText.Size = UDim2.new(1, -45, 1, 0)        -- отступ справа
+headerText.Position = UDim2.new(0, 40, 0, 0)     -- сдвиг вправо на 40 пикселей
 headerText.BackgroundTransparency = 1
 headerText.Text = "Zenin.cs"
 headerText.TextColor3 = Color3.fromRGB(200, 0, 0)
