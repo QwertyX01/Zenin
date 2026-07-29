@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (с хедером)
+--  Zenin Menu (с хедером, красный текст по центру)
 --  Размер: 640x420
 -- =====================================================
 
@@ -28,7 +28,7 @@ local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
 header.Position = UDim2.new(0, 0, 0, 0)
-header.BackgroundColor3 = Color3.fromRGB(28, 28, 28)   -- чуть светлее фона
+header.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 header.BackgroundTransparency = 0
 header.BorderSizePixel = 0
 header.Parent = mainFrame
@@ -40,17 +40,17 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Текст "Zenin.cs"
+-- Текст "Zenin.cs" (красный, по центру)
 local headerText = Instance.new("TextLabel")
-headerText.Size = UDim2.new(1, -20, 1, 0)          -- отступ справа 20
-headerText.Position = UDim2.new(0, 10, 0, 0)       -- отступ слева 10
+headerText.Size = UDim2.new(1, 0, 1, 0)           -- растянут на весь хедер
+headerText.Position = UDim2.new(0, 0, 0, 0)
 headerText.BackgroundTransparency = 1
 headerText.Text = "Zenin.cs"
-headerText.TextColor3 = Color3.fromRGB(255, 255, 255)
+headerText.TextColor3 = Color3.fromRGB(200, 0, 0)  -- красный
 headerText.TextSize = 16
-headerText.Font = Enum.Font.GothamBold              -- жирный шрифт
-headerText.TextXAlignment = Enum.TextXAlignment.Left
+headerText.Font = Enum.Font.GothamBold
+headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
-print("✅ Zenin Menu с хедером загружен!")
+print("✅ Zenin Menu с красным Zenin.cs по центру загружен!")
