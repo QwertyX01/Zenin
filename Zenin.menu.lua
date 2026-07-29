@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (с логотипом, как в Ink Game)
+--  Zenin Menu (логотип без скругления, текст по центру)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -9,7 +9,7 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА (ТОЧНО КАК В INK GAME)
+--  ЗАГРУЗКА ЛОГОТИПА
 -- ============================================================
 local imageUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local fileName = "zenin_logo.png"
@@ -80,7 +80,7 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип (используем тот же метод, что и в Ink Game)
+-- Логотип (без скругления)
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
@@ -93,17 +93,17 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Текст "Zenin.cs"
+-- Текст "Zenin.cs" (по центру)
 local headerText = Instance.new("TextLabel")
-headerText.Size = UDim2.new(1, -45, 1, 0)
-headerText.Position = UDim2.new(0, 40, 0, 0)
+headerText.Size = UDim2.new(1, 0, 1, 0)
+headerText.Position = UDim2.new(0, 0, 0, 0)
 headerText.BackgroundTransparency = 1
 headerText.Text = "Zenin.cs"
 headerText.TextColor3 = Color3.fromRGB(200, 0, 0)
 headerText.TextSize = 16
 headerText.Font = Enum.Font.GothamBold
-headerText.TextXAlignment = Enum.TextXAlignment.Left
+headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
-print("✅ Zenin Menu с логотипом загружен!")
+print("✅ Zenin Menu с логотипом без скругления и текстом по центру загружен!")
