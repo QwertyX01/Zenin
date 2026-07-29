@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (логотип без скругления, текст по центру)
+--  Zenin Menu (цвет текста изменён)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -80,7 +80,7 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип (без скругления)
+-- Логотип
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
@@ -93,17 +93,17 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Текст "Zenin.cs" (по центру)
+-- Текст "Zenin.cs" (НОВЫЙ ЦВЕТ)
 local headerText = Instance.new("TextLabel")
 headerText.Size = UDim2.new(1, 0, 1, 0)
 headerText.Position = UDim2.new(0, 0, 0, 0)
 headerText.BackgroundTransparency = 1
 headerText.Text = "Zenin.cs"
-headerText.TextColor3 = Color3.fromRGB(200, 0, 0)
+headerText.TextColor3 = Color3.fromRGB(240, 40, 40)   -- <-- новый красный
 headerText.TextSize = 16
 headerText.Font = Enum.Font.GothamBold
 headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
-print("✅ Zenin Menu с логотипом без скругления и текстом по центру загружен!")
+print("✅ Zenin Menu с обновлённым цветом загружен!")
