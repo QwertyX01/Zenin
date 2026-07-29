@@ -1,55 +1,36 @@
--- Светлое меню 470x330 (без обводки)
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-
--- GUI
+-- Белое меню 470x330 с заголовком "Zenin CS" (красный)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Основное окно (470 x 330)
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.new(1, 1, 1) -- белый
-MainFrame.BackgroundTransparency = 0.02 -- почти непрозрачный, можно 0
-MainFrame.BorderSize = 0 -- без обводки
+MainFrame.BackgroundColor3 = Color3.new(1, 1, 1)      -- белый фон
+MainFrame.BackgroundTransparency = 0.02
+MainFrame.BorderSize = 0                              -- без обводки
 MainFrame.Size = UDim2.new(0, 470, 0, 330)
-MainFrame.Position = UDim2.new(0.5, -235, 0.5, -165) -- центрирование
+MainFrame.Position = UDim2.new(0.5, -235, 0.5, -165)
 MainFrame.ClipsDescendants = true
 MainFrame.Active = true
 MainFrame.Draggable = true
 
--- Скругление углов
 local Corner = Instance.new("UICorner")
 Corner.Parent = MainFrame
 Corner.CornerRadius = UDim.new(0, 8)
 
--- Лёгкая тень (опционально, без обводки)
-local Shadow = Instance.new("Frame")
-Shadow.Parent = MainFrame
-Shadow.BackgroundColor3 = Color3.new(0, 0, 0)
-Shadow.BackgroundTransparency = 0.08
-Shadow.BorderSize = 0
-Shadow.Size = UDim2.new(1, 6, 1, 6)
-Shadow.Position = UDim2.new(0, -3, 0, -3)
-Shadow.ZIndex = 0
-local ShadowCorner = Instance.new("UICorner")
-ShadowCorner.Parent = Shadow
-ShadowCorner.CornerRadius = UDim.new(0, 10)
-
--- Заголовок
+-- ЗАГОЛОВОК "Zenin CS" КРАСНЫМ
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1, 0, 0, 36)
 Title.Position = UDim2.new(0, 0, 0, 0)
-Title.Text = "Меню"
-Title.TextColor3 = Color3.new(0, 0, 0)
-Title.TextSize = 20
+Title.Text = "Zenin CS"
+Title.TextColor3 = Color3.new(1, 0, 0)                -- красный
+Title.TextSize = 24
 Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Center
 
--- Контейнер вкладок (кнопки переключения)
+-- Контейнер вкладок
 local TabContainer = Instance.new("Frame")
 TabContainer.Parent = MainFrame
 TabContainer.BackgroundTransparency = 1
@@ -63,11 +44,10 @@ ContentContainer.BackgroundTransparency = 1
 ContentContainer.Size = UDim2.new(1, -16, 1, -86)
 ContentContainer.Position = UDim2.new(0, 8, 0, 70)
 
--- Хранилище вкладок
 local Tabs = {}
 local CurrentTab = nil
 
--- Создание вкладки
+-- Функция создания вкладки
 function CreateTab(name)
     local btn = Instance.new("TextButton")
     btn.Parent = TabContainer
@@ -105,7 +85,7 @@ function CreateTab(name)
     return content
 end
 
--- Создание секции (группа элементов)
+-- Секция (группа элементов)
 function CreateSection(parent, title)
     local section = Instance.new("Frame")
     section.Parent = parent
@@ -125,7 +105,7 @@ function CreateSection(parent, title)
     return section
 end
 
--- Создание переключателя (Toggle)
+-- Переключатель (Toggle)
 function CreateToggle(parent, text, default, callback)
     local frame = Instance.new("Frame")
     frame.Parent = parent
@@ -168,7 +148,7 @@ function CreateToggle(parent, text, default, callback)
     return toggleBtn
 end
 
--- Создание кнопки
+-- Кнопка
 function CreateButton(parent, text, callback)
     local frame = Instance.new("Frame")
     frame.Parent = parent
@@ -195,8 +175,7 @@ function CreateButton(parent, text, callback)
     return btn
 end
 
--- ========== НАСТРОЙКА ВКЛАДОК ==========
-
+-- ===== СОЗДАЁМ ВКЛАДКИ =====
 local tabAim = CreateTab("Aimbot")
 local secAim = CreateSection(tabAim, "Прицел")
 CreateToggle(secAim, "Включить Aimbot", false, function(v) print("Aimbot:", v) end)
