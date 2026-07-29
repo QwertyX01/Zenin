@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (с загрузкой логотипа)
+--  Zenin Menu (с надёжной загрузкой логотипа)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -9,20 +9,28 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА (как в Ink Game)
+--  ЗАГРУЗКА ЛОГОТИПА (упрощённая, с диагностикой)
 -- ============================================================
 local imageUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local fileName = "zenin_logo.png"
 local filePath = fileName
 
+local logoPath = nil
+
+-- Сначала проверим, есть ли файл через isfile (если доступно)
 local function fileExists(path)
-    local success, result = pcall(function()
-        return loadfile(path)
-    end)
-    return success and result ~= nil
+    if isfile then
+        return isfile(path)
+    else
+        -- fallback: пытаемся открыть через loadfile
+        local success, result = pcall(function() return loadfile(path) end)
+        return success and result ~= nil
+    end
 end
 
-if not fileExists(filePath) then
+if fileExists(filePath) then
+    print("✅ Логотип уже есть на диске: " .. filePath)
+else
     print("📥 Скачиваем логотип...")
     local success, content = pcall(function()
         return game:HttpGet(imageUrl, true)
@@ -37,17 +45,23 @@ if not fileExists(filePath) then
             warn("⚠️ Не удалось сохранить файл: " .. tostring(err))
         end
     else
-        warn("⚠️ Не удалось скачать картинку")
+        warn("⚠️ Не удалось скачать картинку по ссылке: " .. imageUrl)
     end
-else
-    print("✅ Логотип уже есть на диске.")
 end
 
-local logoPath = nil
+-- Получаем путь через getcustomasset (для отображения)
 if getcustomasset then
     logoPath = getcustomasset(filePath)
 elseif getgenv().getcustomasset then
     logoPath = getgenv().getcustomasset(filePath)
+else
+    warn("⚠️ getcustomasset не найден, логотип не будет отображаться")
+end
+
+if logoPath then
+    print("🖼️ Логотип готов к отображению: " .. tostring(logoPath))
+else
+    print("❌ Логотип не загружен (путь не получен)")
 end
 
 -- ============================================================
@@ -80,7 +94,7 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип (используем загруженный файл)
+-- Логотип (создаём только если путь получен)
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
@@ -88,9 +102,9 @@ if logoPath then
     logo.BackgroundTransparency = 1
     logo.Image = logoPath
     logo.Parent = header
-    print("🖼️ Логотип загружен")
+    print("🖼️ Логотип отображается в меню")
 else
-    print("❌ Логотип не загружен")
+    print("❌ Логотип НЕ отображается (путь не получен)")
 end
 
 -- Текст "Zenin.cs"
