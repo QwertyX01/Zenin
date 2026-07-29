@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (с хедером, красный текст по центру)
+--  Zenin Menu (с логотипом в левом углу)
 --  Размер: 640x420
 -- =====================================================
 
@@ -40,17 +40,29 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Текст "Zenin.cs" (красный, по центру)
+-- ============================================================
+--  ЛОГОТИП (в левом углу хедера)
+-- ============================================================
+local logo = Instance.new("ImageLabel")
+logo.Size = UDim2.new(0, 28, 0, 28)              -- размер 28x28, чтобы поместиться в хедер (высота 35)
+logo.Position = UDim2.new(0, 6, 0.5, -14)        -- отступ слева 6, центрирован по вертикали
+logo.BackgroundTransparency = 1
+logo.Image = "https://i.ibb.co/KcgtJDSj/Chat-GPT-Image-30-2026-02-49-06.png"
+logo.Parent = header
+
+-- ============================================================
+--  Текст "Zenin.cs" (со сдвигом вправо, чтобы не наезжать на логотип)
+-- ============================================================
 local headerText = Instance.new("TextLabel")
-headerText.Size = UDim2.new(1, 0, 1, 0)           -- растянут на весь хедер
-headerText.Position = UDim2.new(0, 0, 0, 0)
+headerText.Size = UDim2.new(1, -45, 1, 0)        -- отступ справа 45, чтобы текст не налезал на лого
+headerText.Position = UDim2.new(0, 40, 0, 0)     -- сдвиг вправо на 40 пикселей
 headerText.BackgroundTransparency = 1
 headerText.Text = "Zenin.cs"
-headerText.TextColor3 = Color3.fromRGB(200, 0, 0)  -- красный
+headerText.TextColor3 = Color3.fromRGB(200, 0, 0)
 headerText.TextSize = 16
 headerText.Font = Enum.Font.GothamBold
-headerText.TextXAlignment = Enum.TextXAlignment.Center
+headerText.TextXAlignment = Enum.TextXAlignment.Left
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
-print("✅ Zenin Menu с красным Zenin.cs по центру загружен!")
+print("✅ Zenin Menu с логотипом загружен!")
