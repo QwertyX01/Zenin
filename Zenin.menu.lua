@@ -1,6 +1,5 @@
 -- =====================================================
---  Zenin Menu (с логотипом в левом углу)
---  Размер: 640x420
+--  Zenin Menu (финальная версия с логотипом)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -9,7 +8,6 @@ gui.Name = "ZeninMenu"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- Основной фрейм
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
 mainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
@@ -21,9 +19,7 @@ mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = gui
 
--- ============================================================
---  Хедер (верхняя плашка)
--- ============================================================
+-- Хедер
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -33,29 +29,24 @@ header.BackgroundTransparency = 0
 header.BorderSizePixel = 0
 header.Parent = mainFrame
 
--- Нижняя обводка (серая полоска)
 local headerStroke = Instance.new("UIStroke")
 headerStroke.Color = Color3.fromRGB(45, 45, 45)
 headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- ============================================================
---  ЛОГОТИП (в левом углу хедера)
--- ============================================================
+-- Логотип (твоя рабочая ссылка)
 local logo = Instance.new("ImageLabel")
-logo.Size = UDim2.new(0, 28, 0, 28)              -- размер 28x28, чтобы поместиться в хедер (высота 35)
-logo.Position = UDim2.new(0, 6, 0.5, -14)        -- отступ слева 6, центрирован по вертикали
+logo.Size = UDim2.new(0, 28, 0, 28)
+logo.Position = UDim2.new(0, 6, 0.5, -14)
 logo.BackgroundTransparency = 1
 logo.Image = "https://i.ibb.co/KcgtJDSj/Chat-GPT-Image-30-2026-02-49-06.png"
 logo.Parent = header
 
--- ============================================================
---  Текст "Zenin.cs" (со сдвигом вправо, чтобы не наезжать на логотип)
--- ============================================================
+-- Текст
 local headerText = Instance.new("TextLabel")
-headerText.Size = UDim2.new(1, -45, 1, 0)        -- отступ справа 45, чтобы текст не налезал на лого
-headerText.Position = UDim2.new(0, 40, 0, 0)     -- сдвиг вправо на 40 пикселей
+headerText.Size = UDim2.new(1, -45, 1, 0)
+headerText.Position = UDim2.new(0, 40, 0, 0)
 headerText.BackgroundTransparency = 1
 headerText.Text = "Zenin.cs"
 headerText.TextColor3 = Color3.fromRGB(200, 0, 0)
