@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (исправленная анимация: логотип + текст рядом, без тряски)
+--  Zenin Menu (без красной обводки)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -59,11 +59,10 @@ local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
 animContainer.Size = UDim2.new(1, 0, 1, 0)
 animContainer.Position = UDim2.new(0, 0, 0, 0)
-animContainer.BackgroundTransparency = 1   -- прозрачный
+animContainer.BackgroundTransparency = 1
 animContainer.ZIndex = 10
 animContainer.Parent = gui
 
--- Логотип
 local animLogo = Instance.new("ImageLabel")
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
@@ -73,22 +72,19 @@ animLogo.ImageTransparency = 1
 animLogo.ZIndex = 10
 animLogo.Parent = animContainer
 
--- Мягкие углы
 local logoCorner = Instance.new("UICorner")
 logoCorner.CornerRadius = UDim.new(0, 16)
 logoCorner.Parent = animLogo
 
--- Белая обводка для логотипа (будет видна после появления)
 local logoStroke = Instance.new("UIStroke")
 logoStroke.Color = Color3.fromRGB(255, 255, 255)
 logoStroke.Thickness = 2
 logoStroke.Transparency = 0.5
 logoStroke.Parent = animLogo
 
--- Текст "Zenin" (белый, будет расположен справа от логотипа)
 local animText = Instance.new("TextLabel")
-animText.Size = UDim2.new(0, 0, 0, 60)   -- ширина будет подстраиваться под текст
-animText.Position = UDim2.new(0.5, 40, 0.5, -30)  -- сначала далеко
+animText.Size = UDim2.new(0, 0, 0, 60)
+animText.Position = UDim2.new(0.5, 40, 0.5, -30)
 animText.BackgroundTransparency = 1
 animText.Text = "Zenin"
 animText.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -101,17 +97,14 @@ animText.Visible = false
 animText.TextTransparency = 1
 animText.Parent = animContainer
 
--- Настройка ширины текста под текст
 animText.Size = UDim2.new(0, animText.TextBounds.X + 20, 0, 60)
 
--- Запуск анимации (объединяем в одну плавную последовательность)
+-- Запуск анимации
 animLogo.ImageTransparency = 1
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
-animLogoStroke = logoStroke
-animLogoStroke.Transparency = 1
+logoStroke.Transparency = 1
 
--- Шаг 1: появление логотипа (увеличение и появление обводки)
 local tween1 = TweenService:Create(animLogo, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     ImageTransparency = 0,
     Size = UDim2.new(0, 100, 0, 100),
@@ -124,14 +117,11 @@ tween1:Play()
 tweenStroke:Play()
 tween1.Completed:Wait()
 
--- Шаг 2: смещение логотипа влево и появление текста рядом
 animText.Visible = true
 animText.TextTransparency = 1
--- Смещаем логотип влево (на 0.35 от центра)
+
 local targetLogoPos = UDim2.new(0.35, -50, 0.5, -50)
--- Смещаем текст справа от логотипа (отступ 10 пикселей)
--- Позиция текста: логотип X + ширина логотипа + отступ
-local logoWidth = 100  -- после увеличения
+local logoWidth = 100
 local textOffset = 10
 local targetTextPos = UDim2.new(0.35, -50 + logoWidth + textOffset, 0.5, -30)
 
@@ -146,15 +136,13 @@ tweenLogo:Play()
 tweenText:Play()
 tweenLogo.Completed:Wait()
 
--- Небольшая задержка для эффекта
 task.wait(0.2)
 
--- Шаг 3: убираем анимацию
 animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ (появляется после анимации)
+--  МЕНЮ (БЕЗ КРАСНОЙ ОБВОДКИ)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -170,6 +158,8 @@ mainFrame.Parent = gui
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
+
+-- ОБВОДКА УДАЛЕНА (нет UIStroke)
 
 -- Хедер
 local header = Instance.new("Frame")
@@ -321,4 +311,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с исправленной анимацией загружен!")
+print("✅ Zenin Menu без красной обводки загружен!")
