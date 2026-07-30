@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (анимация сначала, меню потом)
+--  Zenin Menu (анимация на прозрачном фоне)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -11,7 +11,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА (до анимации)
+--  ЗАГРУЗКА ЛОГОТИПА
 -- ============================================================
 local imageUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local fileName = "zenin_logo.png"
@@ -53,14 +53,13 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  ЭТАП 1: АНИМАЦИЯ (на весь экран, без меню)
+--  ЭТАП 1: АНИМАЦИЯ НА ПРОЗРАЧНОМ ФОНЕ
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
 animContainer.Size = UDim2.new(1, 0, 1, 0)
 animContainer.Position = UDim2.new(0, 0, 0, 0)
-animContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-animContainer.BackgroundTransparency = 0
+animContainer.BackgroundTransparency = 1   -- прозрачный фон
 animContainer.ZIndex = 10
 animContainer.Parent = gui
 
@@ -120,16 +119,12 @@ TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.Eas
 }):Play()
 task.wait(0.6)
 
--- Шаг 3: исчезновение анимационного контейнера
-TweenService:Create(animContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    BackgroundTransparency = 1
-}):Play()
-task.wait(0.4)
+-- Шаг 3: исчезновение анимационного контейнера (просто скрыть)
 animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  ЭТАП 2: ПОЯВЛЕНИЕ МЕНЮ (после анимации)
+--  ЭТАП 2: ПОЯВЛЕНИЕ МЕНЮ
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -296,4 +291,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с раздельной анимацией загружен!")
+print("✅ Zenin Menu с прозрачной анимацией загружен!")
