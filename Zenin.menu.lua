@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (иконка ESP увеличена)
+--  Zenin Menu (иконка ESP по твоей ссылке)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -11,7 +11,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА (без изменений)
+--  ЗАГРУЗКА ЛОГОТИПА
 -- ============================================================
 local imageUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local fileName = "zenin_logo.png"
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИЯ (без изменений)
+--  АНИМАЦИЯ
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -141,7 +141,7 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ (тёмно-серое)
+--  МЕНЮ
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -236,7 +236,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ВКЛАДКИ (с увеличенной иконкой ESP)
+--  ВКЛАДКИ (иконка ESP по твоей ссылке)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -268,7 +268,7 @@ activeLine.Parent = tabsBar
 local tabButtons = {}
 local tabNames = {"Aim", "ESP", "Skins"}
 local tabPositions = {0, 0.33333, 0.66666}
-local espIconUrl = "https://cdn-icons-png.flaticon.com/512/159/159616.png"
+local espIconUrl = "https://i.ibb.co/XxCbHpZX/eye-1.png"  -- твоя ссылка
 
 for i, name in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
@@ -284,15 +284,15 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
-    -- Иконка ESP (увеличенная)
+    -- Иконка ESP (по твоей ссылке)
     if name == "ESP" then
         local icon = Instance.new("ImageLabel")
         icon.Size = UDim2.new(0, 24, 0, 24)          -- размер 24x24
-        icon.Position = UDim2.new(0.05, 0, 0.5, -12) -- центрируем
+        icon.Position = UDim2.new(0.05, 0, 0.5, -12) -- слева, по центру
         icon.BackgroundTransparency = 1
         icon.Image = espIconUrl
         icon.Parent = btn
-        btn.Text = "   ESP"   -- три пробела для отступа
+        btn.Text = "   ESP"   -- отступ
     end
 
     local btnCorner = Instance.new("UICorner")
@@ -337,4 +337,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (иконка ESP увеличена) загружен!")
+print("✅ Zenin Menu с иконкой ESP (твоя ссылка) загружен!")
