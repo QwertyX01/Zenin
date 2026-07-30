@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (прямоугольные вкладки без смайлов)
+--  Zenin Menu (с красной обводкой)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -7,6 +7,8 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "ZeninMenu"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
+
+local TweenService = game:GetService("TweenService")
 
 -- ============================================================
 --  ЗАГРУЗКА ЛОГОТИПА
@@ -51,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ
+--  ОСНОВНОЕ МЕНЮ (с красной обводкой)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -67,6 +69,13 @@ mainFrame.Parent = gui
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
+
+-- ОЧЕНЬ ТОНКАЯ КРАСНАЯ ОБВОДКА
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(240, 40, 40)
+mainStroke.Transparency = 0.4
+mainStroke.Thickness = 1
+mainStroke.Parent = mainFrame
 
 -- ============================================================
 --  ХЕДЕР
@@ -120,7 +129,7 @@ headerText.Parent = header
 --  СТРАНИЦЫ (контент)
 -- ============================================================
 local pages = {}
-local pageNames = {"Aim", "ESP", "Miscs", "Skins"}
+local pageNames = {"Aim", "ESP", "Misc", "Skins"}
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
@@ -152,7 +161,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (без смайлов)
+--  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -164,7 +173,6 @@ tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
--- Тонкая верхняя линия
 local topLine = Instance.new("Frame")
 topLine.Size = UDim2.new(1, 0, 0, 1)
 topLine.Position = UDim2.new(0, 0, 0, 0)
@@ -173,8 +181,10 @@ topLine.BackgroundTransparency = 0.4
 topLine.BorderSizePixel = 0
 topLine.Parent = tabsBar
 
--- Кнопки (без эмодзи)
+-- Кнопки и линии
 local tabButtons = {}
+local tabLines = {}
+local tabScales = {}
 local tabNames = {"Aim", "ESP", "Misc", "Skins"}
 
 for i, name in ipairs(tabNames) do
@@ -185,15 +195,35 @@ for i, name in ipairs(tabNames) do
     btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     btn.BackgroundTransparency = 0.2
     btn.BorderSizePixel = 0
-    btn.Text = name                     -- просто название, без смайла
+    btn.Text = name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
     btn.TextSize = 18
     btn.Font = Enum.Font.SourceSansBold
     btn.Parent = tabsBar
 
+    local scale = Instance.new("UIScale")
+    scale.Scale = 1
+    scale.Parent = btn
+    tabScales[name] = scale
+
+    local line = Instance.new("Frame")
+    line.Name = "Line"
+    line.Size = UDim2.new(1, 0, 0, 2)
+    line.Position = UDim2.new(0, 0, 1, 0)
+    line.BackgroundColor3 = Color3.fromRGB(240, 40, 40)
+    line.BackgroundTransparency = (i == 1) and 0 or 1
+    line.BorderSizePixel = 0
+    line.Parent = btn
+    tabLines[name] = line
+
     tabButtons[name] = btn
 
     btn.MouseButton1Click:Connect(function()
+        local scaleObj = tabScales[name]
+        TweenService:Create(scaleObj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.95}):Play()
+        task.wait(0.1)
+        TweenService:Create(scaleObj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1}):Play()
+
         for pageName, page in pairs(pages) do
             page.Visible = (pageName == name)
         end
@@ -203,18 +233,20 @@ for i, name in ipairs(tabNames) do
                 b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
                 b.BackgroundTransparency = 0.1
                 b.TextColor3 = Color3.fromRGB(255, 255, 255)
+                tabLines[n].BackgroundTransparency = 0
             else
                 b.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
                 b.BackgroundTransparency = 0.2
                 b.TextColor3 = Color3.fromRGB(180, 180, 180)
+                tabLines[n].BackgroundTransparency = 1
             end
         end
     end)
 end
 
--- Устанавливаем начальное состояние (Aim активна)
 tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
+tabLines["Aim"].BackgroundTransparency = 0
 
-print("✅ Zenin Menu (без смайлов) загружен!")
+print("✅ Zenin Menu с красной обводкой загружен!")
