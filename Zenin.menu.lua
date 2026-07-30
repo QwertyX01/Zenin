@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (резкий Auto Aim только на врагов без стен)
+--  Zenin Menu (Auto Aim с toggle switch)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -14,7 +14,7 @@ local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА (без изменений)
+--  ЗАГРУЗКА ЛОГОТИПА
 -- ============================================================
 local function downloadFile(url, fileName)
     local filePath = fileName
@@ -222,7 +222,7 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (Aim с резким Auto Aim)
+--  СТРАНИЦЫ
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
@@ -252,46 +252,73 @@ for i, name in ipairs(pageNames) do
         divider.BorderSizePixel = 0
         divider.Parent = page
 
-        -- Левая половина (Auto Aim)
+        -- Левая половина
         local leftHalf = Instance.new("Frame")
         leftHalf.Size = UDim2.new(0.5, -5, 1, 0)
         leftHalf.Position = UDim2.new(0, 5, 0, 0)
         leftHalf.BackgroundTransparency = 1
         leftHalf.Parent = page
 
+        -- Текст "Auto Aim" слева, не жирный
         local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 0, 30)
-        label.Position = UDim2.new(0, 0, 0, 10)
+        label.Size = UDim2.new(0.5, 0, 0, 30)
+        label.Position = UDim2.new(0, 10, 0, 10)
         label.BackgroundTransparency = 1
         label.Text = "Auto Aim"
         label.TextColor3 = Color3.fromRGB(200, 200, 200)
-        label.TextSize = 18
-        label.Font = Enum.Font.GothamBold
-        label.TextXAlignment = Enum.TextXAlignment.Center
+        label.TextSize = 16
+        label.Font = Enum.Font.SourceSans  -- не жирный
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextYAlignment = Enum.TextYAlignment.Center
         label.Parent = leftHalf
 
-        -- Toggle Button
-        local toggleBtn = Instance.new("TextButton")
-        toggleBtn.Size = UDim2.new(0, 120, 0, 40)
-        toggleBtn.Position = UDim2.new(0.5, -60, 0.3, 0)
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-        toggleBtn.BackgroundTransparency = 0.2
-        toggleBtn.BorderSizePixel = 0
-        toggleBtn.Text = "OFF"
-        toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        toggleBtn.TextSize = 16
-        toggleBtn.Font = Enum.Font.SourceSansBold
-        toggleBtn.Parent = leftHalf
-        local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 6)
-        btnCorner.Parent = toggleBtn
+        -- Toggle Switch (ползунок)
+        local toggleContainer = Instance.new("Frame")
+        toggleContainer.Size = UDim2.new(0, 50, 0, 30)
+        toggleContainer.Position = UDim2.new(0.8, -25, 0.3, 0)
+        toggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+        toggleContainer.BackgroundTransparency = 0
+        toggleContainer.BorderSizePixel = 0
+        toggleContainer.Parent = leftHalf
+        local toggleCorner = Instance.new("UICorner")
+        toggleCorner.CornerRadius = UDim.new(0, 15)
+        toggleCorner.Parent = toggleContainer
 
-        toggleBtn.MouseButton1Click:Connect(function()
-            aimEnabled = not aimEnabled
-            toggleBtn.Text = aimEnabled and "ON" or "OFF"
-            toggleBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(60, 60, 70)
-            print("Auto Aim:", aimEnabled and "ON" or "OFF")
+        -- Ползунок (круглый)
+        local toggleKnob = Instance.new("Frame")
+        toggleKnob.Size = UDim2.new(0, 24, 0, 24)
+        toggleKnob.Position = UDim2.new(0, 3, 0.5, -12)
+        toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        toggleKnob.BackgroundTransparency = 0
+        toggleKnob.BorderSizePixel = 0
+        toggleKnob.Parent = toggleContainer
+        local knobCorner = Instance.new("UICorner")
+        knobCorner.CornerRadius = UDim.new(0, 12)
+        knobCorner.Parent = toggleKnob
+
+        -- Функция обновления состояния
+        local function updateSwitch(state)
+            aimEnabled = state
+            if state then
+                toggleContainer.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- зелёный фон
+                toggleKnob.Position = UDim2.new(1, -27, 0.5, -12) -- сдвинуть вправо
+            else
+                toggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                toggleKnob.Position = UDim2.new(0, 3, 0.5, -12) -- влево
+            end
+            print("Auto Aim:", state and "ON" or "OFF")
+        end
+
+        -- Обработчики кликов
+        toggleContainer.MouseButton1Click:Connect(function()
+            updateSwitch(not aimEnabled)
         end)
+        toggleKnob.MouseButton1Click:Connect(function()
+            updateSwitch(not aimEnabled)
+        end)
+
+        -- Инициализация (выключено)
+        updateSwitch(false)
 
         -- Правая половина (заглушка)
         local rightHalf = Instance.new("Frame")
@@ -316,7 +343,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  РЕЗКИЙ AUTO AIM (только враги, без стен, без плавности)
+--  РЕЗКИЙ AUTO AIM (только враги, без стен)
 -- ============================================================
 local function isEnemy(plr)
     if plr == player then return false end
@@ -363,7 +390,6 @@ local function getBestTarget()
                 if not isVisible(headPos) then
                     continue
                 end
-                -- Расстояние от центра экрана (чем ближе к прицелу, тем лучше)
                 local screenPos, onScreen = Camera:WorldToViewportPoint(headPos)
                 if not onScreen then continue end
                 local centerX, centerY = Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2
@@ -384,7 +410,7 @@ RunService.RenderStepped:Connect(function()
     local targetHead = getBestTarget()
     if not targetHead then return end
 
-    -- Мгновенная наводка (резко)
+    -- Мгновенная наводка
     local camPos = Camera.CFrame.Position
     local targetPos = targetHead.Position
     local newCFrame = CFrame.new(camPos, targetPos)
@@ -481,4 +507,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (резкий Auto Aim, только враги, без стен) загружен!")
+print("✅ Zenin Menu (toggle switch) загружен!")
