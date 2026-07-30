@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (иконка ESP по твоей ссылке)
+--  Zenin Menu (с загрузкой иконки ESP)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -11,49 +11,55 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА
+--  ЗАГРУЗКА ЛОГОТИПА И ИКОНКИ ESP
 -- ============================================================
-local imageUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
-local fileName = "zenin_logo.png"
-local filePath = fileName
-
-local function fileExists(path)
-    local success, result = pcall(function()
-        return loadfile(path)
-    end)
-    return success and result ~= nil
-end
-
-if not fileExists(filePath) then
-    print("📥 Скачиваем логотип...")
-    local success, content = pcall(function()
-        return game:HttpGet(imageUrl, true)
-    end)
-    if success and content then
-        local writeSuccess, err = pcall(function()
-            writefile(filePath, content)
+local function downloadFile(url, fileName)
+    local filePath = fileName
+    local function fileExists(path)
+        local success, result = pcall(function()
+            return loadfile(path)
         end)
-        if writeSuccess then
-            print("✅ Логотип сохранён: " .. filePath)
+        return success and result ~= nil
+    end
+
+    if not fileExists(filePath) then
+        print("📥 Скачиваем " .. fileName .. "...")
+        local success, content = pcall(function()
+            return game:HttpGet(url, true)
+        end)
+        if success and content then
+            local writeSuccess, err = pcall(function()
+                writefile(filePath, content)
+            end)
+            if writeSuccess then
+                print("✅ " .. fileName .. " сохранён: " .. filePath)
+            else
+                warn("⚠️ Не удалось сохранить " .. fileName .. ": " .. tostring(err))
+            end
         else
-            warn("⚠️ Не удалось сохранить файл: " .. tostring(err))
+            warn("⚠️ Не удалось скачать " .. fileName)
         end
     else
-        warn("⚠️ Не удалось скачать картинку")
+        print("✅ " .. fileName .. " уже есть на диске.")
     end
-else
-    print("✅ Логотип уже есть на диске.")
+
+    local assetPath = nil
+    if getcustomasset then
+        assetPath = getcustomasset(filePath)
+    elseif getgenv().getcustomasset then
+        assetPath = getgenv().getcustomasset(filePath)
+    end
+    return assetPath
 end
 
-local logoPath = nil
-if getcustomasset then
-    logoPath = getcustomasset(filePath)
-elseif getgenv().getcustomasset then
-    logoPath = getgenv().getcustomasset(filePath)
-end
+local logoUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
+local espIconUrl = "https://i.ibb.co/XxCbHpZX/eye-1.png"
+
+local logoPath = downloadFile(logoUrl, "zenin_logo.png")
+local espIconPath = downloadFile(espIconUrl, "esp_icon.png")
 
 -- ============================================================
---  АНИМАЦИЯ
+--  АНИМАЦИЯ (использует logoPath)
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -236,7 +242,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ВКЛАДКИ (иконка ESP по твоей ссылке)
+--  ВКЛАДКИ (используем espIconPath)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -268,7 +274,6 @@ activeLine.Parent = tabsBar
 local tabButtons = {}
 local tabNames = {"Aim", "ESP", "Skins"}
 local tabPositions = {0, 0.33333, 0.66666}
-local espIconUrl = "https://i.ibb.co/XxCbHpZX/eye-1.png"  -- твоя ссылка
 
 for i, name in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
@@ -284,15 +289,14 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
-    -- Иконка ESP (по твоей ссылке)
-    if name == "ESP" then
+    if name == "ESP" and espIconPath then
         local icon = Instance.new("ImageLabel")
-        icon.Size = UDim2.new(0, 24, 0, 24)          -- размер 24x24
-        icon.Position = UDim2.new(0.05, 0, 0.5, -12) -- слева, по центру
+        icon.Size = UDim2.new(0, 24, 0, 24)
+        icon.Position = UDim2.new(0.05, 0, 0.5, -12)
         icon.BackgroundTransparency = 1
-        icon.Image = espIconUrl
+        icon.Image = espIconPath
         icon.Parent = btn
-        btn.Text = "   ESP"   -- отступ
+        btn.Text = "   ESP"
     end
 
     local btnCorner = Instance.new("UICorner")
@@ -337,4 +341,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с иконкой ESP (твоя ссылка) загружен!")
+print("✅ Zenin Menu с загрузкой иконки ESP загружен!")
