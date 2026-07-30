@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (логотип на страницах + в хедере)
+--  Zenin Menu (страницы без текста-заглушки)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИЯ (прозрачный фон)
+--  АНИМАЦИЯ
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -179,7 +179,6 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип в хедере
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
@@ -202,7 +201,7 @@ headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (с логотипом в левом углу)
+--  СТРАНИЦЫ (пустые, только логотип в углу)
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
@@ -237,17 +236,7 @@ for i, name in ipairs(pageNames) do
         pageLogoCorner.Parent = pageLogo
     end
 
-    -- Текст-заглушка
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = name .. "\n(настройки)"
-    label.TextColor3 = Color3.fromRGB(150, 150, 150)
-    label.TextSize = 24
-    label.Font = Enum.Font.GothamMedium
-    label.TextXAlignment = Enum.TextXAlignment.Center
-    label.TextYAlignment = Enum.TextYAlignment.Center
-    label.Parent = page
+    -- ТЕКСТ-ЗАГЛУШКА УДАЛЁН
 
     pages[name] = page
 end
@@ -330,4 +319,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с логотипом на страницах загружен!")
+print("✅ Zenin Menu (без текста на страницах) загружен!")
