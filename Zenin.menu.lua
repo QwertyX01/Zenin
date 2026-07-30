@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (разделитель в Aim)
+--  Zenin Menu (Auto Aim в левой части Aim)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -9,6 +9,9 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local Players = game:GetService("Players")
 
 -- ============================================================
 --  ЗАГРУЗКА ЛОГОТИПА
@@ -219,10 +222,11 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (с разделителем в Aim)
+--  СТРАНИЦЫ
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
+local aimEnabled = false  -- состояние Auto Aim
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
@@ -238,22 +242,131 @@ for i, name in ipairs(pageNames) do
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
 
-    -- ДОБАВЛЯЕМ ВЕРТИКАЛЬНУЮ СЕРУЮ ЛИНИЮ ДЛЯ Aim
+    -- Для страницы Aim добавляем разделитель и элементы
     if name == "Aim" then
+        -- Вертикальный разделитель
         local divider = Instance.new("Frame")
-        divider.Size = UDim2.new(0, 2, 1, 0)   -- толщина 2px, на всю высоту
-        divider.Position = UDim2.new(0.5, -1, 0, 0) -- по центру
+        divider.Size = UDim2.new(0, 2, 1, 0)
+        divider.Position = UDim2.new(0.5, -1, 0, 0)
         divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         divider.BackgroundTransparency = 0.4
         divider.BorderSizePixel = 0
         divider.Parent = page
+
+        -- Левая половина (Auto Aim)
+        local leftHalf = Instance.new("Frame")
+        leftHalf.Size = UDim2.new(0.5, -5, 1, 0)
+        leftHalf.Position = UDim2.new(0, 5, 0, 0)
+        leftHalf.BackgroundTransparency = 1
+        leftHalf.Parent = page
+
+        -- Заголовок "Auto Aim"
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 0, 30)
+        label.Position = UDim2.new(0, 0, 0, 10)
+        label.BackgroundTransparency = 1
+        label.Text = "Auto Aim"
+        label.TextColor3 = Color3.fromRGB(200, 200, 200)
+        label.TextSize = 18
+        label.Font = Enum.Font.GothamBold
+        label.TextXAlignment = Enum.TextXAlignment.Center
+        label.Parent = leftHalf
+
+        -- Toggle Button
+        local toggleBtn = Instance.new("TextButton")
+        toggleBtn.Size = UDim2.new(0, 120, 0, 40)
+        toggleBtn.Position = UDim2.new(0.5, -60, 0.3, 0)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+        toggleBtn.BackgroundTransparency = 0.2
+        toggleBtn.BorderSizePixel = 0
+        toggleBtn.Text = "OFF"
+        toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggleBtn.TextSize = 16
+        toggleBtn.Font = Enum.Font.SourceSansBold
+        toggleBtn.Parent = leftHalf
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 6)
+        btnCorner.Parent = toggleBtn
+
+        -- Обработчик нажатия
+        toggleBtn.MouseButton1Click:Connect(function()
+            aimEnabled = not aimEnabled
+            toggleBtn.Text = aimEnabled and "ON" or "OFF"
+            toggleBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(60, 60, 70)
+            print("Auto Aim:", aimEnabled and "ON" or "OFF")
+        end)
+
+        -- Правая половина (можно добавить другие настройки позже)
+        local rightHalf = Instance.new("Frame")
+        rightHalf.Size = UDim2.new(0.5, -5, 1, 0)
+        rightHalf.Position = UDim2.new(0.5, 5, 0, 0)
+        rightHalf.BackgroundTransparency = 1
+        rightHalf.Parent = page
+
+        -- Заглушка для правой половины
+        local rightLabel = Instance.new("TextLabel")
+        rightLabel.Size = UDim2.new(1, 0, 1, 0)
+        rightLabel.BackgroundTransparency = 1
+        rightLabel.Text = "настройки\n(скоро)"
+        rightLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        rightLabel.TextSize = 20
+        rightLabel.Font = Enum.Font.GothamMedium
+        rightLabel.TextXAlignment = Enum.TextXAlignment.Center
+        rightLabel.TextYAlignment = Enum.TextYAlignment.Center
+        rightLabel.Parent = rightHalf
     end
 
     pages[name] = page
 end
 
 -- ============================================================
---  ВКЛАДКИ (без иконок)
+--  ЛОГИКА AUTO AIM
+-- ============================================================
+local function getClosestPlayer()
+    local closest = nil
+    local shortestDist = math.huge
+    local character = player.Character
+    if not character then return nil end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            local targetHrp = plr.Character:FindFirstChild("HumanoidRootPart")
+            if targetHrp then
+                local dist = (hrp.Position - targetHrp.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = plr
+                end
+            end
+        end
+    end
+    return closest
+end
+
+RunService.RenderStepped:Connect(function()
+    if not aimEnabled then return end
+
+    local target = getClosestPlayer()
+    if not target or not target.Character then return end
+
+    local head = target.Character:FindFirstChild("Head")
+    if not head then return end
+
+    -- Проверка, что голова видна (можно упростить, просто проверяем, что она перед камерой)
+    local headPos = head.Position
+    local camPos = Camera.CFrame.Position
+    local direction = (headPos - camPos).Unit
+    local dot = direction:Dot(Camera.CFrame.LookVector)
+    if dot < 0 then return end  -- голова позади камеры
+
+    -- Наводим камеру на голову
+    Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPos)
+end)
+
+-- ============================================================
+--  ВКЛАДКИ
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -300,8 +413,6 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
-    -- Иконки удалены
-
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 6)
     btnCorner.Parent = btn
@@ -344,4 +455,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с разделителем в Aim загружен!")
+print("✅ Zenin Menu с Auto Aim загружен!")
