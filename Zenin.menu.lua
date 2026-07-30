@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (прямоугольные вкладки на всю ширину)
+--  Zenin Menu (прямоугольные вкладки без смайлов)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -152,7 +152,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (на всю ширину, без скруглений)
+--  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (без смайлов)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -164,7 +164,7 @@ tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
--- Тонкая верхняя линия (для отделения)
+-- Тонкая верхняя линия
 local topLine = Instance.new("Frame")
 topLine.Size = UDim2.new(1, 0, 0, 1)
 topLine.Position = UDim2.new(0, 0, 0, 0)
@@ -173,40 +173,33 @@ topLine.BackgroundTransparency = 0.4
 topLine.BorderSizePixel = 0
 topLine.Parent = tabsBar
 
--- Кнопки (4 штуки, по 25% ширины, без отступов, прямоугольные)
+-- Кнопки (без эмодзи)
 local tabButtons = {}
-local tabData = {
-    { name = "Aim", emoji = "🎯" },
-    { name = "ESP", emoji = "👁️" },
-    { name = "Misc", emoji = "⚙️" },
-    { name = "Skins", emoji = "🎨" },
-}
+local tabNames = {"Aim", "ESP", "Misc", "Skins"}
 
-for i, data in ipairs(tabData) do
+for i, name in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
-    btn.Name = data.name .. "Btn"
-    btn.Size = UDim2.new(0.25, 0, 1, 0)        -- ровно ¼ ширины, без щелей
+    btn.Name = name .. "Btn"
+    btn.Size = UDim2.new(0.25, 0, 1, 0)
     btn.Position = UDim2.new((i-1) * 0.25, 0, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     btn.BackgroundTransparency = 0.2
     btn.BorderSizePixel = 0
-    btn.Text = data.emoji .. " " .. data.name
+    btn.Text = name                     -- просто название, без смайла
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 18                -- увеличенный шрифт
+    btn.TextSize = 18
     btn.Font = Enum.Font.SourceSansBold
     btn.Parent = tabsBar
 
-    -- НЕТ UICorner! Кнопки строго прямоугольные
-
-    tabButtons[data.name] = btn
+    tabButtons[name] = btn
 
     btn.MouseButton1Click:Connect(function()
         for pageName, page in pairs(pages) do
-            page.Visible = (pageName == data.name)
+            page.Visible = (pageName == name)
         end
 
-        for name, b in pairs(tabButtons) do
-            if name == data.name then
+        for n, b in pairs(tabButtons) do
+            if n == name then
                 b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
                 b.BackgroundTransparency = 0.1
                 b.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -224,4 +217,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с прямоугольными вкладками на всю ширину загружен!")
+print("✅ Zenin Menu (без смайлов) загружен!")
