@@ -120,7 +120,7 @@ headerText.Parent = header
 --  СТРАНИЦЫ (контент)
 -- ============================================================
 local pages = {}
-local pageNames = {"Aim", "ESP", "Misc", "Skins"}
+local pageNames = {"Aim", "ESP", "Miscs", "Skins"}
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
