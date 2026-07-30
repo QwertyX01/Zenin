@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (ПРАВИЛЬНАЯ анимация: сначала анимация, потом меню)
+--  Zenin Menu (без красной обводки)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИОННЫЙ КОНТЕЙНЕР (ПОЯВЛЯЕТСЯ ПЕРВЫМ)
+--  АНИМАЦИОННЫЙ КОНТЕЙНЕР
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -64,7 +64,6 @@ animContainer.BackgroundTransparency = 0
 animContainer.ZIndex = 10
 animContainer.Parent = gui
 
--- Логотип для анимации
 local animLogo = Instance.new("ImageLabel")
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
@@ -78,7 +77,6 @@ local logoCorner = Instance.new("UICorner")
 logoCorner.CornerRadius = UDim.new(0, 16)
 logoCorner.Parent = animLogo
 
--- Текст "Zenin" (белый)
 local animText = Instance.new("TextLabel")
 animText.Size = UDim2.new(0, 200, 0, 60)
 animText.Position = UDim2.new(0.5, 40, 0.5, -30)
@@ -95,30 +93,26 @@ animText.TextTransparency = 1
 animText.Parent = animContainer
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ (ИЗНАЧАЛЬНО СКРЫТО)
+--  ОСНОВНОЕ МЕНЮ (без обводки)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
 mainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BackgroundTransparency = 0  -- уже непрозрачное
+mainFrame.BackgroundTransparency = 0
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.ZIndex = 5
-mainFrame.Visible = false  -- СКРЫТО до конца анимации
+mainFrame.Visible = false
 mainFrame.Parent = gui
 
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(240, 40, 40)
-mainStroke.Transparency = 0.4
-mainStroke.Thickness = 1
-mainStroke.Parent = mainFrame
+-- ОБВОДКА УДАЛЕНА
 
 -- ============================================================
 --  ХЕДЕР
@@ -199,7 +193,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ВКЛАДКИ (без изменений)
+--  ВКЛАДКИ
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -277,9 +271,8 @@ tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  ЗАПУСК АНИМАЦИИ (МЕНЮ ПОЯВЛЯЕТСЯ ПОСЛЕ)
+--  ЗАПУСК АНИМАЦИИ
 -- ============================================================
--- 1. Появление логотипа
 animLogo.ImageTransparency = 1
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
@@ -289,11 +282,8 @@ TweenService:Create(animLogo, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.Eas
     Size = UDim2.new(0, 100, 0, 100),
     Position = UDim2.new(0.5, -50, 0.5, -50)
 }):Play()
-
--- Ждём 0.7 секунд (длительность первой анимации)
 task.wait(0.7)
 
--- 2. Смещение логотипа влево + появление текста "Zenin"
 animText.Visible = true
 animText.TextTransparency = 1
 
@@ -304,16 +294,11 @@ TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.Eas
 TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     TextTransparency = 0
 }):Play()
-
--- Ждём 0.6 секунд
 task.wait(0.6)
 
--- 3. ПОЯВЛЕНИЕ МЕНЮ (теперь анимация завершена)
 mainFrame.Visible = true
-mainFrame.BackgroundTransparency = 0  -- уже видимое
--- Плавное появление (можно добавить лёгкий fade-in, но меню уже видно)
+mainFrame.BackgroundTransparency = 0
 
--- 4. Исчезновение анимационного контейнера
 TweenService:Create(animContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     BackgroundTransparency = 1
 }):Play()
@@ -321,4 +306,4 @@ task.wait(0.4)
 animContainer.Visible = false
 animContainer:Destroy()
 
-print("✅ Zenin Menu с правильной анимацией загружен!")
+print("✅ Zenin Menu (без обводки) загружен!")
