@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (без красной обводки)
+--  Zenin Menu (анимация сначала, меню потом)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -11,7 +11,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА
+--  ЗАГРУЗКА ЛОГОТИПА (до анимации)
 -- ============================================================
 local imageUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local fileName = "zenin_logo.png"
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИОННЫЙ КОНТЕЙНЕР
+--  ЭТАП 1: АНИМАЦИЯ (на весь экран, без меню)
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -64,6 +64,7 @@ animContainer.BackgroundTransparency = 0
 animContainer.ZIndex = 10
 animContainer.Parent = gui
 
+-- Логотип
 local animLogo = Instance.new("ImageLabel")
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
@@ -77,6 +78,7 @@ local logoCorner = Instance.new("UICorner")
 logoCorner.CornerRadius = UDim.new(0, 16)
 logoCorner.Parent = animLogo
 
+-- Текст "Zenin" (белый)
 local animText = Instance.new("TextLabel")
 animText.Size = UDim2.new(0, 200, 0, 60)
 animText.Position = UDim2.new(0.5, 40, 0.5, -30)
@@ -92,8 +94,42 @@ animText.Visible = false
 animText.TextTransparency = 1
 animText.Parent = animContainer
 
+-- Запуск анимации
+animLogo.ImageTransparency = 1
+animLogo.Size = UDim2.new(0, 80, 0, 80)
+animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
+
+-- Шаг 1: появление логотипа
+TweenService:Create(animLogo, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    ImageTransparency = 0,
+    Size = UDim2.new(0, 100, 0, 100),
+    Position = UDim2.new(0.5, -50, 0.5, -50)
+}):Play()
+task.wait(0.7)
+
+-- Шаг 2: смещение логотипа влево + появление текста
+animText.Visible = true
+animText.TextTransparency = 1
+
+TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    Position = UDim2.new(0.4, -50, 0.5, -50)
+}):Play()
+
+TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    TextTransparency = 0
+}):Play()
+task.wait(0.6)
+
+-- Шаг 3: исчезновение анимационного контейнера
+TweenService:Create(animContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 1
+}):Play()
+task.wait(0.4)
+animContainer.Visible = false
+animContainer:Destroy()
+
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ (без обводки)
+--  ЭТАП 2: ПОЯВЛЕНИЕ МЕНЮ (после анимации)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -104,19 +140,13 @@ mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
 mainFrame.Active = true
 mainFrame.Draggable = true
-mainFrame.ZIndex = 5
-mainFrame.Visible = false
 mainFrame.Parent = gui
 
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- ОБВОДКА УДАЛЕНА
-
--- ============================================================
---  ХЕДЕР
--- ============================================================
+-- Хедер
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -157,9 +187,7 @@ headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
--- ============================================================
---  СТРАНИЦЫ
--- ============================================================
+-- Страницы
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 
@@ -192,9 +220,7 @@ for i, name in ipairs(pageNames) do
     pages[name] = page
 end
 
--- ============================================================
---  ВКЛАДКИ
--- ============================================================
+-- Вкладки
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 45)
@@ -270,40 +296,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- ============================================================
---  ЗАПУСК АНИМАЦИИ
--- ============================================================
-animLogo.ImageTransparency = 1
-animLogo.Size = UDim2.new(0, 80, 0, 80)
-animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
-
-TweenService:Create(animLogo, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    ImageTransparency = 0,
-    Size = UDim2.new(0, 100, 0, 100),
-    Position = UDim2.new(0.5, -50, 0.5, -50)
-}):Play()
-task.wait(0.7)
-
-animText.Visible = true
-animText.TextTransparency = 1
-
-TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    Position = UDim2.new(0.4, -50, 0.5, -50)
-}):Play()
-
-TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    TextTransparency = 0
-}):Play()
-task.wait(0.6)
-
-mainFrame.Visible = true
-mainFrame.BackgroundTransparency = 0
-
-TweenService:Create(animContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    BackgroundTransparency = 1
-}):Play()
-task.wait(0.4)
-animContainer.Visible = false
-animContainer:Destroy()
-
-print("✅ Zenin Menu (без обводки) загружен!")
+print("✅ Zenin Menu с раздельной анимацией загружен!")
