@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (с вкладками ESP, AIM, MISC, SKINS)
+--  Zenin Menu (горизонтальные вкладки-капсулы внизу)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -117,37 +117,33 @@ headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
 -- ============================================================
---  КОНТЕНТ ДЛЯ ВКЛАДОК (область под хедером)
+--  СТРАНИЦЫ (контент)
 -- ============================================================
-local contentContainer = Instance.new("Frame")
-contentContainer.Name = "ContentContainer"
-contentContainer.Size = UDim2.new(1, 0, 1, -65)   -- 35 хедер + 30 вкладки
-contentContainer.Position = UDim2.new(0, 0, 0, 35)
-contentContainer.BackgroundTransparency = 0
-contentContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-contentContainer.BorderSizePixel = 0
-contentContainer.ClipsDescendants = true
-contentContainer.Parent = mainFrame
+local pages = {}
+local pageNames = {"Aim", "ESP", "Misc", "Skins"}
+local pageColors = {
+    Aim = Color3.fromRGB(25, 25, 30),
+    ESP = Color3.fromRGB(25, 25, 30),
+    Misc = Color3.fromRGB(25, 25, 30),
+    Skins = Color3.fromRGB(25, 25, 30),
+}
 
--- Создаём 4 фрейма для контента (пока пустые, только для демонстрации)
-local contentFrames = {}
-local tabNames = {"ESP", "AIM", "MISC", "SKINS"}
-for i, name in ipairs(tabNames) do
-    local frame = Instance.new("Frame")
-    frame.Name = name .. "Content"
-    frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.Position = UDim2.new(0, 0, 0, 0)
-    frame.BackgroundTransparency = 0.2
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    frame.BorderSizePixel = 0
-    frame.Visible = (i == 1)
-    frame.Parent = contentContainer
+for i, name in ipairs(pageNames) do
+    local page = Instance.new("Frame")
+    page.Name = name .. "Page"
+    page.Size = UDim2.new(1, 0, 1, -80)   -- 35 (header) + 45 (tabs) = 80
+    page.Position = UDim2.new(0, 0, 0, 35)
+    page.BackgroundColor3 = pageColors[name]
+    page.BackgroundTransparency = 0.2
+    page.BorderSizePixel = 0
+    page.Visible = (i == 1)   -- AimPage видима по умолчанию
+    page.Parent = mainFrame
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = frame
+    corner.Parent = page
 
-    -- Текст-заглушка (чтобы видеть, какая вкладка активна)
+    -- Текст-заглушка
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
@@ -157,69 +153,71 @@ for i, name in ipairs(tabNames) do
     label.Font = Enum.Font.GothamMedium
     label.TextXAlignment = Enum.TextXAlignment.Center
     label.TextYAlignment = Enum.TextYAlignment.Center
-    label.Parent = frame
+    label.Parent = page
 
-    contentFrames[name] = frame
+    pages[name] = page
 end
 
 -- ============================================================
---  ПАНЕЛЬ ВКЛАДОК (снизу)
+--  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (TabsBar)
 -- ============================================================
-local tabsPanel = Instance.new("Frame")
-tabsPanel.Name = "TabsPanel"
-tabsPanel.Size = UDim2.new(1, 0, 0, 30)
-tabsPanel.Position = UDim2.new(0, 0, 1, -30)
-tabsPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-tabsPanel.BackgroundTransparency = 0
-tabsPanel.BorderSizePixel = 0
-tabsPanel.ClipsDescendants = true
-tabsPanel.Parent = mainFrame
+local tabsBar = Instance.new("Frame")
+tabsBar.Name = "TabsBar"
+tabsBar.Size = UDim2.new(1, 0, 0, 45)
+tabsBar.Position = UDim2.new(0, 0, 1, -45)   -- прижат к низу
+tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)  -- чуть темнее фона
+tabsBar.BackgroundTransparency = 0
+tabsBar.BorderSizePixel = 0
+tabsBar.ClipsDescendants = true
+tabsBar.Parent = mainFrame
 
--- Тонкая верхняя линия (для отделения)
-local topLine = Instance.new("Frame")
-topLine.Size = UDim2.new(1, 0, 0, 1)
-topLine.Position = UDim2.new(0, 0, 0, 0)
-topLine.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-topLine.BackgroundTransparency = 0.4
-topLine.BorderSizePixel = 0
-topLine.Parent = tabsPanel
+-- Горизонтальное расположение с центрированием
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+tabLayout.Padding = UDim.new(0, 10)
+tabLayout.Parent = tabsBar
 
--- Кнопки вкладок (по ¼ ширины)
+-- Кнопки-капсулы
 local tabButtons = {}
-local function createTabButton(parent, name, i)
+local tabData = {
+    { name = "Aim", emoji = "🎯" },
+    { name = "ESP", emoji = "👁️" },
+    { name = "Misc", emoji = "⚙️" },
+    { name = "Skins", emoji = "🎨" },
+}
+
+for i, data in ipairs(tabData) do
     local btn = Instance.new("TextButton")
-    btn.Name = name .. "Btn"
-    btn.Size = UDim2.new(0.25, -1, 1, 0)        -- ¼ ширины с зазором 1 пиксель
-    btn.Position = UDim2.new((i-1) * 0.25, 0, 0, 0)
+    btn.Name = data.name .. "Btn"
+    btn.Size = UDim2.new(0, 90, 0, 32)
     btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     btn.BackgroundTransparency = 0.2
     btn.BorderSizePixel = 0
-    btn.Text = name
+    btn.Text = data.emoji .. " " .. data.name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 14
-    btn.Font = Enum.Font.GothamMedium
-    btn.Parent = parent
+    btn.TextSize = 15
+    btn.Font = Enum.Font.SourceSansBold
+    btn.Parent = tabsBar
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = btn
+    -- Скругление (капсула)
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 12)
+    btnCorner.Parent = btn
 
-    return btn
-end
-
-for i, name in ipairs(tabNames) do
-    local btn = createTabButton(tabsPanel, name, i)
-    tabButtons[name] = btn
+    tabButtons[data.name] = btn
 
     btn.MouseButton1Click:Connect(function()
-        -- Скрываем все контенты
-        for n, frame in pairs(contentFrames) do
-            frame.Visible = (n == name)
+        -- Переключаем страницы
+        for pageName, page in pairs(pages) do
+            page.Visible = (pageName == data.name)
         end
-        -- Обновляем цвет кнопок
-        for n, b in pairs(tabButtons) do
-            if n == name then
-                b.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+
+        -- Обновляем вид кнопок
+        for name, b in pairs(tabButtons) do
+            if name == data.name then
+                b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
                 b.BackgroundTransparency = 0.1
                 b.TextColor3 = Color3.fromRGB(255, 255, 255)
             else
@@ -231,9 +229,9 @@ for i, name in ipairs(tabNames) do
     end)
 end
 
--- Устанавливаем начальное состояние (активна первая вкладка)
-tabButtons["ESP"].BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-tabButtons["ESP"].BackgroundTransparency = 0.1
-tabButtons["ESP"].TextColor3 = Color3.fromRGB(255, 255, 255)
+-- Устанавливаем начальное состояние (Aim активна)
+tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+tabButtons["Aim"].BackgroundTransparency = 0.1
+tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с вкладками загружен!")
+print("✅ Zenin Menu с горизонтальными вкладками-капсулами загружен!")
