@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (Auto Aim только на врагов и без стен)
+--  Zenin Menu (Auto Aim с FOV и Smooth)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -12,6 +12,7 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
 -- ============================================================
 --  ЗАГРУЗКА ЛОГОТИПА (без изменений)
@@ -147,7 +148,7 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ
+--  МЕНЮ (основной фрейм)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -164,7 +165,7 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер (без изменений)
+-- Хедер
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -222,11 +223,12 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (Aim с кнопкой Auto Aim)
+--  СТРАНИЦЫ (Aim с улучшенным Auto Aim)
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 local aimEnabled = false
+local currentSmoothAngles = Vector2.new(0, 0) -- для плавности (Yaw, Pitch)
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
@@ -270,6 +272,7 @@ for i, name in ipairs(pageNames) do
         label.TextXAlignment = Enum.TextXAlignment.Center
         label.Parent = leftHalf
 
+        -- Toggle Button
         local toggleBtn = Instance.new("TextButton")
         toggleBtn.Size = UDim2.new(0, 120, 0, 40)
         toggleBtn.Position = UDim2.new(0.5, -60, 0.3, 0)
@@ -289,6 +292,11 @@ for i, name in ipairs(pageNames) do
             aimEnabled = not aimEnabled
             toggleBtn.Text = aimEnabled and "ON" or "OFF"
             toggleBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(60, 60, 70)
+            if aimEnabled then
+                -- Сбрасываем углы, чтобы не было рывка
+                local cam = workspace.CurrentCamera
+                currentSmoothAngles = Vector2.new(cam.CFrame:ToEulerAnglesYXZ().Y, cam.CFrame:ToEulerAnglesYXZ().X)
+            end
             print("Auto Aim:", aimEnabled and "ON" or "OFF")
         end)
 
@@ -315,19 +323,18 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ЛОГИКА AUTO AIM (только враги, только видимые)
+--  УЛУЧШЕННАЯ ЛОГИКА AUTO AIM (с FOV и Smooth)
 -- ============================================================
 local function isEnemy(plr)
     if plr == player then return false end
-    -- Если у игрока есть свойство Team, сравниваем команды
+    -- Проверка по команде (Team или TeamColor)
     if plr.Team and player.Team then
         return plr.Team ~= player.Team
     end
-    -- Если нет команды, но есть TeamColor, сравниваем цвета
     if plr.TeamColor and player.TeamColor then
         return plr.TeamColor ~= player.TeamColor
     end
-    -- Если ничего нет, считаем всех врагами (но тогда будут свои, так что лучше полагаться на наличие команды)
+    -- Если команды нет, считаем всех врагами (но тогда будут и свои)
     return true
 end
 
@@ -339,62 +346,97 @@ local function isVisible(targetPos)
     rayParams.FilterType = Enum.RaycastFilterType.Blacklist
     rayParams.FilterDescendantsInstances = {player.Character}
     local result = workspace:Raycast(camPos, direction * distance, rayParams)
-    return result == nil or result.Instance:IsDescendantOf(player.Character) -- если луч не упёрся в препятствие или упёрся в самого игрока
+    return result == nil or result.Instance:IsDescendantOf(player.Character)
 end
 
-local function getClosestEnemy()
-    local closest = nil
-    local shortestDist = math.huge
+-- Параметры AimBot
+local FOV_DEGREES = 15          -- максимальный угол FOV (градусы)
+local SMOOTH_SPEED = 8          -- скорость плавности (чем выше, тем быстрее)
+
+local function getBestTarget()
+    local best = nil
+    local bestScore = math.huge  -- минимальное расстояние от центра экрана
     local character = player.Character
     if not character then return nil end
     local hrp = character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
+
+    local camPos = Camera.CFrame.Position
+    local camForward = Camera.CFrame.LookVector
 
     for _, plr in pairs(Players:GetPlayers()) do
         if isEnemy(plr) and plr.Character then
             local head = plr.Character:FindFirstChild("Head")
             if head then
                 local headPos = head.Position
-                -- Проверка, что голова перед камерой (чтобы не наводиться на тех, кто сзади)
-                local camPos = Camera.CFrame.Position
+                -- Проверка, что голова перед камерой
                 local dirToHead = (headPos - camPos).Unit
-                if dirToHead:Dot(Camera.CFrame.LookVector) < 0 then
-                    continue -- голова позади камеры
+                if dirToHead:Dot(camForward) < 0 then
+                    continue -- позади
                 end
                 -- Проверка видимости (не сквозь стены)
                 if not isVisible(headPos) then
                     continue
                 end
-                local dist = (hrp.Position - headPos).Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closest = plr
+                -- Проверка FOV (угол между направлением камеры и направлением на цель)
+                local angle = math.deg(math.acos(dirToHead:Dot(camForward)))
+                if angle > FOV_DEGREES then
+                    continue
+                end
+                -- Расстояние от центра экрана (в пикселях) для выбора ближайшей к прицелу
+                local screenPos, onScreen = Camera:WorldToViewportPoint(headPos)
+                if not onScreen then continue end
+                local centerX, centerY = Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2
+                local distFromCenter = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(centerX, centerY)).Magnitude
+                if distFromCenter < bestScore then
+                    bestScore = distFromCenter
+                    best = head
                 end
             end
         end
     end
-    return closest
+    return best
 end
 
 RunService.RenderStepped:Connect(function()
     if not aimEnabled then return end
 
-    local target = getClosestEnemy()
-    if not target or not target.Character then return end
+    local targetHead = getBestTarget()
+    if not targetHead then return end
 
-    local head = target.Character:FindFirstChild("Head")
-    if not head then return end
+    -- Позиция камеры и головы цели
+    local camPos = Camera.CFrame.Position
+    local targetPos = targetHead.Position
 
-    local headPos = head.Position
-    -- Дополнительная проверка видимости (на случай, если в getClosestEnemy она не сработала)
-    if not isVisible(headPos) then return end
+    -- Направление от камеры к цели
+    local direction = (targetPos - camPos).Unit
 
-    -- Наводим камеру на голову
-    Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPos)
+    -- Рассчитываем углы (Yaw и Pitch)
+    local yaw = math.atan2(-direction.X, -direction.Z)  -- горизонтальный поворот
+    local pitch = math.asin(direction.Y)                -- вертикальный поворот
+
+    -- Преобразуем в градусы
+    local targetYaw = math.deg(yaw)
+    local targetPitch = math.deg(pitch)
+
+    -- Плавная интерполяция (Smooth)
+    local currentYaw = currentSmoothAngles.X
+    local currentPitch = currentSmoothAngles.Y
+
+    local smoothFactor = SMOOTH_SPEED * RunService.RenderStepped:Wait()
+    local newYaw = currentYaw + (targetYaw - currentYaw) * math.min(smoothFactor, 1)
+    local newPitch = currentPitch + (targetPitch - currentPitch) * math.min(smoothFactor, 1)
+
+    -- Обновляем плавные углы
+    currentSmoothAngles = Vector2.new(newYaw, newPitch)
+
+    -- Применяем поворот камеры
+    local newCFrame = CFrame.new(camPos) * CFrame.Angles(0, math.rad(newYaw), 0) * CFrame.Angles(math.rad(newPitch), 0, 0)
+    Camera.CFrame = newCFrame
 end)
 
 -- ============================================================
---  ВКЛАДКИ (без изменений)
+--  ВКЛАДКИ (нижняя панель)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -483,4 +525,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с Auto Aim (только враги, без стен) загружен!")
+print("✅ Zenin Menu с улучшенным Auto Aim (FOV + Smooth) загружен!")
