@@ -236,7 +236,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ВКЛАДКИ (уменьшенные, с иконкой ESP)
+--  ВКЛАДКИ (с иконкой ESP)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -260,7 +260,6 @@ activeLine.Parent = tabsBar
 local tabButtons = {}
 local tabNames = {"Aim", "ESP", "Skins"}
 local tabPositions = {0, 0.33333, 0.66666}
--- ИКОНКА ESP (глаз)
 local espIconUrl = "https://cdn-icons-png.flaticon.com/512/159/159616.png"
 
 for i, name in ipairs(tabNames) do
@@ -277,15 +276,15 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
-    -- ДОБАВЛЯЕМ ИКОНКУ ДЛЯ ESP
+    -- ИКОНКА ДЛЯ ESP (глаз) — слева от текста
     if name == "ESP" then
         local icon = Instance.new("ImageLabel")
         icon.Size = UDim2.new(0, 16, 0, 16)
-        icon.Position = UDim2.new(0.05, 0, 0.5, -8)
+        icon.Position = UDim2.new(0.1, 0, 0.5, -8)   -- слева, по вертикали центрирована
         icon.BackgroundTransparency = 1
         icon.Image = espIconUrl
         icon.Parent = btn
-        btn.Text = "  ESP"  -- отступ для текста
+        btn.Text = "   ESP"   -- три пробела для отступа
     end
 
     local btnCorner = Instance.new("UICorner")
@@ -330,4 +329,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (вкладки уменьшены, иконка ESP) загружен!")
+print("✅ Zenin Menu (иконка ESP добавлена) загружен!")
