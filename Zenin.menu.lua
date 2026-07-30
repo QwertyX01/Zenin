@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (Auto Aim с toggle switch)
+--  Zenin Menu (исправленный: вкладки + toggle switch)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -147,7 +147,7 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ
+--  ОСНОВНОЕ МЕНЮ
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -164,7 +164,9 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер
+-- ============================================================
+--  ХЕДЕР
+-- ============================================================
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -222,26 +224,81 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ
+--  СТРАНИЦЫ И ВКЛАДКИ
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 local aimEnabled = false
 
+-- Левая панель (вкладки)
+local leftPanel = Instance.new("Frame")
+leftPanel.Size = UDim2.new(0.2, 0, 1, -40)
+leftPanel.Position = UDim2.new(0, 0, 0, 40)
+leftPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+leftPanel.BackgroundTransparency = 0
+leftPanel.BorderSizePixel = 0
+leftPanel.ClipsDescendants = true
+leftPanel.Parent = mainFrame
+
+local layoutLeft = Instance.new("UIListLayout")
+layoutLeft.FillDirection = Enum.FillDirection.Vertical
+layoutLeft.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layoutLeft.VerticalAlignment = Enum.VerticalAlignment.Top
+layoutLeft.Padding = UDim.new(0, 8)
+layoutLeft.Parent = leftPanel
+
+-- Правая панель (контент)
+local rightPanel = Instance.new("Frame")
+rightPanel.Size = UDim2.new(0.8, 0, 1, -40)
+rightPanel.Position = UDim2.new(0.2, 0, 0, 40)
+rightPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
+rightPanel.BackgroundTransparency = 0.1
+rightPanel.BorderSizePixel = 0
+rightPanel.ClipsDescendants = true
+rightPanel.Parent = mainFrame
+
+local rightCorners = Instance.new("UICorner")
+rightCorners.CornerRadius = UDim.new(0, 6)
+rightCorners.Parent = rightPanel
+
+-- Функция создания кнопок вкладок
+local function createTabButton(name, parent, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    btn.BackgroundTransparency = 0.5
+    btn.BorderSizePixel = 0
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 16
+    btn.Font = Enum.Font.SourceSans
+    btn.Parent = parent
+    local btnCorners = Instance.new("UICorner")
+    btnCorners.CornerRadius = UDim.new(0, 6)
+    btnCorners.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        callback(name)
+    end)
+    return btn
+end
+
+-- Создаём страницы
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
-    page.Size = UDim2.new(1, 0, 1, -70)
-    page.Position = UDim2.new(0, 0, 0, 35)
+    page.Size = UDim2.new(1, -10, 1, -10)
+    page.Position = UDim2.new(0, 5, 0, 5)
     page.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     page.BackgroundTransparency = 0.2
     page.BorderSizePixel = 0
     page.Visible = (i == 1)
-    page.Parent = mainFrame
+    page.Parent = rightPanel
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
+    corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = page
 
+    -- Для страницы Aim добавляем разделитель и toggle switch
     if name == "Aim" then
         -- Вертикальный разделитель
         local divider = Instance.new("Frame")
@@ -259,57 +316,62 @@ for i, name in ipairs(pageNames) do
         leftHalf.BackgroundTransparency = 1
         leftHalf.Parent = page
 
-        -- Текст "Auto Aim" слева, не жирный
+        -- Строка с текстом и переключателем (в одной строке)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, 0, 0, 40)
+        row.Position = UDim2.new(0, 0, 0.1, 0)
+        row.BackgroundTransparency = 1
+        row.Parent = leftHalf
+
+        -- Текст "Auto Aim" (больше, слева)
         local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(0.5, 0, 0, 30)
-        label.Position = UDim2.new(0, 10, 0, 10)
+        label.Size = UDim2.new(0.6, 0, 1, 0)
+        label.Position = UDim2.new(0, 10, 0, 0)
         label.BackgroundTransparency = 1
         label.Text = "Auto Aim"
         label.TextColor3 = Color3.fromRGB(200, 200, 200)
-        label.TextSize = 16
+        label.TextSize = 18   -- больше
         label.Font = Enum.Font.SourceSans  -- не жирный
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextYAlignment = Enum.TextYAlignment.Center
-        label.Parent = leftHalf
+        label.Parent = row
 
-        -- Toggle Switch (ползунок)
+        -- Toggle Switch (прямо справа от текста)
         local toggleContainer = Instance.new("Frame")
-        toggleContainer.Size = UDim2.new(0, 50, 0, 30)
-        toggleContainer.Position = UDim2.new(0.8, -25, 0.3, 0)
+        toggleContainer.Size = UDim2.new(0, 50, 0, 28)
+        toggleContainer.Position = UDim2.new(0.7, 0, 0.5, -14)
         toggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
         toggleContainer.BackgroundTransparency = 0
         toggleContainer.BorderSizePixel = 0
-        toggleContainer.Parent = leftHalf
+        toggleContainer.Parent = row
         local toggleCorner = Instance.new("UICorner")
-        toggleCorner.CornerRadius = UDim.new(0, 15)
+        toggleCorner.CornerRadius = UDim.new(0, 14)
         toggleCorner.Parent = toggleContainer
 
-        -- Ползунок (круглый)
+        -- Ползунок
         local toggleKnob = Instance.new("Frame")
-        toggleKnob.Size = UDim2.new(0, 24, 0, 24)
-        toggleKnob.Position = UDim2.new(0, 3, 0.5, -12)
+        toggleKnob.Size = UDim2.new(0, 22, 0, 22)
+        toggleKnob.Position = UDim2.new(0, 3, 0.5, -11)
         toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         toggleKnob.BackgroundTransparency = 0
         toggleKnob.BorderSizePixel = 0
         toggleKnob.Parent = toggleContainer
         local knobCorner = Instance.new("UICorner")
-        knobCorner.CornerRadius = UDim.new(0, 12)
+        knobCorner.CornerRadius = UDim.new(0, 11)
         knobCorner.Parent = toggleKnob
 
-        -- Функция обновления состояния
         local function updateSwitch(state)
             aimEnabled = state
             if state then
-                toggleContainer.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- зелёный фон
-                toggleKnob.Position = UDim2.new(1, -27, 0.5, -12) -- сдвинуть вправо
+                toggleContainer.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+                toggleKnob.Position = UDim2.new(1, -25, 0.5, -11)
             else
                 toggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-                toggleKnob.Position = UDim2.new(0, 3, 0.5, -12) -- влево
+                toggleKnob.Position = UDim2.new(0, 3, 0.5, -11)
             end
             print("Auto Aim:", state and "ON" or "OFF")
         end
 
-        -- Обработчики кликов
         toggleContainer.MouseButton1Click:Connect(function()
             updateSwitch(not aimEnabled)
         end)
@@ -317,7 +379,6 @@ for i, name in ipairs(pageNames) do
             updateSwitch(not aimEnabled)
         end)
 
-        -- Инициализация (выключено)
         updateSwitch(false)
 
         -- Правая половина (заглушка)
@@ -341,6 +402,35 @@ for i, name in ipairs(pageNames) do
 
     pages[name] = page
 end
+
+-- Создаём кнопки в левой панели
+local tabButtons = {}
+local tabNames = {"Aim", "ESP", "Skins"}
+
+for i, name in ipairs(tabNames) do
+    local btn = createTabButton(name, leftPanel, function(selected)
+        for n, page in pairs(pages) do
+            page.Visible = (n == selected)
+        end
+        for n, b in pairs(tabButtons) do
+            if n == selected then
+                b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                b.BackgroundTransparency = 0.1
+                b.TextColor3 = Color3.fromRGB(255, 255, 255)
+            else
+                b.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+                b.BackgroundTransparency = 0.5
+                b.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+        end
+    end)
+    tabButtons[name] = btn
+end
+
+-- Устанавливаем начальное состояние
+tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+tabButtons["Aim"].BackgroundTransparency = 0.1
+tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
 --  РЕЗКИЙ AUTO AIM (только враги, без стен)
@@ -417,94 +507,4 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = newCFrame
 end)
 
--- ============================================================
---  ВКЛАДКИ (нижняя панель)
--- ============================================================
-local tabsBar = Instance.new("Frame")
-tabsBar.Name = "TabsBar"
-tabsBar.Size = UDim2.new(1, 0, 0, 35)
-tabsBar.Position = UDim2.new(0, 0, 1, -35)
-tabsBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-tabsBar.BackgroundTransparency = 0
-tabsBar.BorderSizePixel = 0
-tabsBar.ClipsDescendants = true
-tabsBar.Parent = mainFrame
-
-local topLine = Instance.new("Frame")
-topLine.Size = UDim2.new(1, 0, 0, 1)
-topLine.Position = UDim2.new(0, 0, 0, 0)
-topLine.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-topLine.BackgroundTransparency = 0.4
-topLine.BorderSizePixel = 0
-topLine.Parent = tabsBar
-
-local activeLine = Instance.new("Frame")
-activeLine.Name = "ActiveLine"
-activeLine.Size = UDim2.new(0.33333, 0, 0, 2)
-activeLine.Position = UDim2.new(0, 0, 0, 0)
-activeLine.BackgroundColor3 = Color3.fromRGB(240, 40, 40)
-activeLine.BackgroundTransparency = 0
-activeLine.BorderSizePixel = 0
-activeLine.Parent = tabsBar
-
-local tabButtons = {}
-local tabNames = {"Aim", "ESP", "Skins"}
-local tabPositions = {0, 0.33333, 0.66666}
-
-for i, name in ipairs(tabNames) do
-    local btn = Instance.new("TextButton")
-    btn.Name = name .. "Btn"
-    btn.Size = UDim2.new(0.33333, 0, 1, 0)
-    btn.Position = UDim2.new((i-1) * 0.33333, 0, 0, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-    btn.BackgroundTransparency = 0.2
-    btn.BorderSizePixel = 0
-    btn.Text = name
-    btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 16
-    btn.Font = Enum.Font.SourceSans
-    btn.Parent = tabsBar
-
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
-    btnCorner.Parent = btn
-
-    local scale = Instance.new("UIScale")
-    scale.Scale = 1
-    scale.Parent = btn
-
-    tabButtons[name] = btn
-
-    btn.MouseButton1Click:Connect(function()
-        TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.95}):Play()
-        task.wait(0.1)
-        TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1}):Play()
-
-        for pageName, page in pairs(pages) do
-            page.Visible = (pageName == name)
-        end
-
-        for n, b in pairs(tabButtons) do
-            if n == name then
-                b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-                b.BackgroundTransparency = 0.1
-                b.TextColor3 = Color3.fromRGB(255, 255, 255)
-            else
-                b.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-                b.BackgroundTransparency = 0.2
-                b.TextColor3 = Color3.fromRGB(180, 180, 180)
-            end
-        end
-
-        local targetX = tabPositions[i]
-        TweenService:Create(activeLine, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Position = UDim2.new(targetX, 0, 0, 0)
-        }):Play()
-    end)
-end
-
-tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-tabButtons["Aim"].BackgroundTransparency = 0.1
-tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
-
-print("✅ Zenin Menu (toggle switch) загружен!")
+print("✅ Zenin Menu (исправленный) загружен!")
