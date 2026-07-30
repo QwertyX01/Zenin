@@ -1,5 +1,5 @@
 -- =====================================================
---  ZENIN MENU (С СЕРОЙ ОБВОДКОЙ)
+--  ZENIN MENU (TOGGLE BUTTON)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -164,7 +164,7 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- СЕРАЯ ОБВОДКА ДЛЯ ВСЕГО МЕНЮ
+-- Серая обводка
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = Color3.fromRGB(60, 60, 60)
 mainStroke.Thickness = 1
@@ -279,13 +279,14 @@ for i, name in ipairs(pageNames) do
         leftHalf.BackgroundTransparency = 1
         leftHalf.Parent = page
 
-        -- Строка с текстом и переключателем
+        -- Строка с текстом и кнопкой
         local row = Instance.new("Frame")
         row.Size = UDim2.new(1, 0, 0, 40)
         row.Position = UDim2.new(0, 0, 0.1, 0)
         row.BackgroundTransparency = 1
         row.Parent = leftHalf
 
+        -- Текст "Auto Aim"
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(0.6, 0, 1, 0)
         label.Position = UDim2.new(0, 10, 0, 0)
@@ -298,49 +299,39 @@ for i, name in ipairs(pageNames) do
         label.TextYAlignment = Enum.TextYAlignment.Center
         label.Parent = row
 
-        -- Toggle Switch
-        local toggleContainer = Instance.new("Frame")
-        toggleContainer.Size = UDim2.new(0, 50, 0, 28)
-        toggleContainer.Position = UDim2.new(0.7, 0, 0.5, -14)
-        toggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-        toggleContainer.BackgroundTransparency = 0
-        toggleContainer.BorderSizePixel = 0
-        toggleContainer.Parent = row
-        local toggleCorner = Instance.new("UICorner")
-        toggleCorner.CornerRadius = UDim.new(0, 14)
-        toggleCorner.Parent = toggleContainer
+        -- Toggle Button (кнопка-переключатель)
+        local toggleBtn = Instance.new("TextButton")
+        toggleBtn.Size = UDim2.new(0, 80, 0, 32)
+        toggleBtn.Position = UDim2.new(0.75, 0, 0.5, -16)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+        toggleBtn.BackgroundTransparency = 0.2
+        toggleBtn.BorderSizePixel = 0
+        toggleBtn.Text = "OFF"
+        toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggleBtn.TextSize = 16
+        toggleBtn.Font = Enum.Font.SourceSansBold
+        toggleBtn.Parent = row
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 6)
+        btnCorner.Parent = toggleBtn
 
-        local toggleKnob = Instance.new("Frame")
-        toggleKnob.Size = UDim2.new(0, 22, 0, 22)
-        toggleKnob.Position = UDim2.new(0, 3, 0.5, -11)
-        toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        toggleKnob.BackgroundTransparency = 0
-        toggleKnob.BorderSizePixel = 0
-        toggleKnob.Parent = toggleContainer
-        local knobCorner = Instance.new("UICorner")
-        knobCorner.CornerRadius = UDim.new(0, 11)
-        knobCorner.Parent = toggleKnob
-
-        local function updateSwitch(state)
+        local function updateButton(state)
             aimEnabled = state
             if state then
-                toggleContainer.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-                toggleKnob.Position = UDim2.new(1, -25, 0.5, -11)
+                toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+                toggleBtn.Text = "ON"
             else
-                toggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-                toggleKnob.Position = UDim2.new(0, 3, 0.5, -11)
+                toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                toggleBtn.Text = "OFF"
             end
             print("Auto Aim:", state and "ON" or "OFF")
         end
 
-        toggleContainer.MouseButton1Click:Connect(function()
-            updateSwitch(not aimEnabled)
-        end)
-        toggleKnob.MouseButton1Click:Connect(function()
-            updateSwitch(not aimEnabled)
+        toggleBtn.MouseButton1Click:Connect(function()
+            updateButton(not aimEnabled)
         end)
 
-        updateSwitch(false)
+        updateButton(false) -- изначально выключено
 
         -- Правая половина
         local rightHalf = Instance.new("Frame")
@@ -518,4 +509,4 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = newCFrame
 end)
 
-print("✅ Zenin Menu с серой обводкой загружен!")
+print("✅ Zenin Menu (toggle button) загружен!")
