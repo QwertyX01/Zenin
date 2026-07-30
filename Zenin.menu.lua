@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (с анимацией запуска)
+--  Zenin Menu (исправленная анимация запуска)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -57,54 +57,57 @@ end
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
-animContainer.Size = UDim2.new(1, 0, 1, 0)   -- на весь экран
+animContainer.Size = UDim2.new(1, 0, 1, 0)
 animContainer.Position = UDim2.new(0, 0, 0, 0)
-animContainer.BackgroundTransparency = 1
+animContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)  -- тёмный фон для анимации
+animContainer.BackgroundTransparency = 0
 animContainer.ZIndex = 10
 animContainer.Parent = gui
 
--- Логотип для анимации (увеличенный, с мягкими углами)
+-- Логотип для анимации
 local animLogo = Instance.new("ImageLabel")
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
 animLogo.BackgroundTransparency = 1
 animLogo.Image = logoPath or ""
+animLogo.ImageTransparency = 1
 animLogo.ZIndex = 10
 animLogo.Parent = animContainer
 
--- Мягкие углы для логотипа
 local logoCorner = Instance.new("UICorner")
 logoCorner.CornerRadius = UDim.new(0, 16)
 logoCorner.Parent = animLogo
 
--- Текст "Zenin" (появится позже)
+-- Текст "Zenin" (белый)
 local animText = Instance.new("TextLabel")
 animText.Size = UDim2.new(0, 200, 0, 60)
-animText.Position = UDim2.new(0.5, 40, 0.5, -30)  -- сначала справа от лого
+animText.Position = UDim2.new(0.5, 40, 0.5, -30)
 animText.BackgroundTransparency = 1
 animText.Text = "Zenin"
-animText.TextColor3 = Color3.fromRGB(240, 40, 40)
+animText.TextColor3 = Color3.fromRGB(255, 255, 255)  -- белый
 animText.TextSize = 48
 animText.Font = Enum.Font.GothamBold
 animText.TextXAlignment = Enum.TextXAlignment.Left
 animText.TextYAlignment = Enum.TextYAlignment.Center
 animText.ZIndex = 10
-animText.Visible = false   -- сначала скрыт
+animText.Visible = false
+animText.TextTransparency = 1
 animText.Parent = animContainer
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ (изначально прозрачное)
+--  ОСНОВНОЕ МЕНЮ (полностью скрыто до конца анимации)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
 mainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BackgroundTransparency = 1   -- скрыто до анимации
+mainFrame.BackgroundTransparency = 1   -- прозрачное
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.ZIndex = 5
+mainFrame.Visible = false              -- скрыто до конца анимации
 mainFrame.Parent = gui
 
 local mainCorner = Instance.new("UICorner")
@@ -277,55 +280,51 @@ tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  ЗАПУСК АНИМАЦИИ
+--  ЗАПУСК АНИМАЦИИ (полностью независимо от меню)
 -- ============================================================
--- Начальные параметры: логотип прозрачный и маленький
-animLogo.BackgroundTransparency = 1
+-- Убеждаемся, что меню скрыто
+mainFrame.Visible = false
+
+-- Шаг 1: появление логотипа
 animLogo.ImageTransparency = 1
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
 
--- Анимация 1: появление логотипа (прозрачность и масштаб)
-local tween1 = TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+local tween1 = TweenService:Create(animLogo, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     ImageTransparency = 0,
     Size = UDim2.new(0, 100, 0, 100),
     Position = UDim2.new(0.5, -50, 0.5, -50)
 })
-
 tween1:Play()
 tween1.Completed:Wait()
 
--- Анимация 2: смещение логотипа влево и появление текста
+-- Шаг 2: смещение логотипа влево + появление текста
 animText.Visible = true
 animText.TextTransparency = 1
 
-local tween2 = TweenService:Create(animLogo, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+local tweenLogoMove = TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     Position = UDim2.new(0.4, -50, 0.5, -50)
 })
-
-local tweenText = TweenService:Create(animText, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+local tweenTextAppear = TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     TextTransparency = 0
 })
+tweenLogoMove:Play()
+tweenTextAppear:Play()
+tweenLogoMove.Completed:Wait()
 
-tween2:Play()
-tweenText:Play()
-tween2.Completed:Wait()
-
--- Анимация 3: появление меню (прозрачность фона и всех элементов)
-local tweenMenu = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+-- Шаг 3: плавное появление меню
+mainFrame.Visible = true
+TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     BackgroundTransparency = 0
-})
-tweenMenu:Play()
-tweenMenu.Completed:Wait()
+}):Play()
 
--- Анимация 4: исчезновение анимационного контейнера (чтобы освободить место)
-local tweenFade = TweenService:Create(animContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+-- Шаг 4: исчезновение анимационного контейнера
+task.wait(0.3)
+TweenService:Create(animContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     BackgroundTransparency = 1
-})
-tweenFade:Play()
-tweenFade.Completed:Connect(function()
-    animContainer.Visible = false
-    animContainer:Destroy()
-end)
+}):Play()
+task.wait(0.4)
+animContainer.Visible = false
+animContainer:Destroy()
 
-print("✅ Zenin Menu с анимацией запуска загружен!")
+print("✅ Zenin Menu с корректной анимацией запуска загружен!")
