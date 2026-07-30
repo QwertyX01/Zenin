@@ -1,5 +1,5 @@
 -- =====================================================
---  ZENIN MENU (ФИНАЛ С ВКЛАДКАМИ)
+--  ZENIN MENU (С СЕРОЙ ОБВОДКОЙ)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -163,6 +163,13 @@ mainFrame.Parent = gui
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
+
+-- СЕРАЯ ОБВОДКА ДЛЯ ВСЕГО МЕНЮ
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(60, 60, 60)
+mainStroke.Thickness = 1
+mainStroke.Transparency = 0.5
+mainStroke.Parent = mainFrame
 
 -- ============================================================
 --  ХЕДЕР
@@ -358,19 +365,18 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  НИЖНИЕ ВКЛАДКИ (ЯВНО ВИДИМЫЕ)
+--  НИЖНИЕ ВКЛАДКИ
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 40)
 tabsBar.Position = UDim2.new(0, 0, 1, -40)
-tabsBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)  -- светлее фона
+tabsBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 tabsBar.BackgroundTransparency = 0
 tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
--- Верхняя линия (разделитель)
 local topLine = Instance.new("Frame")
 topLine.Size = UDim2.new(1, 0, 0, 1)
 topLine.Position = UDim2.new(0, 0, 0, 0)
@@ -379,7 +385,6 @@ topLine.BackgroundTransparency = 0.3
 topLine.BorderSizePixel = 0
 topLine.Parent = tabsBar
 
--- Красная активная линия
 local activeLine = Instance.new("Frame")
 activeLine.Name = "ActiveLine"
 activeLine.Size = UDim2.new(0.33333, 0, 0, 2)
@@ -398,7 +403,7 @@ for i, name in ipairs(tabNames) do
     btn.Name = name .. "Btn"
     btn.Size = UDim2.new(0.33333, 0, 1, 0)
     btn.Position = UDim2.new((i-1) * 0.33333, 0, 0, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)  -- чуть светлее фона
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     btn.BackgroundTransparency = 0.2
     btn.BorderSizePixel = 0
     btn.Text = name
@@ -513,4 +518,4 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = newCFrame
 end)
 
-print("✅ Zenin Menu (вкладки видны) загружен!")
+print("✅ Zenin Menu с серой обводкой загружен!")
