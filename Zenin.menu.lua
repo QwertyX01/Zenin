@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (цвет текста изменён)
+--  Zenin Menu (слегка скруглённые углы)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -51,7 +51,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ
+--  ОСНОВНОЕ МЕНЮ (с закруглением)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -64,7 +64,12 @@ mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = gui
 
--- Хедер
+-- Скругление основного окна (радиус 6)
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 6)
+mainCorner.Parent = mainFrame
+
+-- Хедер (также с закруглением, чтобы верхние углы были мягкими)
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -74,6 +79,12 @@ header.BackgroundTransparency = 0
 header.BorderSizePixel = 0
 header.Parent = mainFrame
 
+-- Скругление для хедера (только верхние углы, но проще сделать все)
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 6)
+headerCorner.Parent = header
+
+-- Обводка хедера
 local headerStroke = Instance.new("UIStroke")
 headerStroke.Color = Color3.fromRGB(45, 45, 45)
 headerStroke.Thickness = 1
@@ -93,17 +104,17 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Текст "Zenin.cs" (НОВЫЙ ЦВЕТ)
+-- Текст "Zenin.cs" (по центру, ярко-красный)
 local headerText = Instance.new("TextLabel")
 headerText.Size = UDim2.new(1, 0, 1, 0)
 headerText.Position = UDim2.new(0, 0, 0, 0)
 headerText.BackgroundTransparency = 1
 headerText.Text = "Zenin.cs"
-headerText.TextColor3 = Color3.fromRGB(240, 40, 40)   -- <-- новый красный
+headerText.TextColor3 = Color3.fromRGB(240, 40, 40)
 headerText.TextSize = 16
 headerText.Font = Enum.Font.GothamBold
 headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
-print("✅ Zenin Menu с обновлённым цветом загружен!")
+print("✅ Zenin Menu со скруглёнными углами загружен!")
