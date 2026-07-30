@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (слегка скруглённые углы)
+--  Zenin Menu (слегка скруглённые углы, текст ZENIN.CS)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -69,7 +69,7 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер (также с закруглением, чтобы верхние углы были мягкими)
+-- Хедер
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -79,7 +79,7 @@ header.BackgroundTransparency = 0
 header.BorderSizePixel = 0
 header.Parent = mainFrame
 
--- Скругление для хедера (только верхние углы, но проще сделать все)
+-- Скругление хедера
 local headerCorner = Instance.new("UICorner")
 headerCorner.CornerRadius = UDim.new(0, 6)
 headerCorner.Parent = header
@@ -104,12 +104,12 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Текст "Zenin.cs" (по центру, ярко-красный)
+-- Текст "ZENIN.CS" (заглавными, по центру)
 local headerText = Instance.new("TextLabel")
 headerText.Size = UDim2.new(1, 0, 1, 0)
 headerText.Position = UDim2.new(0, 0, 0, 0)
 headerText.BackgroundTransparency = 1
-headerText.Text = "ZENIN.CS"
+headerText.Text = "ZENIN.CS"   -- изменено на заглавные
 headerText.TextColor3 = Color3.fromRGB(240, 40, 40)
 headerText.TextSize = 16
 headerText.Font = Enum.Font.GothamBold
@@ -117,4 +117,4 @@ headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
-print("✅ Zenin Menu со скруглёнными углами загружен!")
+print("✅ Zenin Menu с текстом ZENIN.CS загружен!")
