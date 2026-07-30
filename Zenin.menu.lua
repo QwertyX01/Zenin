@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (анимация → меню, два логотипа в хедере)
+--  Zenin Menu (вкладки с мягкими углами)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -105,7 +105,6 @@ animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
 logoStroke.Transparency = 1
 
--- Шаг 1: появление логотипа
 local tween1 = TweenService:Create(animLogo, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     ImageTransparency = 0,
     Size = UDim2.new(0, 100, 0, 100),
@@ -118,7 +117,6 @@ tween1:Play()
 tweenStroke:Play()
 tween1.Completed:Wait()
 
--- Шаг 2: смещение логотипа влево + появление текста
 animText.Visible = true
 animText.TextTransparency = 1
 
@@ -138,7 +136,6 @@ tweenLogo:Play()
 tweenText:Play()
 tweenLogo.Completed:Wait()
 
--- Шаг 3: исчезновение анимации
 task.wait(0.2)
 animContainer.Visible = false
 animContainer:Destroy()
@@ -246,7 +243,9 @@ for i, name in ipairs(pageNames) do
     pages[name] = page
 end
 
--- Вкладки
+-- ============================================================
+--  ВКЛАДКИ (с мягкими углами)
+-- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 45)
@@ -283,6 +282,11 @@ for i, name in ipairs(tabNames) do
     btn.TextSize = 18
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
+
+    -- Мягкие углы для кнопки
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)   -- радиус 6 для мягких углов
+    btnCorner.Parent = btn
 
     local scale = Instance.new("UIScale")
     scale.Scale = 1
@@ -322,4 +326,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (анимация → меню) загружен!")
+print("✅ Zenin Menu (вкладки с мягкими углами) загружен!")
