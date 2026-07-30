@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (шрифт вкладок обычный)
+--  Zenin Menu (3 вкладки: Aim, ESP, Skins)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ
+--  ОСНОВНОЕ МЕНЮ (с красной обводкой)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -125,10 +125,10 @@ headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (контент)
+--  СТРАНИЦЫ (контент) — только Aim, ESP, Skins
 -- ============================================================
 local pages = {}
-local pageNames = {"Aim", "ESP", "Misc", "Skins"}
+local pageNames = {"Aim", "ESP", "Skins"}   -- убрали Misc
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
@@ -160,7 +160,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (линия НАД вкладками)
+--  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (3 кнопки)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -172,33 +172,33 @@ tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
--- Красная линия НАД вкладками
+-- Красная линия НАД вкладками (ширина = 1/3)
 local activeLine = Instance.new("Frame")
 activeLine.Name = "ActiveLine"
-activeLine.Size = UDim2.new(0.25, 0, 0, 2)
+activeLine.Size = UDim2.new(0.33333, 0, 0, 2)   -- ровно ⅓ ширины
 activeLine.Position = UDim2.new(0, 0, 0, 0)
 activeLine.BackgroundColor3 = Color3.fromRGB(240, 40, 40)
 activeLine.BackgroundTransparency = 0
 activeLine.BorderSizePixel = 0
 activeLine.Parent = tabsBar
 
--- Кнопки вкладок (шрифт обычный)
+-- Кнопки (3 штуки, по ⅓ ширины)
 local tabButtons = {}
-local tabNames = {"Aim", "ESP", "Misc", "Skins"}
-local tabPositions = {0, 0.25, 0.5, 0.75}
+local tabNames = {"Aim", "ESP", "Skins"}   -- без Misc
+local tabPositions = {0, 0.33333, 0.66666}   -- позиции для линии
 
 for i, name in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
     btn.Name = name .. "Btn"
-    btn.Size = UDim2.new(0.25, 0, 1, 0)
-    btn.Position = UDim2.new((i-1) * 0.25, 0, 0, 0)
+    btn.Size = UDim2.new(0.33333, 0, 1, 0)        -- ровно ⅓ ширины
+    btn.Position = UDim2.new((i-1) * 0.33333, 0, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     btn.BackgroundTransparency = 0.2
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
     btn.TextSize = 18
-    btn.Font = Enum.Font.SourceSans   -- ОБЫЧНЫЙ шрифт (не жирный)
+    btn.Font = Enum.Font.SourceSans   -- обычный шрифт
     btn.Parent = tabsBar
 
     local scale = Instance.new("UIScale")
@@ -208,14 +208,17 @@ for i, name in ipairs(tabNames) do
     tabButtons[name] = btn
 
     btn.MouseButton1Click:Connect(function()
+        -- Анимация нажатия
         TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.95}):Play()
         task.wait(0.1)
         TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1}):Play()
 
+        -- Переключение страниц
         for pageName, page in pairs(pages) do
             page.Visible = (pageName == name)
         end
 
+        -- Обновление кнопок
         for n, b in pairs(tabButtons) do
             if n == name then
                 b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
@@ -228,6 +231,7 @@ for i, name in ipairs(tabNames) do
             end
         end
 
+        -- Плавное перемещение линии
         local targetX = tabPositions[i]
         TweenService:Create(activeLine, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Position = UDim2.new(targetX, 0, 0, 0)
@@ -240,4 +244,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с обычным шрифтом вкладок загружен!")
+print("✅ Zenin Menu (3 вкладки) загружен!")
