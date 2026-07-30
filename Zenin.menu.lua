@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (белая иконка ESP с прозрачным фоном)
+--  Zenin Menu (белая иконка ESP по твоей ссылке)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,10 +53,10 @@ local function downloadFile(url, fileName)
 end
 
 local logoUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
-local espIconUrl = "https://cdn-icons-png.flaticon.com/512/7109/7109167.png"  -- БЕЛАЯ ИКОНКА
+local espIconUrl = "https://i.ibb.co/NnFctK9Y/favicon-3.jpg"  -- ТВОЯ ССЫЛКА
 
 local logoPath = downloadFile(logoUrl, "zenin_logo.png")
-local espIconPath = downloadFile(espIconUrl, "esp_icon.png")
+local espIconPath = downloadFile(espIconUrl, "esp_icon.jpg")
 
 -- ============================================================
 --  АНИМАЦИЯ (без изменений)
@@ -242,7 +242,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ВКЛАДКИ (с белой иконкой ESP)
+--  ВКЛАДКИ (с белой иконкой ESP по твоей ссылке)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -341,4 +341,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (белая иконка ESP) загружен!")
+print("✅ Zenin Menu с белой иконкой ESP (твоя ссылка) загружен!")
