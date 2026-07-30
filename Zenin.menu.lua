@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (Auto Aim в левой части Aim)
+--  Zenin Menu (Auto Aim только на врагов и без стен)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -14,7 +14,7 @@ local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА
+--  ЗАГРУЗКА ЛОГОТИПА (без изменений)
 -- ============================================================
 local function downloadFile(url, fileName)
     local filePath = fileName
@@ -164,7 +164,7 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер
+-- Хедер (без изменений)
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -222,11 +222,11 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ
+--  СТРАНИЦЫ (Aim с кнопкой Auto Aim)
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
-local aimEnabled = false  -- состояние Auto Aim
+local aimEnabled = false
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
@@ -242,7 +242,6 @@ for i, name in ipairs(pageNames) do
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
 
-    -- Для страницы Aim добавляем разделитель и элементы
     if name == "Aim" then
         -- Вертикальный разделитель
         local divider = Instance.new("Frame")
@@ -260,7 +259,6 @@ for i, name in ipairs(pageNames) do
         leftHalf.BackgroundTransparency = 1
         leftHalf.Parent = page
 
-        -- Заголовок "Auto Aim"
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1, 0, 0, 30)
         label.Position = UDim2.new(0, 0, 0, 10)
@@ -272,7 +270,6 @@ for i, name in ipairs(pageNames) do
         label.TextXAlignment = Enum.TextXAlignment.Center
         label.Parent = leftHalf
 
-        -- Toggle Button
         local toggleBtn = Instance.new("TextButton")
         toggleBtn.Size = UDim2.new(0, 120, 0, 40)
         toggleBtn.Position = UDim2.new(0.5, -60, 0.3, 0)
@@ -288,7 +285,6 @@ for i, name in ipairs(pageNames) do
         btnCorner.CornerRadius = UDim.new(0, 6)
         btnCorner.Parent = toggleBtn
 
-        -- Обработчик нажатия
         toggleBtn.MouseButton1Click:Connect(function()
             aimEnabled = not aimEnabled
             toggleBtn.Text = aimEnabled and "ON" or "OFF"
@@ -296,14 +292,13 @@ for i, name in ipairs(pageNames) do
             print("Auto Aim:", aimEnabled and "ON" or "OFF")
         end)
 
-        -- Правая половина (можно добавить другие настройки позже)
+        -- Правая половина (заглушка)
         local rightHalf = Instance.new("Frame")
         rightHalf.Size = UDim2.new(0.5, -5, 1, 0)
         rightHalf.Position = UDim2.new(0.5, 5, 0, 0)
         rightHalf.BackgroundTransparency = 1
         rightHalf.Parent = page
 
-        -- Заглушка для правой половины
         local rightLabel = Instance.new("TextLabel")
         rightLabel.Size = UDim2.new(1, 0, 1, 0)
         rightLabel.BackgroundTransparency = 1
@@ -320,9 +315,34 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ЛОГИКА AUTO AIM
+--  ЛОГИКА AUTO AIM (только враги, только видимые)
 -- ============================================================
-local function getClosestPlayer()
+local function isEnemy(plr)
+    if plr == player then return false end
+    -- Если у игрока есть свойство Team, сравниваем команды
+    if plr.Team and player.Team then
+        return plr.Team ~= player.Team
+    end
+    -- Если нет команды, но есть TeamColor, сравниваем цвета
+    if plr.TeamColor and player.TeamColor then
+        return plr.TeamColor ~= player.TeamColor
+    end
+    -- Если ничего нет, считаем всех врагами (но тогда будут свои, так что лучше полагаться на наличие команды)
+    return true
+end
+
+local function isVisible(targetPos)
+    local camPos = Camera.CFrame.Position
+    local direction = (targetPos - camPos).Unit
+    local distance = (targetPos - camPos).Magnitude
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    rayParams.FilterDescendantsInstances = {player.Character}
+    local result = workspace:Raycast(camPos, direction * distance, rayParams)
+    return result == nil or result.Instance:IsDescendantOf(player.Character) -- если луч не упёрся в препятствие или упёрся в самого игрока
+end
+
+local function getClosestEnemy()
     local closest = nil
     local shortestDist = math.huge
     local character = player.Character
@@ -331,10 +351,21 @@ local function getClosestPlayer()
     if not hrp then return nil end
 
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character then
-            local targetHrp = plr.Character:FindFirstChild("HumanoidRootPart")
-            if targetHrp then
-                local dist = (hrp.Position - targetHrp.Position).Magnitude
+        if isEnemy(plr) and plr.Character then
+            local head = plr.Character:FindFirstChild("Head")
+            if head then
+                local headPos = head.Position
+                -- Проверка, что голова перед камерой (чтобы не наводиться на тех, кто сзади)
+                local camPos = Camera.CFrame.Position
+                local dirToHead = (headPos - camPos).Unit
+                if dirToHead:Dot(Camera.CFrame.LookVector) < 0 then
+                    continue -- голова позади камеры
+                end
+                -- Проверка видимости (не сквозь стены)
+                if not isVisible(headPos) then
+                    continue
+                end
+                local dist = (hrp.Position - headPos).Magnitude
                 if dist < shortestDist then
                     shortestDist = dist
                     closest = plr
@@ -348,25 +379,22 @@ end
 RunService.RenderStepped:Connect(function()
     if not aimEnabled then return end
 
-    local target = getClosestPlayer()
+    local target = getClosestEnemy()
     if not target or not target.Character then return end
 
     local head = target.Character:FindFirstChild("Head")
     if not head then return end
 
-    -- Проверка, что голова видна (можно упростить, просто проверяем, что она перед камерой)
     local headPos = head.Position
-    local camPos = Camera.CFrame.Position
-    local direction = (headPos - camPos).Unit
-    local dot = direction:Dot(Camera.CFrame.LookVector)
-    if dot < 0 then return end  -- голова позади камеры
+    -- Дополнительная проверка видимости (на случай, если в getClosestEnemy она не сработала)
+    if not isVisible(headPos) then return end
 
     -- Наводим камеру на голову
     Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPos)
 end)
 
 -- ============================================================
---  ВКЛАДКИ
+--  ВКЛАДКИ (без изменений)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -455,4 +483,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с Auto Aim загружен!")
+print("✅ Zenin Menu с Auto Aim (только враги, без стен) загружен!")
