@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (логотип слева и справа в хедере, мягкие углы)
+--  Zenin Menu (два логотипа в хедере, текст по центру)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИЯ
+--  АНИМАЦИЯ (без изменений)
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -73,7 +73,7 @@ animLogo.ZIndex = 10
 animLogo.Parent = animContainer
 
 local logoCorner = Instance.new("UICorner")
-logoCorner.CornerRadius = UDim.new(0, 16)  -- радиус 16 для анимации (чуть больше)
+logoCorner.CornerRadius = UDim.new(0, 16)
 logoCorner.Parent = animLogo
 
 local logoStroke = Instance.new("UIStroke")
@@ -159,7 +159,9 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер
+-- ============================================================
+--  ХЕДЕР (два логотипа, текст по центру)
+-- ============================================================
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -186,10 +188,11 @@ if logoPath then
     logoLeft.Position = UDim2.new(0, 6, 0.5, -14)
     logoLeft.BackgroundTransparency = 1
     logoLeft.Image = logoPath
+    logoLeft.ZIndex = 2
     logoLeft.Parent = header
 
     local cornerLeft = Instance.new("UICorner")
-    cornerLeft.CornerRadius = UDim.new(0, 12)   -- мягче
+    cornerLeft.CornerRadius = UDim.new(0, 12)
     cornerLeft.Parent = logoLeft
 end
 
@@ -197,18 +200,20 @@ end
 if logoPath then
     local logoRight = Instance.new("ImageLabel")
     logoRight.Size = UDim2.new(0, 28, 0, 28)
-    logoRight.Position = UDim2.new(1, -34, 0.5, -14) -- справа с отступом 6
+    logoRight.Position = UDim2.new(1, -34, 0.5, -14)
     logoRight.BackgroundTransparency = 1
     logoRight.Image = logoPath
+    logoRight.ZIndex = 2
     logoRight.Parent = header
 
     local cornerRight = Instance.new("UICorner")
-    cornerRight.CornerRadius = UDim.new(0, 12)   -- мягче
+    cornerRight.CornerRadius = UDim.new(0, 12)
     cornerRight.Parent = logoRight
 end
 
+-- Текст "ZENIN.CS" (строго по центру, без смещений)
 local headerText = Instance.new("TextLabel")
-headerText.Size = UDim2.new(1, -60, 1, 0) -- немного сдвигаем, чтобы не наезжало на логотипы
+headerText.Size = UDim2.new(1, 0, 1, 0)   -- на всю ширину
 headerText.Position = UDim2.new(0, 0, 0, 0)
 headerText.BackgroundTransparency = 1
 headerText.Text = "ZENIN.CS"
@@ -217,10 +222,11 @@ headerText.TextSize = 16
 headerText.Font = Enum.Font.GothamBold
 headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
+headerText.ZIndex = 1   -- ниже логотипов, чтобы они были поверх
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (пустые, с логотипом в левом углу)
+--  СТРАНИЦЫ (без логотипа)
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
@@ -240,26 +246,13 @@ for i, name in ipairs(pageNames) do
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
 
-    -- Логотип на странице (маленький, в левом углу) с мягкими углами
-    if logoPath then
-        local pageLogo = Instance.new("ImageLabel")
-        pageLogo.Size = UDim2.new(0, 24, 0, 24)
-        pageLogo.Position = UDim2.new(0, 8, 0, 8)
-        pageLogo.BackgroundTransparency = 1
-        pageLogo.Image = logoPath
-        pageLogo.ZIndex = 5
-        pageLogo.Parent = page
-
-        local pageLogoCorner = Instance.new("UICorner")
-        pageLogoCorner.CornerRadius = UDim.new(0, 12)   -- мягче
-        pageLogoCorner.Parent = pageLogo
-    end
+    -- ЛОГОТИП НА СТРАНИЦАХ УДАЛЁН
 
     pages[name] = page
 end
 
 -- ============================================================
---  ВКЛАДКИ
+--  ВКЛАДКИ (без изменений)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -336,4 +329,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с логотипами по краям хедера и мягкими углами загружен!")
+print("✅ Zenin Menu (два логотипа в хедере, текст по центру) загружен!")
