@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (Auto Aim с FOV и Smooth)
+--  Zenin Menu (резкий Auto Aim только на врагов без стен)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -12,7 +12,6 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 
 -- ============================================================
 --  ЗАГРУЗКА ЛОГОТИПА (без изменений)
@@ -148,7 +147,7 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ (основной фрейм)
+--  МЕНЮ
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -223,12 +222,11 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (Aim с улучшенным Auto Aim)
+--  СТРАНИЦЫ (Aim с резким Auto Aim)
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 local aimEnabled = false
-local currentSmoothAngles = Vector2.new(0, 0) -- для плавности (Yaw, Pitch)
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
@@ -292,11 +290,6 @@ for i, name in ipairs(pageNames) do
             aimEnabled = not aimEnabled
             toggleBtn.Text = aimEnabled and "ON" or "OFF"
             toggleBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(60, 60, 70)
-            if aimEnabled then
-                -- Сбрасываем углы, чтобы не было рывка
-                local cam = workspace.CurrentCamera
-                currentSmoothAngles = Vector2.new(cam.CFrame:ToEulerAnglesYXZ().Y, cam.CFrame:ToEulerAnglesYXZ().X)
-            end
             print("Auto Aim:", aimEnabled and "ON" or "OFF")
         end)
 
@@ -323,18 +316,16 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  УЛУЧШЕННАЯ ЛОГИКА AUTO AIM (с FOV и Smooth)
+--  РЕЗКИЙ AUTO AIM (только враги, без стен, без плавности)
 -- ============================================================
 local function isEnemy(plr)
     if plr == player then return false end
-    -- Проверка по команде (Team или TeamColor)
     if plr.Team and player.Team then
         return plr.Team ~= player.Team
     end
     if plr.TeamColor and player.TeamColor then
         return plr.TeamColor ~= player.TeamColor
     end
-    -- Если команды нет, считаем всех врагами (но тогда будут и свои)
     return true
 end
 
@@ -349,13 +340,9 @@ local function isVisible(targetPos)
     return result == nil or result.Instance:IsDescendantOf(player.Character)
 end
 
--- Параметры AimBot
-local FOV_DEGREES = 15          -- максимальный угол FOV (градусы)
-local SMOOTH_SPEED = 8          -- скорость плавности (чем выше, тем быстрее)
-
 local function getBestTarget()
     local best = nil
-    local bestScore = math.huge  -- минимальное расстояние от центра экрана
+    local bestScore = math.huge
     local character = player.Character
     if not character then return nil end
     local hrp = character:FindFirstChild("HumanoidRootPart")
@@ -369,21 +356,14 @@ local function getBestTarget()
             local head = plr.Character:FindFirstChild("Head")
             if head then
                 local headPos = head.Position
-                -- Проверка, что голова перед камерой
                 local dirToHead = (headPos - camPos).Unit
                 if dirToHead:Dot(camForward) < 0 then
-                    continue -- позади
+                    continue
                 end
-                -- Проверка видимости (не сквозь стены)
                 if not isVisible(headPos) then
                     continue
                 end
-                -- Проверка FOV (угол между направлением камеры и направлением на цель)
-                local angle = math.deg(math.acos(dirToHead:Dot(camForward)))
-                if angle > FOV_DEGREES then
-                    continue
-                end
-                -- Расстояние от центра экрана (в пикселях) для выбора ближайшей к прицелу
+                -- Расстояние от центра экрана (чем ближе к прицелу, тем лучше)
                 local screenPos, onScreen = Camera:WorldToViewportPoint(headPos)
                 if not onScreen then continue end
                 local centerX, centerY = Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2
@@ -404,34 +384,10 @@ RunService.RenderStepped:Connect(function()
     local targetHead = getBestTarget()
     if not targetHead then return end
 
-    -- Позиция камеры и головы цели
+    -- Мгновенная наводка (резко)
     local camPos = Camera.CFrame.Position
     local targetPos = targetHead.Position
-
-    -- Направление от камеры к цели
-    local direction = (targetPos - camPos).Unit
-
-    -- Рассчитываем углы (Yaw и Pitch)
-    local yaw = math.atan2(-direction.X, -direction.Z)  -- горизонтальный поворот
-    local pitch = math.asin(direction.Y)                -- вертикальный поворот
-
-    -- Преобразуем в градусы
-    local targetYaw = math.deg(yaw)
-    local targetPitch = math.deg(pitch)
-
-    -- Плавная интерполяция (Smooth)
-    local currentYaw = currentSmoothAngles.X
-    local currentPitch = currentSmoothAngles.Y
-
-    local smoothFactor = SMOOTH_SPEED * RunService.RenderStepped:Wait()
-    local newYaw = currentYaw + (targetYaw - currentYaw) * math.min(smoothFactor, 1)
-    local newPitch = currentPitch + (targetPitch - currentPitch) * math.min(smoothFactor, 1)
-
-    -- Обновляем плавные углы
-    currentSmoothAngles = Vector2.new(newYaw, newPitch)
-
-    -- Применяем поворот камеры
-    local newCFrame = CFrame.new(camPos) * CFrame.Angles(0, math.rad(newYaw), 0) * CFrame.Angles(math.rad(newPitch), 0, 0)
+    local newCFrame = CFrame.new(camPos, targetPos)
     Camera.CFrame = newCFrame
 end)
 
@@ -525,4 +481,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с улучшенным Auto Aim (FOV + Smooth) загружен!")
+print("✅ Zenin Menu (резкий Auto Aim, только враги, без стен) загружен!")
