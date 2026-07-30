@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (два логотипа в хедере, текст по центру)
+--  Zenin Menu (плавная анимация без тряски)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИЯ (без изменений)
+--  АНИМАЦИЯ (плавная, без пауз)
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -99,12 +99,13 @@ animText.Parent = animContainer
 
 animText.Size = UDim2.new(0, animText.TextBounds.X + 20, 0, 60)
 
--- Запуск анимации
+-- === ЗАПУСК АНИМАЦИИ (без пауз, плавно) ===
 animLogo.ImageTransparency = 1
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
 logoStroke.Transparency = 1
 
+-- Этап 1: появление и увеличение
 local tween1 = TweenService:Create(animLogo, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
     ImageTransparency = 0,
     Size = UDim2.new(0, 100, 0, 100),
@@ -115,34 +116,37 @@ local tweenStroke = TweenService:Create(logoStroke, TweenInfo.new(0.5, Enum.Easi
 })
 tween1:Play()
 tweenStroke:Play()
-tween1.Completed:Wait()
 
-animText.Visible = true
-animText.TextTransparency = 1
+-- По завершении первого этапа сразу запускаем второй
+tween1.Completed:Connect(function()
+    -- Этап 2: смещение логотипа влево и появление текста
+    animText.Visible = true
+    animText.TextTransparency = 1
 
-local targetLogoPos = UDim2.new(0.35, -50, 0.5, -50)
-local logoWidth = 100
-local textOffset = 10
-local targetTextPos = UDim2.new(0.35, -50 + logoWidth + textOffset, 0.5, -30)
+    local targetLogoPos = UDim2.new(0.35, -50, 0.5, -50)
+    local logoWidth = 100
+    local textOffset = 10
+    local targetTextPos = UDim2.new(0.35, -50 + logoWidth + textOffset, 0.5, -30)
 
-local tweenLogo = TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    Position = targetLogoPos
-})
-local tweenText = TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    TextTransparency = 0,
-    Position = targetTextPos
-})
-tweenLogo:Play()
-tweenText:Play()
-tweenLogo.Completed:Wait()
+    local tweenLogo = TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = targetLogoPos
+    })
+    local tweenText = TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = 0,
+        Position = targetTextPos
+    })
+    tweenLogo:Play()
+    tweenText:Play()
 
-task.wait(0.2)
-
-animContainer.Visible = false
-animContainer:Destroy()
+    -- После завершения второго этапа убираем анимацию
+    tweenLogo.Completed:Wait()
+    task.wait(0.2)
+    animContainer.Visible = false
+    animContainer:Destroy()
+end)
 
 -- ============================================================
---  МЕНЮ
+--  МЕНЮ (появляется после анимации)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -211,9 +215,9 @@ if logoPath then
     cornerRight.Parent = logoRight
 end
 
--- Текст "ZENIN.CS" (строго по центру, без смещений)
+-- Текст "ZENIN.CS" строго по центру
 local headerText = Instance.new("TextLabel")
-headerText.Size = UDim2.new(1, 0, 1, 0)   -- на всю ширину
+headerText.Size = UDim2.new(1, 0, 1, 0)
 headerText.Position = UDim2.new(0, 0, 0, 0)
 headerText.BackgroundTransparency = 1
 headerText.Text = "ZENIN.CS"
@@ -222,7 +226,7 @@ headerText.TextSize = 16
 headerText.Font = Enum.Font.GothamBold
 headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
-headerText.ZIndex = 1   -- ниже логотипов, чтобы они были поверх
+headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
@@ -246,13 +250,11 @@ for i, name in ipairs(pageNames) do
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
 
-    -- ЛОГОТИП НА СТРАНИЦАХ УДАЛЁН
-
     pages[name] = page
 end
 
 -- ============================================================
---  ВКЛАДКИ (без изменений)
+--  ВКЛАДКИ
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -329,4 +331,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (два логотипа в хедере, текст по центру) загружен!")
+print("✅ Zenin Menu с плавной анимацией (без тряски) загружен!")
