@@ -1,5 +1,8 @@
 -- =====================================================
---  Zenin Menu (нижние вкладки, toggle switch в Aim)
+--  ZENIN MENU (ФИНАЛ)
+--  Размер: 640x420, тёмно-серый
+--  Вкладки снизу: Aim, ESP, Skins
+--  Toggle Switch для Auto Aim
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -59,7 +62,7 @@ local logoUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local logoPath = downloadFile(logoUrl, "zenin_logo.png")
 
 -- ============================================================
---  АНИМАЦИЯ (без изменений)
+--  АНИМАЦИЯ ЗАПУСКА (без изменений)
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -186,6 +189,7 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
+-- Логотип слева
 if logoPath then
     local logoLeft = Instance.new("ImageLabel")
     logoLeft.Size = UDim2.new(0, 28, 0, 28)
@@ -198,6 +202,7 @@ if logoPath then
     cornerLeft.CornerRadius = UDim.new(0, 12)
     cornerLeft.Parent = logoLeft
 
+    -- Логотип справа
     local logoRight = Instance.new("ImageLabel")
     logoRight.Size = UDim2.new(0, 28, 0, 28)
     logoRight.Position = UDim2.new(1, -34, 0.5, -14)
@@ -224,11 +229,11 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (контент, занимает всё пространство под хедером)
+--  СТРАНИЦЫ (контент)
 -- ============================================================
 local contentContainer = Instance.new("Frame")
 contentContainer.Name = "ContentContainer"
-contentContainer.Size = UDim2.new(1, 0, 1, -75)   -- 35 (header) + 40 (tabs) = 75
+contentContainer.Size = UDim2.new(1, 0, 1, -75)
 contentContainer.Position = UDim2.new(0, 0, 0, 35)
 contentContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 contentContainer.BackgroundTransparency = 0
@@ -255,7 +260,7 @@ for i, name in ipairs(pageNames) do
     corner.Parent = page
 
     if name == "Aim" then
-        -- Вертикальный разделитель
+        -- Вертикальный разделитель (серая линия по центру)
         local divider = Instance.new("Frame")
         divider.Size = UDim2.new(0, 2, 1, 0)
         divider.Position = UDim2.new(0.5, -1, 0, 0)
@@ -278,7 +283,7 @@ for i, name in ipairs(pageNames) do
         row.BackgroundTransparency = 1
         row.Parent = leftHalf
 
-        -- Текст "Auto Aim" (увеличенный, слева)
+        -- Текст "Auto Aim" (слева, размер 18)
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(0.6, 0, 1, 0)
         label.Position = UDim2.new(0, 10, 0, 0)
@@ -291,7 +296,7 @@ for i, name in ipairs(pageNames) do
         label.TextYAlignment = Enum.TextYAlignment.Center
         label.Parent = row
 
-        -- Toggle Switch (справа)
+        -- Toggle Switch (справа от текста)
         local toggleContainer = Instance.new("Frame")
         toggleContainer.Size = UDim2.new(0, 50, 0, 28)
         toggleContainer.Position = UDim2.new(0.7, 0, 0.5, -14)
@@ -511,4 +516,4 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = newCFrame
 end)
 
-print("✅ Zenin Menu (нижние вкладки, toggle switch) загружен!")
+print("✅ Zenin Menu (финальная версия) загружен!")
