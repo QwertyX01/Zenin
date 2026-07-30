@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (белая иконка ESP по твоей ссылке)
+--  Zenin Menu (разделитель в Aim)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -11,7 +11,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА И ИКОНКИ ESP
+--  ЗАГРУЗКА ЛОГОТИПА
 -- ============================================================
 local function downloadFile(url, fileName)
     local filePath = fileName
@@ -53,10 +53,7 @@ local function downloadFile(url, fileName)
 end
 
 local logoUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
-local espIconUrl = "https://i.ibb.co/NnFctK9Y/favicon-3.jpg"  -- ТВОЯ ССЫЛКА
-
 local logoPath = downloadFile(logoUrl, "zenin_logo.png")
-local espIconPath = downloadFile(espIconUrl, "esp_icon.jpg")
 
 -- ============================================================
 --  АНИМАЦИЯ (без изменений)
@@ -221,7 +218,9 @@ headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.ZIndex = 1
 headerText.Parent = header
 
--- Страницы
+-- ============================================================
+--  СТРАНИЦЫ (с разделителем в Aim)
+-- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 
@@ -238,11 +237,23 @@ for i, name in ipairs(pageNames) do
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
+
+    -- ДОБАВЛЯЕМ ВЕРТИКАЛЬНУЮ СЕРУЮ ЛИНИЮ ДЛЯ Aim
+    if name == "Aim" then
+        local divider = Instance.new("Frame")
+        divider.Size = UDim2.new(0, 2, 1, 0)   -- толщина 2px, на всю высоту
+        divider.Position = UDim2.new(0.5, -1, 0, 0) -- по центру
+        divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        divider.BackgroundTransparency = 0.4
+        divider.BorderSizePixel = 0
+        divider.Parent = page
+    end
+
     pages[name] = page
 end
 
 -- ============================================================
---  ВКЛАДКИ (с белой иконкой ESP по твоей ссылке)
+--  ВКЛАДКИ (без иконок)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -289,15 +300,7 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
-    if name == "ESP" and espIconPath then
-        local icon = Instance.new("ImageLabel")
-        icon.Size = UDim2.new(0, 24, 0, 24)
-        icon.Position = UDim2.new(0.05, 0, 0.5, -12)
-        icon.BackgroundTransparency = 1
-        icon.Image = espIconPath
-        icon.Parent = btn
-        btn.Text = "   ESP"
-    end
+    -- Иконки удалены
 
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 6)
@@ -341,4 +344,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с белой иконкой ESP (твоя ссылка) загружен!")
+print("✅ Zenin Menu с разделителем в Aim загружен!")
