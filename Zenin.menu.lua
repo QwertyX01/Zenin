@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (анимация "Zenin CS")
+--  Zenin Menu (вкладки меньше)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -11,7 +11,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local TweenService = game:GetService("TweenService")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА
+--  ЗАГРУЗКА ЛОГОТИПА (без изменений)
 -- ============================================================
 local imageUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local fileName = "zenin_logo.png"
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИЯ (прозрачный фон, "Zenin CS")
+--  АНИМАЦИЯ (без изменений)
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -82,12 +82,11 @@ logoStroke.Thickness = 2
 logoStroke.Transparency = 0.5
 logoStroke.Parent = animLogo
 
--- Текст "Zenin CS" (вместо просто "Zenin")
 local animText = Instance.new("TextLabel")
 animText.Size = UDim2.new(0, 0, 0, 60)
 animText.Position = UDim2.new(0.5, 40, 0.5, -30)
 animText.BackgroundTransparency = 1
-animText.Text = "Zenin CS"   -- изменено
+animText.Text = "Zenin CS"
 animText.TextColor3 = Color3.fromRGB(255, 255, 255)
 animText.TextSize = 48
 animText.Font = Enum.Font.GothamBold
@@ -98,10 +97,9 @@ animText.Visible = false
 animText.TextTransparency = 1
 animText.Parent = animContainer
 
--- Автоматическая ширина под текст
 animText.Size = UDim2.new(0, animText.TextBounds.X + 20, 0, 60)
 
--- Запуск анимации (без изменений)
+-- Запуск анимации
 animLogo.ImageTransparency = 1
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
@@ -143,7 +141,7 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ (без изменений)
+--  МЕНЮ
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -160,7 +158,7 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер
+-- Хедер (без изменений)
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -217,14 +215,14 @@ headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.ZIndex = 1
 headerText.Parent = header
 
--- Страницы
+-- Страницы (без изменений)
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
-    page.Size = UDim2.new(1, 0, 1, -80)
+    page.Size = UDim2.new(1, 0, 1, -70)   -- подгоняем под новую высоту вкладок
     page.Position = UDim2.new(0, 0, 0, 35)
     page.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     page.BackgroundTransparency = 0.2
@@ -237,11 +235,13 @@ for i, name in ipairs(pageNames) do
     pages[name] = page
 end
 
--- Вкладки
+-- ============================================================
+--  ВКЛАДКИ (уменьшенные)
+-- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
-tabsBar.Size = UDim2.new(1, 0, 0, 45)
-tabsBar.Position = UDim2.new(0, 0, 1, -45)
+tabsBar.Size = UDim2.new(1, 0, 0, 35)    -- высота уменьшена с 45 до 35
+tabsBar.Position = UDim2.new(0, 0, 1, -35)
 tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 tabsBar.BackgroundTransparency = 0
 tabsBar.BorderSizePixel = 0
@@ -272,14 +272,14 @@ for i, name in ipairs(tabNames) do
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 18
+    btn.TextSize = 16                  -- уменьшен с 18
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
     if name == "ESP" then
         local icon = Instance.new("ImageLabel")
-        icon.Size = UDim2.new(0, 20, 0, 20)
-        icon.Position = UDim2.new(0.05, 0, 0.5, -10)
+        icon.Size = UDim2.new(0, 16, 0, 16)    -- уменьшена с 20x20
+        icon.Position = UDim2.new(0.05, 0, 0.5, -8)
         icon.BackgroundTransparency = 1
         icon.Image = espIconUrl
         icon.Parent = btn
@@ -328,4 +328,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (анимация 'Zenin CS') загружен!")
+print("✅ Zenin Menu (вкладки уменьшены) загружен!")
