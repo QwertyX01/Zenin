@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (иконка ESP с прозрачным фоном)
+--  Zenin Menu (анимация "Zenin CS")
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,7 +53,7 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  АНИМАЦИЯ
+--  АНИМАЦИЯ (прозрачный фон, "Zenin CS")
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -82,11 +82,12 @@ logoStroke.Thickness = 2
 logoStroke.Transparency = 0.5
 logoStroke.Parent = animLogo
 
+-- Текст "Zenin CS" (вместо просто "Zenin")
 local animText = Instance.new("TextLabel")
 animText.Size = UDim2.new(0, 0, 0, 60)
 animText.Position = UDim2.new(0.5, 40, 0.5, -30)
 animText.BackgroundTransparency = 1
-animText.Text = "Zenin"
+animText.Text = "Zenin CS"   -- изменено
 animText.TextColor3 = Color3.fromRGB(255, 255, 255)
 animText.TextSize = 48
 animText.Font = Enum.Font.GothamBold
@@ -97,9 +98,10 @@ animText.Visible = false
 animText.TextTransparency = 1
 animText.Parent = animContainer
 
+-- Автоматическая ширина под текст
 animText.Size = UDim2.new(0, animText.TextBounds.X + 20, 0, 60)
 
--- Запуск анимации
+-- Запуск анимации (без изменений)
 animLogo.ImageTransparency = 1
 animLogo.Size = UDim2.new(0, 80, 0, 80)
 animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
@@ -141,7 +143,7 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ
+--  МЕНЮ (без изменений)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -178,7 +180,6 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип слева
 if logoPath then
     local logoLeft = Instance.new("ImageLabel")
     logoLeft.Size = UDim2.new(0, 28, 0, 28)
@@ -187,14 +188,10 @@ if logoPath then
     logoLeft.Image = logoPath
     logoLeft.ZIndex = 2
     logoLeft.Parent = header
-
     local cornerLeft = Instance.new("UICorner")
     cornerLeft.CornerRadius = UDim.new(0, 12)
     cornerLeft.Parent = logoLeft
-end
 
--- Логотип справа
-if logoPath then
     local logoRight = Instance.new("ImageLabel")
     logoRight.Size = UDim2.new(0, 28, 0, 28)
     logoRight.Position = UDim2.new(1, -34, 0.5, -14)
@@ -202,7 +199,6 @@ if logoPath then
     logoRight.Image = logoPath
     logoRight.ZIndex = 2
     logoRight.Parent = header
-
     local cornerRight = Instance.new("UICorner")
     cornerRight.CornerRadius = UDim.new(0, 12)
     cornerRight.Parent = logoRight
@@ -235,17 +231,13 @@ for i, name in ipairs(pageNames) do
     page.BorderSizePixel = 0
     page.Visible = (i == 1)
     page.Parent = mainFrame
-
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
-
     pages[name] = page
 end
 
--- ============================================================
---  ВКЛАДКИ (с иконкой ESP с прозрачным фоном)
--- ============================================================
+-- Вкладки
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 45)
@@ -268,7 +260,6 @@ activeLine.Parent = tabsBar
 local tabButtons = {}
 local tabNames = {"Aim", "ESP", "Skins"}
 local tabPositions = {0, 0.33333, 0.66666}
--- Новая ссылка на иконку глаза с прозрачным фоном
 local espIconUrl = "https://cdn-icons-png.flaticon.com/512/159/159616.png"
 
 for i, name in ipairs(tabNames) do
@@ -285,18 +276,16 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
-    -- Если это вкладка ESP, добавляем иконку с прозрачным фоном
     if name == "ESP" then
         local icon = Instance.new("ImageLabel")
         icon.Size = UDim2.new(0, 20, 0, 20)
         icon.Position = UDim2.new(0.05, 0, 0.5, -10)
-        icon.BackgroundTransparency = 1  -- делаем фон иконки прозрачным
+        icon.BackgroundTransparency = 1
         icon.Image = espIconUrl
         icon.Parent = btn
-        btn.Text = "  ESP"  -- отступ для текста
+        btn.Text = "  ESP"
     end
 
-    -- Мягкие углы для кнопки
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 6)
     btnCorner.Parent = btn
@@ -339,4 +328,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (иконка ESP с прозрачным фоном) загружен!")
+print("✅ Zenin Menu (анимация 'Zenin CS') загружен!")
