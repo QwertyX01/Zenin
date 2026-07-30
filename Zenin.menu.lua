@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (вкладки меньше)
+--  Zenin Menu (вкладки уменьшены, иконка ESP)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -158,7 +158,7 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер (без изменений)
+-- Хедер
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
@@ -215,14 +215,14 @@ headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.ZIndex = 1
 headerText.Parent = header
 
--- Страницы (без изменений)
+-- Страницы
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
-    page.Size = UDim2.new(1, 0, 1, -70)   -- подгоняем под новую высоту вкладок
+    page.Size = UDim2.new(1, 0, 1, -70)
     page.Position = UDim2.new(0, 0, 0, 35)
     page.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     page.BackgroundTransparency = 0.2
@@ -236,11 +236,11 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ВКЛАДКИ (уменьшенные)
+--  ВКЛАДКИ (уменьшенные, с иконкой ESP)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
-tabsBar.Size = UDim2.new(1, 0, 0, 35)    -- высота уменьшена с 45 до 35
+tabsBar.Size = UDim2.new(1, 0, 0, 35)
 tabsBar.Position = UDim2.new(0, 0, 1, -35)
 tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 tabsBar.BackgroundTransparency = 0
@@ -260,6 +260,7 @@ activeLine.Parent = tabsBar
 local tabButtons = {}
 local tabNames = {"Aim", "ESP", "Skins"}
 local tabPositions = {0, 0.33333, 0.66666}
+-- ИКОНКА ESP (глаз)
 local espIconUrl = "https://cdn-icons-png.flaticon.com/512/159/159616.png"
 
 for i, name in ipairs(tabNames) do
@@ -272,18 +273,19 @@ for i, name in ipairs(tabNames) do
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 16                  -- уменьшен с 18
+    btn.TextSize = 16
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
+    -- ДОБАВЛЯЕМ ИКОНКУ ДЛЯ ESP
     if name == "ESP" then
         local icon = Instance.new("ImageLabel")
-        icon.Size = UDim2.new(0, 16, 0, 16)    -- уменьшена с 20x20
+        icon.Size = UDim2.new(0, 16, 0, 16)
         icon.Position = UDim2.new(0.05, 0, 0.5, -8)
         icon.BackgroundTransparency = 1
         icon.Image = espIconUrl
         icon.Parent = btn
-        btn.Text = "  ESP"
+        btn.Text = "  ESP"  -- отступ для текста
     end
 
     local btnCorner = Instance.new("UICorner")
@@ -328,4 +330,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (вкладки уменьшены) загружен!")
+print("✅ Zenin Menu (вкладки уменьшены, иконка ESP) загружен!")
