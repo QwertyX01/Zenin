@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (без красной обводки)
+--  Zenin Menu (логотип на страницах + в хедере)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -142,7 +142,7 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ (БЕЗ КРАСНОЙ ОБВОДКИ)
+--  МЕНЮ
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -158,8 +158,6 @@ mainFrame.Parent = gui
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
-
--- ОБВОДКА УДАЛЕНА (нет UIStroke)
 
 -- Хедер
 local header = Instance.new("Frame")
@@ -181,6 +179,7 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
+-- Логотип в хедере
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
@@ -202,7 +201,9 @@ headerText.TextXAlignment = Enum.TextXAlignment.Center
 headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
--- Страницы
+-- ============================================================
+--  СТРАНИЦЫ (с логотипом в левом углу)
+-- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Skins"}
 
@@ -221,6 +222,22 @@ for i, name in ipairs(pageNames) do
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
 
+    -- Логотип на странице (маленький, в левом углу)
+    if logoPath then
+        local pageLogo = Instance.new("ImageLabel")
+        pageLogo.Size = UDim2.new(0, 24, 0, 24)
+        pageLogo.Position = UDim2.new(0, 8, 0, 8)
+        pageLogo.BackgroundTransparency = 1
+        pageLogo.Image = logoPath
+        pageLogo.ZIndex = 5
+        pageLogo.Parent = page
+
+        local pageLogoCorner = Instance.new("UICorner")
+        pageLogoCorner.CornerRadius = UDim.new(0, 4)
+        pageLogoCorner.Parent = pageLogo
+    end
+
+    -- Текст-заглушка
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
@@ -235,7 +252,9 @@ for i, name in ipairs(pageNames) do
     pages[name] = page
 end
 
--- Вкладки
+-- ============================================================
+--  ВКЛАДКИ
+-- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 45)
@@ -311,4 +330,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu без красной обводки загружен!")
+print("✅ Zenin Menu с логотипом на страницах загружен!")
