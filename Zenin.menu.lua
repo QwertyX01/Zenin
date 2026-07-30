@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (с красной обводкой)
+--  Zenin Menu (красная линия НАД вкладками с анимацией)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -70,7 +70,6 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- ОЧЕНЬ ТОНКАЯ КРАСНАЯ ОБВОДКА
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = Color3.fromRGB(240, 40, 40)
 mainStroke.Transparency = 0.4
@@ -134,7 +133,7 @@ local pageNames = {"Aim", "ESP", "Misc", "Skins"}
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
-    page.Size = UDim2.new(1, 0, 1, -80)   -- 35 (header) + 45 (tabs) = 80
+    page.Size = UDim2.new(1, 0, 1, -80)
     page.Position = UDim2.new(0, 0, 0, 35)
     page.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     page.BackgroundTransparency = 0.2
@@ -161,7 +160,7 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК
+--  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (линия НАД вкладками)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
@@ -173,19 +172,20 @@ tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
-local topLine = Instance.new("Frame")
-topLine.Size = UDim2.new(1, 0, 0, 1)
-topLine.Position = UDim2.new(0, 0, 0, 0)
-topLine.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-topLine.BackgroundTransparency = 0.4
-topLine.BorderSizePixel = 0
-topLine.Parent = tabsBar
+-- Красная линия НАД вкладками (общая, будет двигаться)
+local activeLine = Instance.new("Frame")
+activeLine.Name = "ActiveLine"
+activeLine.Size = UDim2.new(0.25, 0, 0, 2)   -- ширина равна одной кнопке
+activeLine.Position = UDim2.new(0, 0, 0, 0)   -- начальная позиция над первой кнопкой
+activeLine.BackgroundColor3 = Color3.fromRGB(240, 40, 40)
+activeLine.BackgroundTransparency = 0        -- сразу видна
+activeLine.BorderSizePixel = 0
+activeLine.Parent = tabsBar
 
--- Кнопки и линии
+-- Кнопки
 local tabButtons = {}
-local tabLines = {}
-local tabScales = {}
 local tabNames = {"Aim", "ESP", "Misc", "Skins"}
+local tabPositions = {0, 0.25, 0.5, 0.75}  -- позиции в UDim2.X
 
 for i, name in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
@@ -201,52 +201,49 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSansBold
     btn.Parent = tabsBar
 
+    -- Анимация нажатия
     local scale = Instance.new("UIScale")
     scale.Scale = 1
     scale.Parent = btn
-    tabScales[name] = scale
-
-    local line = Instance.new("Frame")
-    line.Name = "Line"
-    line.Size = UDim2.new(1, 0, 0, 2)
-    line.Position = UDim2.new(0, 0, 1, 0)
-    line.BackgroundColor3 = Color3.fromRGB(240, 40, 40)
-    line.BackgroundTransparency = (i == 1) and 0 or 1
-    line.BorderSizePixel = 0
-    line.Parent = btn
-    tabLines[name] = line
 
     tabButtons[name] = btn
 
     btn.MouseButton1Click:Connect(function()
-        local scaleObj = tabScales[name]
-        TweenService:Create(scaleObj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.95}):Play()
+        -- Анимация нажатия кнопки
+        TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.95}):Play()
         task.wait(0.1)
-        TweenService:Create(scaleObj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1}):Play()
 
+        -- Переключение страниц
         for pageName, page in pairs(pages) do
             page.Visible = (pageName == name)
         end
 
+        -- Обновление кнопок
         for n, b in pairs(tabButtons) do
             if n == name then
                 b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
                 b.BackgroundTransparency = 0.1
                 b.TextColor3 = Color3.fromRGB(255, 255, 255)
-                tabLines[n].BackgroundTransparency = 0
             else
                 b.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
                 b.BackgroundTransparency = 0.2
                 b.TextColor3 = Color3.fromRGB(180, 180, 180)
-                tabLines[n].BackgroundTransparency = 1
             end
         end
+
+        -- Плавное перемещение красной линии (анимация)
+        local targetX = tabPositions[i]
+        TweenService:Create(activeLine, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(targetX, 0, 0, 0)
+        }):Play()
     end)
 end
 
+-- Устанавливаем начальное состояние
 tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
-tabLines["Aim"].BackgroundTransparency = 0
+-- Линия уже стоит над Aim (позиция 0)
 
-print("✅ Zenin Menu с красной обводкой загружен!")
+print("✅ Zenin Menu с плавающей линией НАД вкладками загружен!")
