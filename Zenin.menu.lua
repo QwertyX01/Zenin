@@ -1,8 +1,5 @@
 -- =====================================================
---  ZENIN MENU (ФИНАЛ)
---  Размер: 640x420, тёмно-серый
---  Вкладки снизу: Aim, ESP, Skins
---  Toggle Switch для Auto Aim
+--  ZENIN MENU (ФИНАЛ С ВКЛАДКАМИ)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -62,7 +59,7 @@ local logoUrl = "https://i.ibb.co/Ng94fYSP/Chat-GPT-Image-30-2026-02-48-28.png"
 local logoPath = downloadFile(logoUrl, "zenin_logo.png")
 
 -- ============================================================
---  АНИМАЦИЯ ЗАПУСКА (без изменений)
+--  АНИМАЦИЯ ЗАПУСКА
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
@@ -189,7 +186,7 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип слева
+-- Логотипы
 if logoPath then
     local logoLeft = Instance.new("ImageLabel")
     logoLeft.Size = UDim2.new(0, 28, 0, 28)
@@ -202,7 +199,6 @@ if logoPath then
     cornerLeft.CornerRadius = UDim.new(0, 12)
     cornerLeft.Parent = logoLeft
 
-    -- Логотип справа
     local logoRight = Instance.new("ImageLabel")
     logoRight.Size = UDim2.new(0, 28, 0, 28)
     logoRight.Position = UDim2.new(1, -34, 0.5, -14)
@@ -229,7 +225,7 @@ headerText.ZIndex = 1
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (контент)
+--  КОНТЕНТ (страницы)
 -- ============================================================
 local contentContainer = Instance.new("Frame")
 contentContainer.Name = "ContentContainer"
@@ -260,7 +256,7 @@ for i, name in ipairs(pageNames) do
     corner.Parent = page
 
     if name == "Aim" then
-        -- Вертикальный разделитель (серая линия по центру)
+        -- Вертикальный разделитель
         local divider = Instance.new("Frame")
         divider.Size = UDim2.new(0, 2, 1, 0)
         divider.Position = UDim2.new(0.5, -1, 0, 0)
@@ -283,7 +279,6 @@ for i, name in ipairs(pageNames) do
         row.BackgroundTransparency = 1
         row.Parent = leftHalf
 
-        -- Текст "Auto Aim" (слева, размер 18)
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(0.6, 0, 1, 0)
         label.Position = UDim2.new(0, 10, 0, 0)
@@ -296,7 +291,7 @@ for i, name in ipairs(pageNames) do
         label.TextYAlignment = Enum.TextYAlignment.Center
         label.Parent = row
 
-        -- Toggle Switch (справа от текста)
+        -- Toggle Switch
         local toggleContainer = Instance.new("Frame")
         toggleContainer.Size = UDim2.new(0, 50, 0, 28)
         toggleContainer.Position = UDim2.new(0.7, 0, 0.5, -14)
@@ -340,7 +335,7 @@ for i, name in ipairs(pageNames) do
 
         updateSwitch(false)
 
-        -- Правая половина (заглушка)
+        -- Правая половина
         local rightHalf = Instance.new("Frame")
         rightHalf.Size = UDim2.new(0.5, -5, 1, 0)
         rightHalf.Position = UDim2.new(0.5, 5, 0, 0)
@@ -363,26 +358,28 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  НИЖНИЕ ВКЛАДКИ
+--  НИЖНИЕ ВКЛАДКИ (ЯВНО ВИДИМЫЕ)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 40)
 tabsBar.Position = UDim2.new(0, 0, 1, -40)
-tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+tabsBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)  -- светлее фона
 tabsBar.BackgroundTransparency = 0
 tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
+-- Верхняя линия (разделитель)
 local topLine = Instance.new("Frame")
 topLine.Size = UDim2.new(1, 0, 0, 1)
 topLine.Position = UDim2.new(0, 0, 0, 0)
 topLine.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-topLine.BackgroundTransparency = 0.4
+topLine.BackgroundTransparency = 0.3
 topLine.BorderSizePixel = 0
 topLine.Parent = tabsBar
 
+-- Красная активная линия
 local activeLine = Instance.new("Frame")
 activeLine.Name = "ActiveLine"
 activeLine.Size = UDim2.new(0.33333, 0, 0, 2)
@@ -401,13 +398,13 @@ for i, name in ipairs(tabNames) do
     btn.Name = name .. "Btn"
     btn.Size = UDim2.new(0.33333, 0, 1, 0)
     btn.Position = UDim2.new((i-1) * 0.33333, 0, 0, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)  -- чуть светлее фона
     btn.BackgroundTransparency = 0.2
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 16
-    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 18
+    btn.Font = Enum.Font.SourceSansBold
     btn.Parent = tabsBar
 
     local btnCorner = Instance.new("UICorner")
@@ -426,7 +423,7 @@ for i, name in ipairs(tabNames) do
                 b.BackgroundTransparency = 0.1
                 b.TextColor3 = Color3.fromRGB(255, 255, 255)
             else
-                b.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+                b.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
                 b.BackgroundTransparency = 0.2
                 b.TextColor3 = Color3.fromRGB(180, 180, 180)
             end
@@ -443,7 +440,7 @@ tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  РЕЗКИЙ AUTO AIM (только враги, без стен)
+--  AUTO AIM
 -- ============================================================
 local function isEnemy(plr)
     if plr == player then return false end
@@ -516,4 +513,4 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = newCFrame
 end)
 
-print("✅ Zenin Menu (финальная версия) загружен!")
+print("✅ Zenin Menu (вкладки видны) загружен!")
