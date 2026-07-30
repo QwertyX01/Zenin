@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (анимация на прозрачном фоне)
+--  Zenin Menu (прозрачная анимация + меню после)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,13 +53,13 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  ЭТАП 1: АНИМАЦИЯ НА ПРОЗРАЧНОМ ФОНЕ
+--  АНИМАЦИЯ (прозрачный фон)
 -- ============================================================
 local animContainer = Instance.new("Frame")
 animContainer.Name = "AnimContainer"
 animContainer.Size = UDim2.new(1, 0, 1, 0)
 animContainer.Position = UDim2.new(0, 0, 0, 0)
-animContainer.BackgroundTransparency = 1   -- прозрачный фон
+animContainer.BackgroundTransparency = 1   -- ПОЛНОСТЬЮ ПРОЗРАЧНЫЙ
 animContainer.ZIndex = 10
 animContainer.Parent = gui
 
@@ -119,12 +119,12 @@ TweenService:Create(animText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.Eas
 }):Play()
 task.wait(0.6)
 
--- Шаг 3: исчезновение анимационного контейнера (просто скрыть)
+-- Шаг 3: убираем анимацию
 animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  ЭТАП 2: ПОЯВЛЕНИЕ МЕНЮ
+--  МЕНЮ (появляется после анимации)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -291,4 +291,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с прозрачной анимацией загружен!")
+print("✅ Zenin Menu (прозрачная анимация) загружен!")
