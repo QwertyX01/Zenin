@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (горизонтальные вкладки-капсулы внизу)
+--  Zenin Menu (прямоугольные вкладки на всю ширину)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -121,29 +121,22 @@ headerText.Parent = header
 -- ============================================================
 local pages = {}
 local pageNames = {"Aim", "ESP", "Misc", "Skins"}
-local pageColors = {
-    Aim = Color3.fromRGB(25, 25, 30),
-    ESP = Color3.fromRGB(25, 25, 30),
-    Misc = Color3.fromRGB(25, 25, 30),
-    Skins = Color3.fromRGB(25, 25, 30),
-}
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, -80)   -- 35 (header) + 45 (tabs) = 80
     page.Position = UDim2.new(0, 0, 0, 35)
-    page.BackgroundColor3 = pageColors[name]
+    page.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     page.BackgroundTransparency = 0.2
     page.BorderSizePixel = 0
-    page.Visible = (i == 1)   -- AimPage видима по умолчанию
+    page.Visible = (i == 1)
     page.Parent = mainFrame
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = page
 
-    -- Текст-заглушка
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
@@ -159,27 +152,28 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (TabsBar)
+--  НИЖНЯЯ ПАНЕЛЬ ВКЛАДОК (на всю ширину, без скруглений)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 45)
-tabsBar.Position = UDim2.new(0, 0, 1, -45)   -- прижат к низу
-tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)  -- чуть темнее фона
+tabsBar.Position = UDim2.new(0, 0, 1, -45)
+tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 tabsBar.BackgroundTransparency = 0
 tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
--- Горизонтальное расположение с центрированием
-local tabLayout = Instance.new("UIListLayout")
-tabLayout.FillDirection = Enum.FillDirection.Horizontal
-tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-tabLayout.Padding = UDim.new(0, 10)
-tabLayout.Parent = tabsBar
+-- Тонкая верхняя линия (для отделения)
+local topLine = Instance.new("Frame")
+topLine.Size = UDim2.new(1, 0, 0, 1)
+topLine.Position = UDim2.new(0, 0, 0, 0)
+topLine.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+topLine.BackgroundTransparency = 0.4
+topLine.BorderSizePixel = 0
+topLine.Parent = tabsBar
 
--- Кнопки-капсулы
+-- Кнопки (4 штуки, по 25% ширины, без отступов, прямоугольные)
 local tabButtons = {}
 local tabData = {
     { name = "Aim", emoji = "🎯" },
@@ -191,30 +185,26 @@ local tabData = {
 for i, data in ipairs(tabData) do
     local btn = Instance.new("TextButton")
     btn.Name = data.name .. "Btn"
-    btn.Size = UDim2.new(0, 90, 0, 32)
+    btn.Size = UDim2.new(0.25, 0, 1, 0)        -- ровно ¼ ширины, без щелей
+    btn.Position = UDim2.new((i-1) * 0.25, 0, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     btn.BackgroundTransparency = 0.2
     btn.BorderSizePixel = 0
     btn.Text = data.emoji .. " " .. data.name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-    btn.TextSize = 15
+    btn.TextSize = 18                -- увеличенный шрифт
     btn.Font = Enum.Font.SourceSansBold
     btn.Parent = tabsBar
 
-    -- Скругление (капсула)
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 12)
-    btnCorner.Parent = btn
+    -- НЕТ UICorner! Кнопки строго прямоугольные
 
     tabButtons[data.name] = btn
 
     btn.MouseButton1Click:Connect(function()
-        -- Переключаем страницы
         for pageName, page in pairs(pages) do
             page.Visible = (pageName == data.name)
         end
 
-        -- Обновляем вид кнопок
         for name, b in pairs(tabButtons) do
             if name == data.name then
                 b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
@@ -234,4 +224,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu с горизонтальными вкладками-капсулами загружен!")
+print("✅ Zenin Menu с прямоугольными вкладками на всю ширину загружен!")
