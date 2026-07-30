@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (вкладки уменьшены, иконка ESP)
+--  Zenin Menu (тёмно-серое, с серыми разделителями)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -141,12 +141,12 @@ animContainer.Visible = false
 animContainer:Destroy()
 
 -- ============================================================
---  МЕНЮ
+--  МЕНЮ (тёмно-серое)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
 mainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)  -- тёмно-серый
 mainFrame.BackgroundTransparency = 0
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
@@ -158,12 +158,12 @@ local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 6)
 mainCorner.Parent = mainFrame
 
--- Хедер
+-- Хедер (чуть светлее)
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 35)
 header.Position = UDim2.new(0, 0, 0, 0)
-header.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+header.BackgroundColor3 = Color3.fromRGB(28, 28, 28)   -- светло-серый
 header.BackgroundTransparency = 0
 header.BorderSizePixel = 0
 header.Parent = mainFrame
@@ -172,12 +172,14 @@ local headerCorner = Instance.new("UICorner")
 headerCorner.CornerRadius = UDim.new(0, 6)
 headerCorner.Parent = header
 
+-- Серая полоска под хедером (обводка снизу)
 local headerStroke = Instance.new("UIStroke")
-headerStroke.Color = Color3.fromRGB(45, 45, 45)
+headerStroke.Color = Color3.fromRGB(60, 60, 60)   -- серая
 headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
+-- Логотипы в хедере
 if logoPath then
     local logoLeft = Instance.new("ImageLabel")
     logoLeft.Size = UDim2.new(0, 28, 0, 28)
@@ -236,18 +238,28 @@ for i, name in ipairs(pageNames) do
 end
 
 -- ============================================================
---  ВКЛАДКИ (с иконкой ESP)
+--  ВКЛАДКИ (с серой линией сверху)
 -- ============================================================
 local tabsBar = Instance.new("Frame")
 tabsBar.Name = "TabsBar"
 tabsBar.Size = UDim2.new(1, 0, 0, 35)
 tabsBar.Position = UDim2.new(0, 0, 1, -35)
-tabsBar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+tabsBar.BackgroundColor3 = Color3.fromRGB(28, 28, 28)   -- светло-серый
 tabsBar.BackgroundTransparency = 0
 tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
+-- Серая линия НАД вкладками (разделитель между страницами и вкладками)
+local topLine = Instance.new("Frame")
+topLine.Size = UDim2.new(1, 0, 0, 1)
+topLine.Position = UDim2.new(0, 0, 0, 0)
+topLine.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+topLine.BackgroundTransparency = 0.4
+topLine.BorderSizePixel = 0
+topLine.Parent = tabsBar
+
+-- Активная линия (красная, под вкладками, как было)
 local activeLine = Instance.new("Frame")
 activeLine.Name = "ActiveLine"
 activeLine.Size = UDim2.new(0.33333, 0, 0, 2)
@@ -276,15 +288,15 @@ for i, name in ipairs(tabNames) do
     btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
-    -- ИКОНКА ДЛЯ ESP (глаз) — слева от текста
+    -- Иконка ESP
     if name == "ESP" then
         local icon = Instance.new("ImageLabel")
         icon.Size = UDim2.new(0, 16, 0, 16)
-        icon.Position = UDim2.new(0.1, 0, 0.5, -8)   -- слева, по вертикали центрирована
+        icon.Position = UDim2.new(0.05, 0, 0.5, -8)
         icon.BackgroundTransparency = 1
         icon.Image = espIconUrl
         icon.Parent = btn
-        btn.Text = "   ESP"   -- три пробела для отступа
+        btn.Text = "  ESP"
     end
 
     local btnCorner = Instance.new("UICorner")
@@ -329,4 +341,4 @@ tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (иконка ESP добавлена) загружен!")
+print("✅ Zenin Menu (тёмно-серое, с серыми разделителями) загружен!")
