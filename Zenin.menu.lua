@@ -1,5 +1,5 @@
 -- =====================================================
---  Zenin Menu (3 вкладки: Aim, ESP, Skins)
+--  Zenin Menu (с анимацией запуска)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,17 +53,58 @@ elseif getgenv().getcustomasset then
 end
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ (с красной обводкой)
+--  АНИМАЦИОННЫЙ КОНТЕЙНЕР (появляется до меню)
+-- ============================================================
+local animContainer = Instance.new("Frame")
+animContainer.Name = "AnimContainer"
+animContainer.Size = UDim2.new(1, 0, 1, 0)   -- на весь экран
+animContainer.Position = UDim2.new(0, 0, 0, 0)
+animContainer.BackgroundTransparency = 1
+animContainer.ZIndex = 10
+animContainer.Parent = gui
+
+-- Логотип для анимации (увеличенный, с мягкими углами)
+local animLogo = Instance.new("ImageLabel")
+animLogo.Size = UDim2.new(0, 80, 0, 80)
+animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
+animLogo.BackgroundTransparency = 1
+animLogo.Image = logoPath or ""
+animLogo.ZIndex = 10
+animLogo.Parent = animContainer
+
+-- Мягкие углы для логотипа
+local logoCorner = Instance.new("UICorner")
+logoCorner.CornerRadius = UDim.new(0, 16)
+logoCorner.Parent = animLogo
+
+-- Текст "Zenin" (появится позже)
+local animText = Instance.new("TextLabel")
+animText.Size = UDim2.new(0, 200, 0, 60)
+animText.Position = UDim2.new(0.5, 40, 0.5, -30)  -- сначала справа от лого
+animText.BackgroundTransparency = 1
+animText.Text = "Zenin"
+animText.TextColor3 = Color3.fromRGB(240, 40, 40)
+animText.TextSize = 48
+animText.Font = Enum.Font.GothamBold
+animText.TextXAlignment = Enum.TextXAlignment.Left
+animText.TextYAlignment = Enum.TextYAlignment.Center
+animText.ZIndex = 10
+animText.Visible = false   -- сначала скрыт
+animText.Parent = animContainer
+
+-- ============================================================
+--  ОСНОВНОЕ МЕНЮ (изначально прозрачное)
 -- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 640, 0, 420)
 mainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BackgroundTransparency = 0
+mainFrame.BackgroundTransparency = 1   -- скрыто до анимации
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
 mainFrame.Active = true
 mainFrame.Draggable = true
+mainFrame.ZIndex = 5
 mainFrame.Parent = gui
 
 local mainCorner = Instance.new("UICorner")
@@ -77,7 +118,7 @@ mainStroke.Thickness = 1
 mainStroke.Parent = mainFrame
 
 -- ============================================================
---  ХЕДЕР
+--  ХЕДЕР (внутри меню)
 -- ============================================================
 local header = Instance.new("Frame")
 header.Name = "Header"
@@ -98,7 +139,7 @@ headerStroke.Thickness = 1
 headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 headerStroke.Parent = header
 
--- Логотип
+-- Логотип в хедере (маленький)
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
@@ -106,12 +147,9 @@ if logoPath then
     logo.BackgroundTransparency = 1
     logo.Image = logoPath
     logo.Parent = header
-    print("🖼️ Логотип загружен")
-else
-    print("❌ Логотип не загружен")
 end
 
--- Текст "ZENIN.CS"
+-- Текст "ZENIN.CS" в хедере
 local headerText = Instance.new("TextLabel")
 headerText.Size = UDim2.new(1, 0, 1, 0)
 headerText.Position = UDim2.new(0, 0, 0, 0)
@@ -125,10 +163,10 @@ headerText.TextYAlignment = Enum.TextYAlignment.Center
 headerText.Parent = header
 
 -- ============================================================
---  СТРАНИЦЫ (контент) — только Aim, ESP, Skins
+--  СТРАНИЦЫ (контент) — Aim, ESP, Skins
 -- ============================================================
 local pages = {}
-local pageNames = {"Aim", "ESP", "Skins"}   -- убрали Misc
+local pageNames = {"Aim", "ESP", "Skins"}
 
 for i, name in ipairs(pageNames) do
     local page = Instance.new("Frame")
@@ -172,25 +210,23 @@ tabsBar.BorderSizePixel = 0
 tabsBar.ClipsDescendants = true
 tabsBar.Parent = mainFrame
 
--- Красная линия НАД вкладками (ширина = 1/3)
 local activeLine = Instance.new("Frame")
 activeLine.Name = "ActiveLine"
-activeLine.Size = UDim2.new(0.33333, 0, 0, 2)   -- ровно ⅓ ширины
+activeLine.Size = UDim2.new(0.33333, 0, 0, 2)
 activeLine.Position = UDim2.new(0, 0, 0, 0)
 activeLine.BackgroundColor3 = Color3.fromRGB(240, 40, 40)
 activeLine.BackgroundTransparency = 0
 activeLine.BorderSizePixel = 0
 activeLine.Parent = tabsBar
 
--- Кнопки (3 штуки, по ⅓ ширины)
 local tabButtons = {}
-local tabNames = {"Aim", "ESP", "Skins"}   -- без Misc
-local tabPositions = {0, 0.33333, 0.66666}   -- позиции для линии
+local tabNames = {"Aim", "ESP", "Skins"}
+local tabPositions = {0, 0.33333, 0.66666}
 
 for i, name in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
     btn.Name = name .. "Btn"
-    btn.Size = UDim2.new(0.33333, 0, 1, 0)        -- ровно ⅓ ширины
+    btn.Size = UDim2.new(0.33333, 0, 1, 0)
     btn.Position = UDim2.new((i-1) * 0.33333, 0, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     btn.BackgroundTransparency = 0.2
@@ -198,7 +234,7 @@ for i, name in ipairs(tabNames) do
     btn.Text = name
     btn.TextColor3 = (i == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
     btn.TextSize = 18
-    btn.Font = Enum.Font.SourceSans   -- обычный шрифт
+    btn.Font = Enum.Font.SourceSans
     btn.Parent = tabsBar
 
     local scale = Instance.new("UIScale")
@@ -208,17 +244,14 @@ for i, name in ipairs(tabNames) do
     tabButtons[name] = btn
 
     btn.MouseButton1Click:Connect(function()
-        -- Анимация нажатия
         TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.95}):Play()
         task.wait(0.1)
         TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1}):Play()
 
-        -- Переключение страниц
         for pageName, page in pairs(pages) do
             page.Visible = (pageName == name)
         end
 
-        -- Обновление кнопок
         for n, b in pairs(tabButtons) do
             if n == name then
                 b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
@@ -231,7 +264,6 @@ for i, name in ipairs(tabNames) do
             end
         end
 
-        -- Плавное перемещение линии
         local targetX = tabPositions[i]
         TweenService:Create(activeLine, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Position = UDim2.new(targetX, 0, 0, 0)
@@ -239,9 +271,61 @@ for i, name in ipairs(tabNames) do
     end)
 end
 
--- Начальное состояние
+-- Начальное состояние для кнопок
 tabButtons["Aim"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Aim"].BackgroundTransparency = 0.1
 tabButtons["Aim"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
-print("✅ Zenin Menu (3 вкладки) загружен!")
+-- ============================================================
+--  ЗАПУСК АНИМАЦИИ
+-- ============================================================
+-- Начальные параметры: логотип прозрачный и маленький
+animLogo.BackgroundTransparency = 1
+animLogo.ImageTransparency = 1
+animLogo.Size = UDim2.new(0, 80, 0, 80)
+animLogo.Position = UDim2.new(0.5, -40, 0.5, -40)
+
+-- Анимация 1: появление логотипа (прозрачность и масштаб)
+local tween1 = TweenService:Create(animLogo, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    ImageTransparency = 0,
+    Size = UDim2.new(0, 100, 0, 100),
+    Position = UDim2.new(0.5, -50, 0.5, -50)
+})
+
+tween1:Play()
+tween1.Completed:Wait()
+
+-- Анимация 2: смещение логотипа влево и появление текста
+animText.Visible = true
+animText.TextTransparency = 1
+
+local tween2 = TweenService:Create(animLogo, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    Position = UDim2.new(0.4, -50, 0.5, -50)
+})
+
+local tweenText = TweenService:Create(animText, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    TextTransparency = 0
+})
+
+tween2:Play()
+tweenText:Play()
+tween2.Completed:Wait()
+
+-- Анимация 3: появление меню (прозрачность фона и всех элементов)
+local tweenMenu = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0
+})
+tweenMenu:Play()
+tweenMenu.Completed:Wait()
+
+-- Анимация 4: исчезновение анимационного контейнера (чтобы освободить место)
+local tweenFade = TweenService:Create(animContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 1
+})
+tweenFade:Play()
+tweenFade.Completed:Connect(function()
+    animContainer.Visible = false
+    animContainer:Destroy()
+end)
+
+print("✅ Zenin Menu с анимацией запуска загружен!")
