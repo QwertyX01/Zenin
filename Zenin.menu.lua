@@ -1,11 +1,13 @@
--- Zertyx CHEAT v3.1 - ESP WORKING
+-- Zertyx CHEAT v3.2 - BIG HEAD ADDED
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
+local BigHeadEnabled = false
 local espObjects = {}
+local bigHeadObjects = {}
 
 -- ГЛАВНОЕ МЕНЮ
 local ScreenGui = Instance.new("ScreenGui")
@@ -107,64 +109,81 @@ end
 
 -- VISUALS TAB
 local visualsContent = tabContents["Visuals"]
+local yPos = 10
 
--- ESP Toggle (квадратный)
-local espRow = Instance.new("Frame")
-espRow.Parent = visualsContent
-espRow.Size = UDim2.new(1, -20, 0, 40)
-espRow.Position = UDim2.new(0, 10, 0, 10)
-espRow.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-espRow.BackgroundTransparency = 0.5
-espRow.BorderSizePixel = 0
+-- ФУНКЦИЯ СОЗДАНИЯ РЯДА С ТОГГЛЕМ
+local function CreateToggleRow(parent, label, defaultState, callback, yPos)
+    local row = Instance.new("Frame")
+    row.Parent = parent
+    row.Size = UDim2.new(1, -20, 0, 40)
+    row.Position = UDim2.new(0, 10, 0, yPos)
+    row.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    row.BackgroundTransparency = 0.5
+    row.BorderSizePixel = 0
+    
+    local rowCorner = Instance.new("UICorner")
+    rowCorner.Parent = row
+    rowCorner.CornerRadius = UDim.new(0, 8)
+    
+    local labelText = Instance.new("TextLabel")
+    labelText.Parent = row
+    labelText.Size = UDim2.new(0, 140, 1, 0)
+    labelText.Position = UDim2.new(0, 12, 0, 0)
+    labelText.BackgroundTransparency = 1
+    labelText.Text = label
+    labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
+    labelText.TextSize = 14
+    labelText.Font = Enum.Font.GothamMedium
+    labelText.TextXAlignment = Enum.TextXAlignment.Left
+    labelText.TextYAlignment = Enum.TextYAlignment.Center
+    
+    local toggle = Instance.new("TextButton")
+    toggle.Parent = row
+    toggle.Size = UDim2.new(0, 30, 0, 30)
+    toggle.Position = UDim2.new(1, -40, 0.5, -15)
+    toggle.BackgroundColor3 = defaultState and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
+    toggle.BackgroundTransparency = 0
+    toggle.BorderSizePixel = 0
+    toggle.Text = defaultState and "✓" or ""
+    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggle.TextSize = 18
+    toggle.Font = Enum.Font.GothamBold
+    toggle.AutoButtonColor = false
+    
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.Parent = toggle
+    toggleCorner.CornerRadius = UDim.new(0, 4)
+    
+    local state = defaultState
+    toggle.MouseButton1Click:Connect(function()
+        state = not state
+        toggle.Text = state and "✓" or ""
+        toggle.BackgroundColor3 = state and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
+        if callback then callback(state) end
+    end)
+    
+    return row, toggle, state
+end
 
-local espCorner = Instance.new("UICorner")
-espCorner.Parent = espRow
-espCorner.CornerRadius = UDim.new(0, 8)
+-- ESP TOGGLE
+CreateToggleRow(visualsContent, "ESP", ESPEnabled, function(state)
+    ESPEnabled = state
+    if state then UpdateESP() else ClearESP() end
+end, yPos)
+yPos = yPos + 50
 
-local espLabel = Instance.new("TextLabel")
-espLabel.Parent = espRow
-espLabel.Size = UDim2.new(0, 100, 1, 0)
-espLabel.Position = UDim2.new(0, 12, 0, 0)
-espLabel.BackgroundTransparency = 1
-espLabel.Text = "ESP"
-espLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-espLabel.TextSize = 14
-espLabel.Font = Enum.Font.GothamMedium
-espLabel.TextXAlignment = Enum.TextXAlignment.Left
-espLabel.TextYAlignment = Enum.TextYAlignment.Center
+-- BIG HEAD TOGGLE
+CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
+    BigHeadEnabled = state
+    if state then UpdateBigHead() else ClearBigHead() end
+end, yPos)
+yPos = yPos + 50
 
--- Квадратный toggle (без слова ON/OFF)
-local espToggle = Instance.new("TextButton")
-espToggle.Parent = espRow
-espToggle.Size = UDim2.new(0, 30, 0, 30)
-espToggle.Position = UDim2.new(1, -40, 0.5, -15)
-espToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-espToggle.BackgroundTransparency = 0
-espToggle.BorderSizePixel = 0
-espToggle.Text = "✓"
-espToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-espToggle.TextSize = 18
-espToggle.Font = Enum.Font.GothamBold
-espToggle.AutoButtonColor = false
+-- ОБНОВЛЯЕМ РАЗМЕР КАНВАСА
+visualsContent.Size = UDim2.new(1, 0, 1, -90)
+visualsContent.ClipsDescendants = true
 
-local espCorner2 = Instance.new("UICorner")
-espCorner2.Parent = espToggle
-espCorner2.CornerRadius = UDim.new(0, 4)
-
-local espState = true
-espToggle.MouseButton1Click:Connect(function()
-    espState = not espState
-    ESPEnabled = espState
-    espToggle.Text = espState and "✓" or ""
-    espToggle.BackgroundColor3 = espState and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
-    if espState then
-        UpdateESP()
-    else
-        ClearESP()
-    end
-end)
-
--- === ESP ФУНКЦИИ (твой способ) ===
+-- === ESP ФУНКЦИИ ===
 function CreateESP(targetPlayer)
     if espObjects[targetPlayer] then
         espObjects[targetPlayer]:Destroy()
@@ -210,8 +229,70 @@ function ClearESP()
     espObjects = {}
 end
 
--- ПОСТОЯННОЕ ОБНОВЛЕНИЕ (твой способ)
+-- === BIG HEAD ФУНКЦИИ ===
+function CreateBigHead(targetPlayer)
+    if bigHeadObjects[targetPlayer] then
+        bigHeadObjects[targetPlayer]:Destroy()
+        bigHeadObjects[targetPlayer] = nil
+    end
+    
+    if not targetPlayer.Character then return end
+    
+    local head = targetPlayer.Character:FindFirstChild("Head")
+    if not head then return end
+    
+    -- Сохраняем оригинальный размер
+    if not head:GetAttribute("OriginalSize") then
+        head:SetAttribute("OriginalSize", head.Size)
+    end
+    
+    -- Увеличиваем голову в 2 раза
+    head.Size = head.Size * 2
+    
+    bigHeadObjects[targetPlayer] = head
+end
+
+function RemoveBigHead(targetPlayer)
+    if bigHeadObjects[targetPlayer] then
+        local head = bigHeadObjects[targetPlayer]
+        local originalSize = head:GetAttribute("OriginalSize")
+        if originalSize then
+            head.Size = originalSize
+        end
+        head:SetAttribute("OriginalSize", nil)
+        bigHeadObjects[targetPlayer] = nil
+    end
+end
+
+function UpdateBigHead()
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if BigHeadEnabled and targetPlayer.Character then
+                local head = targetPlayer.Character:FindFirstChild("Head")
+                if head and not bigHeadObjects[targetPlayer] then
+                    CreateBigHead(targetPlayer)
+                end
+            else
+                RemoveBigHead(targetPlayer)
+            end
+        end
+    end
+end
+
+function ClearBigHead()
+    for _, head in pairs(bigHeadObjects) do
+        local originalSize = head:GetAttribute("OriginalSize")
+        if originalSize then
+            head.Size = originalSize
+        end
+        head:SetAttribute("OriginalSize", nil)
+    end
+    bigHeadObjects = {}
+end
+
+-- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
 RunService.Heartbeat:Connect(function()
+    -- ESP
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -221,21 +302,40 @@ RunService.Heartbeat:Connect(function()
             end
         end
     end
+    
+    -- Big Head
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if BigHeadEnabled and targetPlayer.Character then
+                local head = targetPlayer.Character:FindFirstChild("Head")
+                if head and not bigHeadObjects[targetPlayer] then
+                    CreateBigHead(targetPlayer)
+                end
+            else
+                RemoveBigHead(targetPlayer)
+            end
+        end
+    end
 end)
 
--- СОБЫТИЯ
+-- === СОБЫТИЯ ===
 Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(UpdateESP)
+    player.CharacterAdded:Connect(function()
+        UpdateESP()
+        UpdateBigHead()
+    end)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
     RemoveESP(player)
+    RemoveBigHead(player)
 end)
 
--- ЗАПУСК
+-- === ЗАПУСК ===
 UpdateESP()
+UpdateBigHead()
 
--- ОТКРЫТИЕ МЕНЮ
+-- === ОТКРЫТИЕ МЕНЮ ===
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Parent = ScreenGui
 OpenBtn.Size = UDim2.new(0, 50, 0, 30)
@@ -256,20 +356,20 @@ OpenBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- WATERMARK
+-- === WATERMARK ===
 local Watermark = Instance.new("TextLabel")
 Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.1 | BloxStrike"
+Watermark.Text = "Zertyx v3.2 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
 Watermark.TextYAlignment = Enum.TextYAlignment.Bottom
 
--- FPS
+-- === FPS ===
 local FPS = Instance.new("TextLabel")
 FPS.Parent = ScreenGui
 FPS.Size = UDim2.new(0, 60, 0, 30)
@@ -294,9 +394,11 @@ RunService.RenderStepped:Connect(function()
 end)
 
 _G.Zertyx = {
-    ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
+    ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end,
+    ToggleESP = function() ESPEnabled = not ESPEnabled end,
+    ToggleBigHead = function() BigHeadEnabled = not BigHeadEnabled end
 }
 
-print("ZERTYX v3.1 LOADED!")
+print("ZERTYX v3.2 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON")
+print("ESP: ON | Big Head: OFF")
