@@ -1,4 +1,4 @@
--- Zertyx CHEAT v3.8 - CHROMATIC HAT
+-- Zertyx CHEAT v3.9 - RAINBOW AURA HAT (3D NEON)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -9,11 +9,11 @@ local ESPEnabled = true
 local BigHeadEnabled = false
 local AtmosphereEnabled = false
 local HatEnabled = false
-local HatColor = Color3.fromRGB(255, 0, 0) -- Красный по умолчанию
 local SelectedAtmoColor = Color3.fromRGB(150, 50, 200)
 local espObjects = {}
 local bigHeadObjects = {}
 local hatObjects = {}
+local hue = 0
 local originalGuiColor = nil
 
 -- === ГЛАВНОЕ МЕНЮ ===
@@ -135,7 +135,7 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     
     local labelText = Instance.new("TextLabel")
     labelText.Parent = row
-    labelText.Size = UDim2.new(0, 140, 1, 0)
+    labelText.Size = UDim2.new(0, 160, 1, 0)
     labelText.Position = UDim2.new(0, 12, 0, 0)
     labelText.BackgroundTransparency = 1
     labelText.Text = label
@@ -187,87 +187,15 @@ CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
--- CHROMATIC HAT TOGGLE
-CreateToggleRow(visualsContent, "Chromatic Hat", HatEnabled, function(state)
+-- RAINBOW AURA HAT TOGGLE
+CreateToggleRow(visualsContent, "Rainbow Aura Hat", HatEnabled, function(state)
     HatEnabled = state
     if state then 
         UpdateHat()
-        colorPickerHat.Visible = true
-        colorPickerHatFrame.Visible = true
     else 
         ClearHat()
-        colorPickerHat.Visible = false
-        colorPickerHatFrame.Visible = false
     end
 end, yPos)
-yPos = yPos + 50
-
--- === ПАЛИТРА ДЛЯ ШЛЯПЫ ===
-local colorPickerHatFrame = Instance.new("Frame")
-colorPickerHatFrame.Parent = visualsContent
-colorPickerHatFrame.Size = UDim2.new(1, -20, 0, 40)
-colorPickerHatFrame.Position = UDim2.new(0, 10, 0, yPos)
-colorPickerHatFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
-colorPickerHatFrame.BackgroundTransparency = 0.5
-colorPickerHatFrame.BorderSizePixel = 0
-colorPickerHatFrame.Visible = false
-
-local colorPickerHatCorner = Instance.new("UICorner")
-colorPickerHatCorner.Parent = colorPickerHatFrame
-colorPickerHatCorner.CornerRadius = UDim.new(0, 8)
-
-local hatColors = {
-    {Color3.fromRGB(255, 0, 0), "Red"},
-    {Color3.fromRGB(0, 255, 0), "Green"},
-    {Color3.fromRGB(0, 150, 255), "Blue"},
-    {Color3.fromRGB(255, 255, 0), "Yellow"},
-    {Color3.fromRGB(255, 0, 255), "Purple"},
-    {Color3.fromRGB(255, 100, 0), "Orange"},
-    {Color3.fromRGB(0, 255, 255), "Cyan"},
-    {Color3.fromRGB(255, 200, 255), "Pink"}
-}
-
-local hatColorButtons = {}
-local hatColorPicker = Instance.new("Frame")
-hatColorPicker.Parent = colorPickerHatFrame
-hatColorPicker.Size = UDim2.new(1, 0, 1, 0)
-hatColorPicker.BackgroundTransparency = 1
-
-for i = 1, #hatColors do
-    local colorBtn = Instance.new("TextButton")
-    colorBtn.Parent = hatColorPicker
-    colorBtn.Size = UDim2.new(0, 30, 0, 30)
-    colorBtn.Position = UDim2.new(0, 10 + (i-1) * 40, 0.5, -15)
-    colorBtn.BackgroundColor3 = hatColors[i][1]
-    colorBtn.BackgroundTransparency = 0
-    colorBtn.BorderSizePixel = 0
-    colorBtn.Text = ""
-    colorBtn.AutoButtonColor = false
-    
-    local colorCorner = Instance.new("UICorner")
-    colorCorner.Parent = colorBtn
-    colorCorner.CornerRadius = UDim.new(0, 6)
-    
-    if hatColors[i][1] == HatColor then
-        colorBtn.BorderSizePixel = 2
-        colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    end
-    
-    colorBtn.MouseButton1Click:Connect(function()
-        HatColor = hatColors[i][1]
-        if HatEnabled then
-            ClearHat()
-            UpdateHat()
-        end
-        for _, btn in pairs(hatColorButtons) do
-            btn.BorderSizePixel = 0
-        end
-        colorBtn.BorderSizePixel = 2
-        colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    end)
-    
-    hatColorButtons[i] = colorBtn
-end
 yPos = yPos + 50
 
 -- ATMOSPHERE TOGGLE
@@ -276,29 +204,29 @@ CreateToggleRow(visualsContent, "Atmosphere", AtmosphereEnabled, function(state)
     if state then 
         ApplyCloudColor(SelectedAtmoColor)
         ApplyGUIStyle(true)
-        colorPickerAtmo.Visible = true
-        colorPickerAtmoFrame.Visible = true
+        colorPicker.Visible = true
+        colorPickerFrame.Visible = true
     else 
         ResetAtmosphere()
-        colorPickerAtmo.Visible = false
-        colorPickerAtmoFrame.Visible = false
+        colorPicker.Visible = false
+        colorPickerFrame.Visible = false
     end
 end, yPos)
 yPos = yPos + 50
 
--- === ПАЛИТРА ДЛЯ ATMOSPHERE ===
-local colorPickerAtmoFrame = Instance.new("Frame")
-colorPickerAtmoFrame.Parent = visualsContent
-colorPickerAtmoFrame.Size = UDim2.new(1, -20, 0, 40)
-colorPickerAtmoFrame.Position = UDim2.new(0, 10, 0, yPos)
-colorPickerAtmoFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
-colorPickerAtmoFrame.BackgroundTransparency = 0.5
-colorPickerAtmoFrame.BorderSizePixel = 0
-colorPickerAtmoFrame.Visible = false
+-- === ЦВЕТОВАЯ ПАЛИТРА ДЛЯ ATMOSPHERE ===
+local colorPickerFrame = Instance.new("Frame")
+colorPickerFrame.Parent = visualsContent
+colorPickerFrame.Size = UDim2.new(1, -20, 0, 40)
+colorPickerFrame.Position = UDim2.new(0, 10, 0, yPos)
+colorPickerFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
+colorPickerFrame.BackgroundTransparency = 0.5
+colorPickerFrame.BorderSizePixel = 0
+colorPickerFrame.Visible = false
 
-local colorPickerAtmoCorner = Instance.new("UICorner")
-colorPickerAtmoCorner.Parent = colorPickerAtmoFrame
-colorPickerAtmoCorner.CornerRadius = UDim.new(0, 8)
+local colorPickerCorner = Instance.new("UICorner")
+colorPickerCorner.Parent = colorPickerFrame
+colorPickerCorner.CornerRadius = UDim.new(0, 8)
 
 local atmoColors = {
     {Color3.fromRGB(150, 50, 200), "Purple"},
@@ -311,15 +239,15 @@ local atmoColors = {
     {Color3.fromRGB(255, 150, 50), "Orange"}
 }
 
-local atmoColorButtons = {}
-local atmoColorPicker = Instance.new("Frame")
-atmoColorPicker.Parent = colorPickerAtmoFrame
-atmoColorPicker.Size = UDim2.new(1, 0, 1, 0)
-atmoColorPicker.BackgroundTransparency = 1
+local colorButtons = {}
+local colorPicker = Instance.new("Frame")
+colorPicker.Parent = colorPickerFrame
+colorPicker.Size = UDim2.new(1, 0, 1, 0)
+colorPicker.BackgroundTransparency = 1
 
 for i = 1, #atmoColors do
     local colorBtn = Instance.new("TextButton")
-    colorBtn.Parent = atmoColorPicker
+    colorBtn.Parent = colorPicker
     colorBtn.Size = UDim2.new(0, 30, 0, 30)
     colorBtn.Position = UDim2.new(0, 10 + (i-1) * 40, 0.5, -15)
     colorBtn.BackgroundColor3 = atmoColors[i][1]
@@ -343,123 +271,43 @@ for i = 1, #atmoColors do
             ApplyCloudColor(SelectedAtmoColor)
             ApplyGUIStyle(true)
         end
-        for _, btn in pairs(atmoColorButtons) do
+        for _, btn in pairs(colorButtons) do
             btn.BorderSizePixel = 0
         end
         colorBtn.BorderSizePixel = 2
         colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
     end)
     
-    atmoColorButtons[i] = colorBtn
+    colorButtons[i] = colorBtn
 end
 
--- === HAT ФУНКЦИИ (ТАКАЯ ЖЕ ШЛЯПА КАК НА ФОТО) ===
-function CreateHat(player)
-    if hatObjects[player] then
-        for _, obj in pairs(hatObjects[player]) do
-            obj:Destroy()
-        end
-        hatObjects[player] = nil
-    end
-    
-    if not player.Character then return end
-    local head = player.Character:FindFirstChild("Head")
-    if not head then return end
-    
-    -- Создаем BillboardGui
-    local billboard = Instance.new("BillboardGui")
-    billboard.Parent = head
-    billboard.Size = UDim2.new(0, 80, 0, 80)
-    billboard.Adornee = head
-    billboard.StudsOffset = Vector3.new(0, 3.5, 0)
-    billboard.AlwaysOnTop = true
-    billboard.MaxDistance = 500
-    
-    -- Основная шляпа (круг с градиентом)
-    local hat = Instance.new("Frame")
-    hat.Parent = billboard
-    hat.Size = UDim2.new(1, 0, 1, 0)
-    hat.BackgroundColor3 = HatColor
-    hat.BackgroundTransparency = 0.2
-    hat.BorderSizePixel = 0
-    
-    local hatCorner = Instance.new("UICorner")
-    hatCorner.Parent = hat
-    hatCorner.CornerRadius = UDim.new(0, 40) -- Круглая шляпа
-    
-    -- Свечение
-    local glow = Instance.new("ImageLabel")
-    glow.Parent = hat
-    glow.Size = UDim2.new(1.8, 0, 1.8, 0)
-    glow.Position = UDim2.new(-0.4, 0, -0.4, 0)
-    glow.BackgroundTransparency = 1
-    glow.Image = "rbxassetid://13063196338"
-    glow.ImageColor3 = HatColor
-    glow.ImageTransparency = 0.3
-    
-    -- Ободок шляпы (второй круг)
-    local rim = Instance.new("Frame")
-    rim.Parent = hat
-    rim.Size = UDim2.new(0.8, 0, 0.8, 0)
-    rim.Position = UDim2.new(0.1, 0, 0.1, 0)
-    rim.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    rim.BackgroundTransparency = 0.8
-    rim.BorderSizePixel = 0
-    
-    local rimCorner = Instance.new("UICorner")
-    rimCorner.Parent = rim
-    rimCorner.CornerRadius = UDim.new(0, 40)
-    
-    -- Радужный градиент (как на фото)
-    local gradient = Instance.new("UIGradient")
-    gradient.Parent = hat
-    gradient.Rotation = 45
-    local gradColors = {
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 255, 0)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
-        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
-        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
-    }
-    gradient.Color = ColorSequence.new(gradColors)
-    
-    -- Храним все объекты
-    hatObjects[player] = {billboard, hat, glow, rim, gradient}
-end
+-- AIM TAB
+local aimContent = tabContents["Aim"]
+local aimLabel = Instance.new("TextLabel")
+aimLabel.Parent = aimContent
+aimLabel.Size = UDim2.new(1, 0, 1, 0)
+aimLabel.Position = UDim2.new(0, 0, 0, 0)
+aimLabel.BackgroundTransparency = 1
+aimLabel.Text = "AIM TAB"
+aimLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
+aimLabel.TextSize = 24
+aimLabel.Font = Enum.Font.GothamBold
+aimLabel.TextXAlignment = Enum.TextXAlignment.Center
+aimLabel.TextYAlignment = Enum.TextYAlignment.Center
 
-function RemoveHat(player)
-    if hatObjects[player] then
-        for _, obj in pairs(hatObjects[player]) do
-            obj:Destroy()
-        end
-        hatObjects[player] = nil
-    end
-end
-
-function UpdateHat()
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if HatEnabled and targetPlayer.Character then
-                local head = targetPlayer.Character:FindFirstChild("Head")
-                if head and not hatObjects[targetPlayer] then
-                    CreateHat(targetPlayer)
-                end
-            else
-                RemoveHat(targetPlayer)
-            end
-        end
-    end
-end
-
-function ClearHat()
-    for player, objects in pairs(hatObjects) do
-        for _, obj in pairs(objects) do
-            obj:Destroy()
-        end
-    end
-    hatObjects = {}
-end
+-- MISC TAB
+local miscContent = tabContents["Misc"]
+local miscLabel = Instance.new("TextLabel")
+miscLabel.Parent = miscContent
+miscLabel.Size = UDim2.new(1, 0, 1, 0)
+miscLabel.Position = UDim2.new(0, 0, 0, 0)
+miscLabel.BackgroundTransparency = 1
+miscLabel.Text = "MISC TAB"
+miscLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
+miscLabel.TextSize = 24
+miscLabel.Font = Enum.Font.GothamBold
+miscLabel.TextXAlignment = Enum.TextXAlignment.Center
+miscLabel.TextYAlignment = Enum.TextYAlignment.Center
 
 -- === ATMOSPHERE ФУНКЦИИ ===
 function ApplyGUIStyle(enable)
@@ -511,6 +359,133 @@ function ResetAtmosphere()
         Lighting.FogEnd = 2000
         ApplyGUIStyle(false)
     end)
+end
+
+-- === RAINBOW AURA HAT ФУНКЦИИ (3D NEON) ===
+function CreateHat(player)
+    if hatObjects[player] then
+        for _, obj in pairs(hatObjects[player]) do
+            obj:Destroy()
+        end
+        hatObjects[player] = nil
+    end
+    
+    if not player.Character then return end
+    local head = player.Character:FindFirstChild("Head")
+    if not head then return end
+    
+    -- === СОЗДАЁМ ТРЕУГОЛЬНУЮ ШЛЯПУ ===
+    local hat = Instance.new("Part")
+    hat.Parent = player.Character
+    hat.Name = "RainbowHat"
+    hat.Size = Vector3.new(2, 2, 2)
+    hat.Position = head.Position + Vector3.new(0, 2.5, 0)
+    hat.Material = Enum.Material.Neon -- Светящийся материал
+    hat.Anchored = false
+    hat.CanCollide = false
+    hat.Shape = Enum.PartType.Ball -- Шар как основа
+    
+    -- === ПРИВЯЗЫВАЕМ К ГОЛОВЕ ===
+    local weld = Instance.new("WeldConstraint")
+    weld.Parent = hat
+    weld.Part0 = head
+    weld.Part1 = hat
+    
+    -- === ДОБАВЛЯЕМ ТРЕУГОЛЬНУЮ ФОРМУ ===
+    -- Создаём MeshPart для треугольника
+    local meshPart = Instance.new("Part")
+    meshPart.Parent = player.Character
+    meshPart.Name = "HatMesh"
+    meshPart.Size = Vector3.new(2, 2.5, 2)
+    meshPart.Position = head.Position + Vector3.new(0, 3.5, 0)
+    meshPart.Material = Enum.Material.Neon
+    meshPart.Anchored = false
+    meshPart.CanCollide = false
+    meshPart.Shape = Enum.PartType.Cylinder
+    
+    -- Создаём SpecialMesh для формы треугольника/конуса
+    local mesh = Instance.new("SpecialMesh")
+    mesh.Parent = meshPart
+    mesh.MeshType = Enum.MeshType.Cone
+    mesh.Scale = Vector3.new(1.5, 2, 1.5)
+    
+    -- Привязываем к голове
+    local weld2 = Instance.new("WeldConstraint")
+    weld2.Parent = meshPart
+    weld2.Part0 = head
+    weld2.Part1 = meshPart
+    
+    -- === ДОБАВЛЯЕМ ОСНОВАНИЕ ШЛЯПЫ ===
+    local brim = Instance.new("Part")
+    brim.Parent = player.Character
+    brim.Name = "HatBrim"
+    brim.Size = Vector3.new(3, 0.3, 3)
+    brim.Position = head.Position + Vector3.new(0, 1.8, 0)
+    brim.Material = Enum.Material.Neon
+    brim.Anchored = false
+    brim.CanCollide = false
+    brim.Shape = Enum.PartType.Cylinder
+    
+    local brimWeld = Instance.new("WeldConstraint")
+    brimWeld.Parent = brim
+    brimWeld.Part0 = head
+    brimWeld.Part1 = brim
+    
+    -- === СОХРАНЯЕМ ВСЕ ЧАСТИ ===
+    hatObjects[player] = {
+        hat = hat,
+        meshPart = meshPart,
+        brim = brim,
+        weld = weld,
+        weld2 = weld2,
+        brimWeld = brimWeld,
+        mesh = mesh
+    }
+end
+
+function RemoveHat(player)
+    if hatObjects[player] then
+        for _, obj in pairs(hatObjects[player]) do
+            obj:Destroy()
+        end
+        hatObjects[player] = nil
+    end
+end
+
+function UpdateHat()
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if HatEnabled and targetPlayer.Character then
+                local head = targetPlayer.Character:FindFirstChild("Head")
+                if head and not hatObjects[targetPlayer] then
+                    CreateHat(targetPlayer)
+                end
+            else
+                RemoveHat(targetPlayer)
+            end
+        end
+    end
+end
+
+function ClearHat()
+    for player, objects in pairs(hatObjects) do
+        for _, obj in pairs(objects) do
+            obj:Destroy()
+        end
+    end
+    hatObjects = {}
+end
+
+-- === ОБНОВЛЕНИЕ ЦВЕТА ШЛЯПЫ (RAINBOW) ===
+function UpdateHatColors()
+    for _, objects in pairs(hatObjects) do
+        if objects and objects.hat and objects.meshPart and objects.brim then
+            local color = Color3.fromHSV(hue, 1, 1)
+            objects.hat.Color = color
+            objects.meshPart.Color = color
+            objects.brim.Color = color
+        end
+    end
 end
 
 -- === ESP ФУНКЦИИ ===
@@ -612,6 +587,13 @@ end
 
 -- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
 RunService.Heartbeat:Connect(function()
+    -- Обновляем цвета шляпы (RAINBOW)
+    if HatEnabled then
+        hue = (hue + 0.005) % 1
+        UpdateHatColors()
+    end
+    
+    -- ESP
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -622,6 +604,7 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
+    -- Big Head
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if BigHeadEnabled and targetPlayer.Character then
@@ -635,6 +618,7 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
+    -- Rainbow Hat
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if HatEnabled and targetPlayer.Character then
@@ -696,7 +680,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.8 | BloxStrike"
+Watermark.Text = "Zertyx v3.9 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -731,6 +715,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v3.8 LOADED!")
+print("ZERTYX v3.9 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF | Chromatic Hat: OFF | Atmosphere: OFF")
+print("ESP: ON | Big Head: OFF | Rainbow Aura Hat: OFF | Atmosphere: OFF")
