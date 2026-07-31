@@ -1,12 +1,22 @@
 --[[
-    Zertyx - Menu with Header and Tabs
-    Version: 2.0
+    Zertyx - Menu with ESP
+    Version: 2.1
     Size: 640x420
     Open: Button ≡ in top-left corner
 ]]
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+-- === SETTINGS ===
+local Settings = {
+    ESP = true
+}
+
+-- === ESP STORAGE ===
+local espObjects = {}
 
 -- === CREATE GUI ===
 local ScreenGui = Instance.new("ScreenGui")
@@ -14,27 +24,27 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === MAIN FRAME (DARK WHITE) ===
+-- === MAIN FRAME ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(245, 245, 245) -- Темно-белый
+MainFrame.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
 MainFrame.BackgroundTransparency = 0
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 
--- === HEADER (GRAY LINE) ===
+-- === HEADER ===
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
 Header.Size = UDim2.new(1, 0, 0, 45)
 Header.Position = UDim2.new(0, 0, 0, 0)
-Header.BackgroundColor3 = Color3.fromRGB(220, 220, 220) -- Серая полоска
+Header.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
 Header.BackgroundTransparency = 0
 Header.BorderSizePixel = 0
 
--- === TITLE (RED) ===
+-- === TITLE ===
 local Title = Instance.new("TextLabel")
 Title.Parent = Header
 Title.Size = UDim2.new(0, 150, 1, 0)
@@ -47,12 +57,12 @@ Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextYAlignment = Enum.TextYAlignment.Center
 
--- === TABS CONTAINER (BELOW HEADER) ===
+-- === TABS CONTAINER ===
 local TabsContainer = Instance.new("Frame")
 TabsContainer.Parent = MainFrame
 TabsContainer.Size = UDim2.new(1, 0, 0, 40)
-TabsContainer.Position = UDim2.new(0, 0, 0, 45) -- Сразу под хедером
-TabsContainer.BackgroundTransparency = 1 -- Прозрачный фон
+TabsContainer.Position = UDim2.new(0, 0, 0, 45)
+TabsContainer.BackgroundTransparency = 1
 TabsContainer.BorderSizePixel = 0
 
 -- === TAB BUTTONS ===
@@ -74,16 +84,14 @@ for i, tabName in ipairs(tabs) do
     TabBtn.Font = Enum.Font.GothamMedium
     TabBtn.AutoButtonColor = false
     
-    -- Мягкие углы у вкладок
     local TabCorner = Instance.new("UICorner")
     TabCorner.Parent = TabBtn
-    TabCorner.CornerRadius = UDim.new(0, 20) -- Мягкие углы
+    TabCorner.CornerRadius = UDim.new(0, 20)
     
-    -- Content for each tab
     local Content = Instance.new("ScrollingFrame")
     Content.Parent = MainFrame
     Content.Size = UDim2.new(1, -20, 1, -100)
-    Content.Position = UDim2.new(0, 10, 0, 90) -- Ниже хедера и вкладок
+    Content.Position = UDim2.new(0, 10, 0, 90)
     Content.BackgroundTransparency = 1
     Content.BorderSizePixel = 0
     Content.Visible = (i == 1)
@@ -92,18 +100,13 @@ for i, tabName in ipairs(tabs) do
     Content.ScrollBarImageColor3 = Color3.fromRGB(200, 200, 200)
     Content.Name = tabName .. "Content"
     
-    -- Empty text in each tab
-    local EmptyText = Instance.new("TextLabel")
-    EmptyText.Parent = Content
-    EmptyText.Size = UDim2.new(1, 0, 1, 0)
-    EmptyText.Position = UDim2.new(0, 0, 0, 0)
-    EmptyText.BackgroundTransparency = 1
-    EmptyText.Text = tabName:upper() .. " TAB"
-    EmptyText.TextColor3 = Color3.fromRGB(180, 180, 180)
-    EmptyText.TextSize = 24
-    EmptyText.Font = Enum.Font.GothamBold
-    EmptyText.TextXAlignment = Enum.TextXAlignment.Center
-    EmptyText.TextYAlignment = Enum.TextYAlignment.Center
+    if tabName == "Visuals" then
+        CreateVisualsTab(Content)
+    elseif tabName == "Aim" then
+        CreateAimTab(Content)
+    elseif tabName == "Misc" then
+        CreateMiscTab(Content)
+    end
     
     TabButtons[tabName] = TabBtn
     TabContents[tabName] = Content
@@ -127,6 +130,165 @@ if firstTab then
     firstTab.TextColor3 = Color3.fromRGB(0, 0, 0)
 end
 
+-- === CREATE ROW ===
+local function CreateRow(parent, label, yPos)
+    local Row = Instance.new("Frame")
+    Row.Parent = parent
+    Row.Size = UDim2.new(1, -10, 0, 42)
+    Row.Position = UDim2.new(0, 5, 0, yPos)
+    Row.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+    Row.BackgroundTransparency = 0.3
+    Row.BorderSizePixel = 0
+    
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.Parent = Row
+    RowCorner.CornerRadius = UDim.new(0, 10)
+    
+    local Label = Instance.new("TextLabel")
+    Label.Parent = Row
+    Label.Size = UDim2.new(0, 140, 1, 0)
+    Label.Position = UDim2.new(0, 12, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = label
+    Label.TextColor3 = Color3.fromRGB(50, 50, 50)
+    Label.TextSize = 14
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextYAlignment = Enum.TextYAlignment.Center
+    
+    return Row
+end
+
+-- === SQUARE TOGGLE ===
+local function CreateToggle(row, defaultState, callback)
+    local Toggle = Instance.new("TextButton")
+    Toggle.Parent = row
+    Toggle.Size = UDim2.new(0, 32, 0, 32)
+    Toggle.Position = UDim2.new(1, -42, 0.5, -16)
+    Toggle.BackgroundColor3 = defaultState and Color3.fromRGB(79, 124, 176) or Color3.fromRGB(180, 180, 180)
+    Toggle.BorderSizePixel = 0
+    Toggle.Text = defaultState and "✓" or ""
+    Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Toggle.TextSize = 20
+    Toggle.Font = Enum.Font.GothamBold
+    Toggle.AutoButtonColor = false
+    
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.Parent = Toggle
+    ToggleCorner.CornerRadius = UDim.new(0, 4)
+    
+    local state = defaultState
+    Toggle.MouseButton1Click:Connect(function()
+        state = not state
+        Toggle.Text = state and "✓" or ""
+        Toggle.BackgroundColor3 = state and Color3.fromRGB(79, 124, 176) or Color3.fromRGB(180, 180, 180)
+        if callback then callback(state) end
+    end)
+    
+    return Toggle
+end
+
+-- === ESP FUNCTIONS ===
+local function createHighlight(playerObj)
+    if espObjects[playerObj] then
+        espObjects[playerObj]:Destroy()
+        espObjects[playerObj] = nil
+    end
+    
+    if not playerObj.Character then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Parent = playerObj.Character
+    highlight.FillColor = Color3.fromRGB(0, 255, 100)
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    
+    espObjects[playerObj] = highlight
+end
+
+local function updateESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local character = player.Character
+            local humanoid = character and character:FindFirstChild("Humanoid")
+            
+            if Settings.ESP and character and humanoid then
+                if not espObjects[player] then
+                    createHighlight(player)
+                end
+            else
+                if espObjects[player] then
+                    espObjects[player]:Destroy()
+                    espObjects[player] = nil
+                end
+            end
+        end
+    end
+end
+
+local function clearESP()
+    for player, highlight in pairs(espObjects) do
+        highlight:Destroy()
+    end
+    espObjects = {}
+end
+
+local function toggleESP(state)
+    Settings.ESP = state
+    if state then
+        updateESP()
+    else
+        clearESP()
+    end
+end
+
+-- === VISUALS TAB ===
+function CreateVisualsTab(parent)
+    local yPos = 10
+    
+    local row1 = CreateRow(parent, "ESP", yPos)
+    CreateToggle(row1, Settings.ESP, function(state)
+        toggleESP(state)
+    end)
+    yPos = yPos + 48
+    
+    parent.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
+end
+
+-- === AIM TAB ===
+function CreateAimTab(parent)
+    local yPos = 10
+    
+    local row1 = CreateRow(parent, "Aimbot", yPos)
+    CreateToggle(row1, false, function(state)
+        print("Aimbot: " .. tostring(state))
+    end)
+    yPos = yPos + 48
+    
+    parent.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
+end
+
+-- === MISC TAB ===
+function CreateMiscTab(parent)
+    local yPos = 10
+    
+    local row1 = CreateRow(parent, "Watermark", yPos)
+    CreateToggle(row1, true, function(state)
+        Watermark.Visible = state
+    end)
+    yPos = yPos + 48
+    
+    local row2 = CreateRow(parent, "FPS Counter", yPos)
+    CreateToggle(row2, true, function(state)
+        FPSCounter.Visible = state
+    end)
+    yPos = yPos + 48
+    
+    parent.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
+end
+
 -- === OPEN BUTTON ===
 local OpenButton = Instance.new("TextButton")
 OpenButton.Parent = ScreenGui
@@ -148,6 +310,71 @@ OpenButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
+-- === WATERMARK ===
+local Watermark = Instance.new("TextLabel")
+Watermark.Parent = ScreenGui
+Watermark.Size = UDim2.new(0, 200, 0, 30)
+Watermark.Position = UDim2.new(0, 10, 1, -40)
+Watermark.BackgroundTransparency = 1
+Watermark.Text = "Zertyx v2.1 | BloxStrike"
+Watermark.TextColor3 = Color3.fromRGB(100, 100, 100)
+Watermark.TextSize = 14
+Watermark.Font = Enum.Font.GothamBold
+Watermark.TextXAlignment = Enum.TextXAlignment.Left
+Watermark.TextYAlignment = Enum.TextYAlignment.Bottom
+Watermark.Visible = true
+
+-- === FPS COUNTER ===
+local FPSCounter = Instance.new("TextLabel")
+FPSCounter.Parent = ScreenGui
+FPSCounter.Size = UDim2.new(0, 60, 0, 30)
+FPSCounter.Position = UDim2.new(1, -70, 1, -40)
+FPSCounter.BackgroundTransparency = 1
+FPSCounter.Text = "60 FPS"
+FPSCounter.TextColor3 = Color3.fromRGB(100, 100, 100)
+FPSCounter.TextSize = 13
+FPSCounter.Font = Enum.Font.GothamMedium
+FPSCounter.TextXAlignment = Enum.TextXAlignment.Right
+FPSCounter.TextYAlignment = Enum.TextYAlignment.Bottom
+FPSCounter.Visible = true
+
+local frameCount = 0
+local lastTime = tick()
+
+RunService.RenderStepped:Connect(function()
+    frameCount = frameCount + 1
+    local currentTime = tick()
+    if currentTime - lastTime >= 1 then
+        FPSCounter.Text = tostring(frameCount) .. " FPS"
+        frameCount = 0
+        lastTime = currentTime
+    end
+end)
+
+-- === ESP EVENTS ===
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        updateESP()
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if espObjects[player] then
+        espObjects[player]:Destroy()
+        espObjects[player] = nil
+    end
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        updateESP()
+    end
+end)
+
+task.wait(1)
+toggleESP(true)
+
 -- === GLOBAL ACCESS ===
 _G.Zertyx = {
     ToggleMenu = function()
@@ -155,8 +382,12 @@ _G.Zertyx = {
     end,
     IsOpen = function()
         return MainFrame.Visible
-    end
+    end,
+    Settings = Settings,
+    ToggleESP = toggleESP,
+    UpdateESP = updateESP
 }
 
-print("Zertyx v2.0 Loaded Successfully!")
+print("Zertyx v2.1 Loaded Successfully!")
 print("Press ≡ button in top-left corner to open menu")
+print("ESP: ON")
