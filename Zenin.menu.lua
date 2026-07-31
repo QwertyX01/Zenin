@@ -6,8 +6,8 @@
     ███████╗███████╗██║  ██║   ██║      ██║   ██╔╝ ██╗
     ╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝
     
-    Zertyx - BloxStrike Menu
-    Version: 1.0
+    Zertyx - BloxStrike Menu (FIXED)
+    Version: 1.1
     Size: 640x420
 ]]
 
@@ -81,7 +81,7 @@ TitleText.BackgroundTransparency = 1
 TitleText.Text = "ZERTYX"
 TitleText.TextColor3 = Color3.fromRGB(106, 147, 199)
 TitleText.TextSize = 18
-TitleText.TextFont = Enum.Font.GothamBold
+TitleText.Font = Enum.Font.GothamBold  -- FIXED
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.TextYAlignment = Enum.TextYAlignment.Center
 
@@ -91,10 +91,10 @@ VersionText.Parent = TitleBar
 VersionText.Size = UDim2.new(0, 50, 1, 0)
 VersionText.Position = UDim2.new(0, 105, 0, 0)
 VersionText.BackgroundTransparency = 1
-VersionText.Text = "v1.0"
+VersionText.Text = "v1.1"
 VersionText.TextColor3 = Color3.fromRGB(100, 120, 150)
 VersionText.TextSize = 12
-VersionText.TextFont = Enum.Font.GothamMedium
+VersionText.Font = Enum.Font.GothamMedium  -- FIXED
 VersionText.TextXAlignment = Enum.TextXAlignment.Left
 VersionText.TextYAlignment = Enum.TextYAlignment.Center
 
@@ -109,7 +109,7 @@ CloseBtn.BorderSizePixel = 0
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.TextSize = 16
-CloseBtn.TextFont = Enum.Font.GothamBold
+CloseBtn.Font = Enum.Font.GothamBold  -- FIXED
 
 local CloseCorner = Instance.new("UICorner")
 CloseCorner.Parent = CloseBtn
@@ -141,7 +141,7 @@ local function CreateTab(tabName)
     TabBtn.Text = tabName:upper()
     TabBtn.TextColor3 = ZertyxConfig.Theme.Text
     TabBtn.TextSize = 13
-    TabBtn.TextFont = Enum.Font.GothamMedium
+    TabBtn.Font = Enum.Font.GothamMedium  -- FIXED
     TabBtn.AutoButtonColor = false
     
     -- Мягкие углы вкладок
@@ -226,7 +226,7 @@ local function CreateRow(parent, label, yPos, icon)
         IconLabel.Text = icon
         IconLabel.TextColor3 = ZertyxConfig.Theme.Accent
         IconLabel.TextSize = 16
-        IconLabel.TextFont = Enum.Font.GothamMedium
+        IconLabel.Font = Enum.Font.GothamMedium  -- FIXED
         IconLabel.TextXAlignment = Enum.TextXAlignment.Center
         IconLabel.TextYAlignment = Enum.TextYAlignment.Center
     end
@@ -239,7 +239,7 @@ local function CreateRow(parent, label, yPos, icon)
     Label.Text = label
     Label.TextColor3 = ZertyxConfig.Theme.Text
     Label.TextSize = 13
-    Label.TextFont = Enum.Font.GothamMedium
+    Label.Font = Enum.Font.GothamMedium  -- FIXED
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.TextYAlignment = Enum.TextYAlignment.Center
     
@@ -257,7 +257,7 @@ local function CreateToggle(row, defaultState, callback)
     Toggle.Text = defaultState and "ON" or "OFF"
     Toggle.TextColor3 = ZertyxConfig.Theme.TextBright
     Toggle.TextSize = 12
-    Toggle.TextFont = Enum.Font.GothamBold
+    Toggle.Font = Enum.Font.GothamBold  -- FIXED
     Toggle.AutoButtonColor = false
     
     local ToggleCorner = Instance.new("UICorner")
@@ -306,7 +306,7 @@ local function CreateSlider(row, minVal, maxVal, defaultVal, label, callback)
     ValueLabel.Text = tostring(defaultVal)
     ValueLabel.TextColor3 = ZertyxConfig.Theme.Text
     ValueLabel.TextSize = 12
-    ValueLabel.TextFont = Enum.Font.GothamMedium
+    ValueLabel.Font = Enum.Font.GothamMedium  -- FIXED
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     
     local dragging = false
@@ -353,7 +353,7 @@ local function CreateDropdown(row, options, defaultIndex, callback)
     Dropdown.Text = options[defaultIndex or 1]
     Dropdown.TextColor3 = ZertyxConfig.Theme.Text
     Dropdown.TextSize = 12
-    Dropdown.TextFont = Enum.Font.GothamMedium
+    Dropdown.Font = Enum.Font.GothamMedium  -- FIXED
     Dropdown.AutoButtonColor = false
     
     local DropCorner = Instance.new("UICorner")
@@ -362,7 +362,6 @@ local function CreateDropdown(row, options, defaultIndex, callback)
     
     local selectedIndex = defaultIndex or 1
     Dropdown.MouseButton1Click:Connect(function()
-        -- Простой циклический выбор
         selectedIndex = selectedIndex % #options + 1
         Dropdown.Text = options[selectedIndex]
         if callback then callback(selectedIndex, options[selectedIndex]) end
@@ -405,7 +404,6 @@ function CreateVisualsTab(parent)
     local getNameSize = CreateSlider(row6, 8, 24, 14)
     yPos = yPos + 42
     
-    -- Обновляем CanvasSize
     parent.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
 end
 
@@ -482,7 +480,7 @@ function CreateMiscTab(parent)
     keyLabel.Text = "RSHIFT"
     keyLabel.TextColor3 = ZertyxConfig.Theme.Text
     keyLabel.TextSize = 12
-    keyLabel.TextFont = Enum.Font.GothamBold
+    keyLabel.Font = Enum.Font.GothamBold  -- FIXED
     keyLabel.TextXAlignment = Enum.TextXAlignment.Center
     
     local KeyCorner = Instance.new("UICorner")
@@ -522,10 +520,10 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v1.0 | BloxStrike"
+Watermark.Text = "Zertyx v1.1 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(106, 147, 199)
 Watermark.TextSize = 14
-Watermark.TextFont = Enum.Font.GothamBold
+Watermark.Font = Enum.Font.GothamBold  -- FIXED
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
 Watermark.TextYAlignment = Enum.TextYAlignment.Bottom
 Watermark.Visible = true
@@ -539,7 +537,7 @@ FPSCounter.BackgroundTransparency = 1
 FPSCounter.Text = "60 FPS"
 FPSCounter.TextColor3 = Color3.fromRGB(100, 255, 100)
 FPSCounter.TextSize = 13
-FPSCounter.TextFont = Enum.Font.GothamMedium
+FPSCounter.Font = Enum.Font.GothamMedium  -- FIXED
 FPSCounter.TextXAlignment = Enum.TextXAlignment.Right
 FPSCounter.TextYAlignment = Enum.TextYAlignment.Bottom
 
@@ -569,5 +567,5 @@ _G.Zertyx = {
     end
 }
 
-print("Zertyx Loaded Successfully!")
+print("Zertyx v1.1 Loaded Successfully!")
 print("Press RSHIFT to open menu")
