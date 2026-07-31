@@ -1,6 +1,6 @@
 --[[
     Zertyx - Menu with Header and Tabs
-    Version: 1.9
+    Version: 2.0
     Size: 640x420
     Open: Button ≡ in top-left corner
 ]]
@@ -14,23 +14,23 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === MAIN FRAME ===
+-- === MAIN FRAME (DARK WHITE) ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.BackgroundColor3 = Color3.fromRGB(245, 245, 245) -- Темно-белый
 MainFrame.BackgroundTransparency = 0
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 
--- === HEADER (GRAY) ===
+-- === HEADER (GRAY LINE) ===
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
-Header.Size = UDim2.new(1, 0, 0, 50)
+Header.Size = UDim2.new(1, 0, 0, 45)
 Header.Position = UDim2.new(0, 0, 0, 0)
-Header.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+Header.BackgroundColor3 = Color3.fromRGB(220, 220, 220) -- Серая полоска
 Header.BackgroundTransparency = 0
 Header.BorderSizePixel = 0
 
@@ -42,7 +42,7 @@ Title.Position = UDim2.new(0, 15, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "Zertyx"
 Title.TextColor3 = Color3.fromRGB(255, 0, 0)
-Title.TextSize = 24
+Title.TextSize = 22
 Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextYAlignment = Enum.TextYAlignment.Center
@@ -50,10 +50,9 @@ Title.TextYAlignment = Enum.TextYAlignment.Center
 -- === TABS CONTAINER (BELOW HEADER) ===
 local TabsContainer = Instance.new("Frame")
 TabsContainer.Parent = MainFrame
-TabsContainer.Size = UDim2.new(1, 0, 0, 35)
-TabsContainer.Position = UDim2.new(0, 0, 0, 50) -- Сразу под хедером
-TabsContainer.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
-TabsContainer.BackgroundTransparency = 0
+TabsContainer.Size = UDim2.new(1, 0, 0, 40)
+TabsContainer.Position = UDim2.new(0, 0, 0, 45) -- Сразу под хедером
+TabsContainer.BackgroundTransparency = 1 -- Прозрачный фон
 TabsContainer.BorderSizePixel = 0
 
 -- === TAB BUTTONS ===
@@ -64,20 +63,21 @@ local TabContents = {}
 for i, tabName in ipairs(tabs) do
     local TabBtn = Instance.new("TextButton")
     TabBtn.Parent = TabsContainer
-    TabBtn.Size = UDim2.new(0, 90, 1, 0)
-    TabBtn.Position = UDim2.new(0, 10 + (i-1) * 95, 0, 0)
-    TabBtn.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+    TabBtn.Size = UDim2.new(0, 80, 0, 28)
+    TabBtn.Position = UDim2.new(0, 15 + (i-1) * 90, 0.5, -14)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
     TabBtn.BackgroundTransparency = 0
     TabBtn.BorderSizePixel = 0
     TabBtn.Text = tabName:upper()
     TabBtn.TextColor3 = Color3.fromRGB(80, 80, 80)
-    TabBtn.TextSize = 13
+    TabBtn.TextSize = 12
     TabBtn.Font = Enum.Font.GothamMedium
     TabBtn.AutoButtonColor = false
     
+    -- Мягкие углы у вкладок
     local TabCorner = Instance.new("UICorner")
     TabCorner.Parent = TabBtn
-    TabCorner.CornerRadius = UDim.new(0, 8)
+    TabCorner.CornerRadius = UDim.new(0, 20) -- Мягкие углы
     
     -- Content for each tab
     local Content = Instance.new("ScrollingFrame")
@@ -110,11 +110,11 @@ for i, tabName in ipairs(tabs) do
     
     TabBtn.MouseButton1Click:Connect(function()
         for name, btn in pairs(TabButtons) do
-            btn.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+            btn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
             btn.TextColor3 = Color3.fromRGB(80, 80, 80)
             TabContents[name].Visible = false
         end
-        TabBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        TabBtn.BackgroundColor3 = Color3.fromRGB(160, 160, 160)
         TabBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
         Content.Visible = true
     end)
@@ -123,7 +123,7 @@ end
 -- Activate first tab
 local firstTab = TabButtons["Visuals"]
 if firstTab then
-    firstTab.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    firstTab.BackgroundColor3 = Color3.fromRGB(160, 160, 160)
     firstTab.TextColor3 = Color3.fromRGB(0, 0, 0)
 end
 
@@ -158,5 +158,5 @@ _G.Zertyx = {
     end
 }
 
-print("Zertyx v1.9 Loaded Successfully!")
+print("Zertyx v2.0 Loaded Successfully!")
 print("Press ≡ button in top-left corner to open menu")
