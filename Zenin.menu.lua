@@ -1,16 +1,18 @@
--- Zertyx CHEAT v3.4 - SKY COLOR FIXED
+-- Zertyx CHEAT v3.6 - ATMOSPHERE
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
 local BigHeadEnabled = false
-local SkyColorEnabled = false
-local SelectedSkyColor = Color3.fromRGB(0, 150, 255)
+local AtmosphereEnabled = false
+local SelectedAtmoColor = Color3.fromRGB(150, 50, 200) -- Фиолетовый по умолчанию
 local espObjects = {}
 local bigHeadObjects = {}
+local originalGuiColor = nil
 
 -- ГЛАВНОЕ МЕНЮ
 local ScreenGui = Instance.new("ScreenGui")
@@ -18,11 +20,92 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
+-- === СТИЛЬ GUI (ФИОЛЕТОВЫЙ ВАЙБ) ===
+local function ApplyGUIStyle(enable)
+    if enable then
+        -- Меняем цвет фона GUI
+        pcall(function()
+            local guiService = game:GetService("GuiService")
+            if guiService then
+                originalGuiColor = guiService.BackgroundColor3
+                guiService.BackgroundColor3 = Color3.fromRGB(80, 30, 120)
+            end
+        end)
+        -- Меняем цвет кнопок в игре (если есть)
+        pcall(function()
+            for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+                if gui:IsA("ScreenGui") then
+                    for _, child in pairs(gui:GetDescendants()) do
+                        if child:IsA("TextButton") or child:IsA("TextLabel") then
+                            if child.BackgroundColor3 ~= Color3.fromRGB(0, 0, 0) then
+                                child.BackgroundColor3 = Color3.fromRGB(80, 30, 120)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    else
+        -- Возвращаем оригинальный цвет
+        pcall(function()
+            local guiService = game:GetService("GuiService")
+            if guiService and originalGuiColor then
+                guiService.BackgroundColor3 = originalGuiColor
+            end
+        end)
+    end
+end
+
+-- === ЦВЕТ ОБЛАКОВ ===
+local function ApplyCloudColor(color)
+    pcall(function()
+        -- Меняем цвет облаков через Lighting
+        if Lighting:FindFirstChild("Clouds") then
+            local clouds = Lighting:FindFirstChild("Clouds")
+            clouds.Color = color
+        end
+        -- Если есть свойство CloudColor
+        if Lighting.CloudColor ~= nil then
+            Lighting.CloudColor = color
+        end
+        -- Меняем атмосферу
+        if Lighting:FindFirstChild("Atmosphere") then
+            local atmosphere = Lighting:FindFirstChild("Atmosphere")
+            atmosphere.Color = color
+            atmosphere.Density = 0.3
+        end
+        -- Меняем цвет тумана под цвет
+        Lighting.FogColor = color
+        Lighting.FogEnd = 1000
+    end)
+end
+
+local function ResetAtmosphere()
+    pcall(function()
+        if Lighting:FindFirstChild("Clouds") then
+            local clouds = Lighting:FindFirstChild("Clouds")
+            clouds.Color = Color3.fromRGB(255, 255, 255)
+        end
+        if Lighting.CloudColor ~= nil then
+            Lighting.CloudColor = Color3.fromRGB(255, 255, 255)
+        end
+        if Lighting:FindFirstChild("Atmosphere") then
+            local atmosphere = Lighting:FindFirstChild("Atmosphere")
+            atmosphere.Color = Color3.fromRGB(255, 255, 255)
+            atmosphere.Density = 0.5
+        end
+        Lighting.FogColor = Color3.fromRGB(150, 150, 150)
+        Lighting.FogEnd = 2000
+        ApplyGUIStyle(false)
+    end)
+end
+
+-- ГЛАВНОЕ МЕНЮ (ТЕМНО-ФИОЛЕТОВАЯ ТЕМА)
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 20, 40) -- Фиолетовый фон
 MainFrame.BackgroundTransparency = 0
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
@@ -37,7 +120,7 @@ local Header = Instance.new("Frame")
 Header.Parent = MainFrame
 Header.Size = UDim2.new(1, 0, 0, 40)
 Header.Position = UDim2.new(0, 0, 0, 0)
-Header.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+Header.BackgroundColor3 = Color3.fromRGB(60, 30, 80)
 Header.BackgroundTransparency = 0
 Header.BorderSizePixel = 0
 
@@ -47,7 +130,7 @@ Title.Size = UDim2.new(1, 0, 1, 0)
 Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "ZERTYX CHEAT"
-Title.TextColor3 = Color3.fromRGB(255, 50, 50)
+Title.TextColor3 = Color3.fromRGB(220, 150, 255)
 Title.TextSize = 20
 Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Center
@@ -58,7 +141,7 @@ local TabContainer = Instance.new("Frame")
 TabContainer.Parent = MainFrame
 TabContainer.Size = UDim2.new(1, 0, 0, 35)
 TabContainer.Position = UDim2.new(0, 0, 0, 40)
-TabContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+TabContainer.BackgroundColor3 = Color3.fromRGB(40, 20, 55)
 TabContainer.BackgroundTransparency = 0
 TabContainer.BorderSizePixel = 0
 
@@ -71,11 +154,11 @@ for i = 1, 3 do
     btn.Parent = TabContainer
     btn.Size = UDim2.new(0, 80, 0, 28)
     btn.Position = UDim2.new(0, 15 + (i-1) * 90, 0.5, -14)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
     btn.BackgroundTransparency = 0
     btn.BorderSizePixel = 0
     btn.Text = string.upper(tabs[i])
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextColor3 = Color3.fromRGB(200, 180, 220)
     btn.TextSize = 12
     btn.Font = Enum.Font.GothamMedium
     btn.AutoButtonColor = false
@@ -98,13 +181,13 @@ for i = 1, 3 do
     
     btn.MouseButton1Click:Connect(function()
         for _, b in pairs(tabBtns) do
-            b.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-            b.TextColor3 = Color3.fromRGB(200, 200, 200)
+            b.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
+            b.TextColor3 = Color3.fromRGB(200, 180, 220)
         end
         for _, c in pairs(tabContents) do
             c.Visible = false
         end
-        btn.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+        btn.BackgroundColor3 = Color3.fromRGB(80, 50, 100)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         content.Visible = true
     end)
@@ -120,7 +203,7 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     row.Parent = parent
     row.Size = UDim2.new(1, -20, 0, 40)
     row.Position = UDim2.new(0, 10, 0, yPos)
-    row.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    row.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
     row.BackgroundTransparency = 0.5
     row.BorderSizePixel = 0
     
@@ -134,7 +217,7 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     labelText.Position = UDim2.new(0, 12, 0, 0)
     labelText.BackgroundTransparency = 1
     labelText.Text = label
-    labelText.TextColor3 = Color3.fromRGB(220, 220, 220)
+    labelText.TextColor3 = Color3.fromRGB(220, 200, 240)
     labelText.TextSize = 14
     labelText.Font = Enum.Font.GothamMedium
     labelText.TextXAlignment = Enum.TextXAlignment.Left
@@ -144,7 +227,7 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     toggle.Parent = row
     toggle.Size = UDim2.new(0, 30, 0, 30)
     toggle.Position = UDim2.new(1, -40, 0.5, -15)
-    toggle.BackgroundColor3 = defaultState and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
+    toggle.BackgroundColor3 = defaultState and Color3.fromRGB(150, 50, 200) or Color3.fromRGB(60, 40, 75)
     toggle.BackgroundTransparency = 0
     toggle.BorderSizePixel = 0
     toggle.Text = defaultState and "✓" or ""
@@ -161,11 +244,11 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     toggle.MouseButton1Click:Connect(function()
         state = not state
         toggle.Text = state and "✓" or ""
-        toggle.BackgroundColor3 = state and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
+        toggle.BackgroundColor3 = state and Color3.fromRGB(150, 50, 200) or Color3.fromRGB(60, 40, 75)
         if callback then callback(state) end
     end)
     
-    return row, toggle, state
+    return row
 end
 
 -- ESP TOGGLE
@@ -182,27 +265,29 @@ CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
--- SKY COLOR TOGGLE
-local skyRow, skyToggle, skyState = CreateToggleRow(visualsContent, "Sky Color", SkyColorEnabled, function(state)
-    SkyColorEnabled = state
+-- ATMOSPHERE TOGGLE
+CreateToggleRow(visualsContent, "Atmosphere", AtmosphereEnabled, function(state)
+    AtmosphereEnabled = state
     if state then 
-        ApplySkyColor(SelectedSkyColor)
+        ApplyCloudColor(SelectedAtmoColor)
+        ApplyGUIStyle(true)
+        -- Показываем цветовую палитру
         colorPicker.Visible = true
         colorPickerFrame.Visible = true
     else 
-        ResetSkyColor()
+        ResetAtmosphere()
         colorPicker.Visible = false
         colorPickerFrame.Visible = false
     end
 end, yPos)
 yPos = yPos + 50
 
--- === ЦВЕТОВАЯ ПАЛИТРА ===
+-- === ЦВЕТОВАЯ ПАЛИТРА (ФИОЛЕТОВЫЕ ОТТЕНКИ) ===
 local colorPickerFrame = Instance.new("Frame")
 colorPickerFrame.Parent = visualsContent
 colorPickerFrame.Size = UDim2.new(1, -20, 0, 40)
 colorPickerFrame.Position = UDim2.new(0, 10, 0, yPos)
-colorPickerFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+colorPickerFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
 colorPickerFrame.BackgroundTransparency = 0.5
 colorPickerFrame.BorderSizePixel = 0
 colorPickerFrame.Visible = false
@@ -211,16 +296,16 @@ local colorPickerCorner = Instance.new("UICorner")
 colorPickerCorner.Parent = colorPickerFrame
 colorPickerCorner.CornerRadius = UDim.new(0, 8)
 
--- ЦВЕТА
+-- ЦВЕТА (ФИОЛЕТОВАЯ ГАММА + НЕСКОЛЬКО ВАЙБОВЫХ)
 local colors = {
-    {Color3.fromRGB(0, 150, 255), "Blue"},
-    {Color3.fromRGB(255, 0, 0), "Red"},
-    {Color3.fromRGB(0, 255, 0), "Green"},
-    {Color3.fromRGB(255, 255, 0), "Yellow"},
-    {Color3.fromRGB(255, 0, 255), "Purple"},
-    {Color3.fromRGB(255, 100, 0), "Orange"},
-    {Color3.fromRGB(0, 255, 255), "Cyan"},
-    {Color3.fromRGB(255, 200, 255), "Pink"}
+    {Color3.fromRGB(150, 50, 200), "Purple"},    -- Фиолетовый
+    {Color3.fromRGB(200, 100, 255), "Lavender"}, -- Лавандовый
+    {Color3.fromRGB(100, 50, 200), "Deep Purple"},
+    {Color3.fromRGB(255, 100, 200), "Pink"},     -- Розовый
+    {Color3.fromRGB(50, 150, 255), "Blue"},      -- Синий
+    {Color3.fromRGB(200, 50, 100), "Red"},       -- Красный
+    {Color3.fromRGB(0, 200, 255), "Cyan"},       -- Циан
+    {Color3.fromRGB(255, 150, 50), "Orange"}     -- Оранжевый
 }
 
 local colorButtons = {}
@@ -244,15 +329,16 @@ for i = 1, #colors do
     colorCorner.Parent = colorBtn
     colorCorner.CornerRadius = UDim.new(0, 6)
     
-    if colors[i][1] == SelectedSkyColor then
+    if colors[i][1] == SelectedAtmoColor then
         colorBtn.BorderSizePixel = 2
         colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
     end
     
     colorBtn.MouseButton1Click:Connect(function()
-        SelectedSkyColor = colors[i][1]
-        if SkyColorEnabled then
-            ApplySkyColor(SelectedSkyColor)
+        SelectedAtmoColor = colors[i][1]
+        if AtmosphereEnabled then
+            ApplyCloudColor(SelectedAtmoColor)
+            ApplyGUIStyle(true)
         end
         for _, btn in pairs(colorButtons) do
             btn.BorderSizePixel = 0
@@ -264,40 +350,33 @@ for i = 1, #colors do
     colorButtons[i] = colorBtn
 end
 
--- === SKY COLOR ФУНКЦИИ (FIXED) ===
-function ApplySkyColor(color)
-    pcall(function()
-        -- Пробуем разные способы
-        if Lighting:FindFirstChild("Sky") then
-            local sky = Lighting:FindFirstChild("Sky")
-            sky.SkyColor = color
-        end
-        if Lighting:FindFirstChild("Skybox") then
-            local skybox = Lighting:FindFirstChild("Skybox")
-            skybox.SkyColor = color
-        end
-        -- Если есть свойство SkyColor
-        if Lighting.SkyColor ~= nil then
-            Lighting.SkyColor = color
-        end
-    end)
-end
+-- AIM TAB (пустая)
+local aimContent = tabContents["Aim"]
+local aimLabel = Instance.new("TextLabel")
+aimLabel.Parent = aimContent
+aimLabel.Size = UDim2.new(1, 0, 1, 0)
+aimLabel.Position = UDim2.new(0, 0, 0, 0)
+aimLabel.BackgroundTransparency = 1
+aimLabel.Text = "AIM TAB"
+aimLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
+aimLabel.TextSize = 24
+aimLabel.Font = Enum.Font.GothamBold
+aimLabel.TextXAlignment = Enum.TextXAlignment.Center
+aimLabel.TextYAlignment = Enum.TextYAlignment.Center
 
-function ResetSkyColor()
-    pcall(function()
-        if Lighting:FindFirstChild("Sky") then
-            local sky = Lighting:FindFirstChild("Sky")
-            sky.SkyColor = Color3.fromRGB(0, 150, 255)
-        end
-        if Lighting:FindFirstChild("Skybox") then
-            local skybox = Lighting:FindFirstChild("Skybox")
-            skybox.SkyColor = Color3.fromRGB(0, 150, 255)
-        end
-        if Lighting.SkyColor ~= nil then
-            Lighting.SkyColor = Color3.fromRGB(0, 150, 255)
-        end
-    end)
-end
+-- MISC TAB (пустая)
+local miscContent = tabContents["Misc"]
+local miscLabel = Instance.new("TextLabel")
+miscLabel.Parent = miscContent
+miscLabel.Size = UDim2.new(1, 0, 1, 0)
+miscLabel.Position = UDim2.new(0, 0, 0, 0)
+miscLabel.BackgroundTransparency = 1
+miscLabel.Text = "MISC TAB"
+miscLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
+miscLabel.TextSize = 24
+miscLabel.Font = Enum.Font.GothamBold
+miscLabel.TextXAlignment = Enum.TextXAlignment.Center
+miscLabel.TextYAlignment = Enum.TextYAlignment.Center
 
 -- === ESP ФУНКЦИИ ===
 function CreateESP(targetPlayer)
@@ -308,9 +387,9 @@ function CreateESP(targetPlayer)
     if not targetPlayer.Character then return end
     local highlight = Instance.new("Highlight")
     highlight.Parent = targetPlayer.Character
-    highlight.FillColor = Color3.fromRGB(0, 255, 0)
-    highlight.FillTransparency = 0.5
-    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillColor = Color3.fromRGB(150, 50, 200)
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(255, 200, 255)
     highlight.OutlineTransparency = 0
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     espObjects[targetPlayer] = highlight
@@ -444,11 +523,11 @@ local OpenBtn = Instance.new("TextButton")
 OpenBtn.Parent = ScreenGui
 OpenBtn.Size = UDim2.new(0, 50, 0, 30)
 OpenBtn.Position = UDim2.new(0, 10, 0, 10)
-OpenBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 80)
 OpenBtn.BackgroundTransparency = 0
 OpenBtn.BorderSizePixel = 0
 OpenBtn.Text = "≡"
-OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextColor3 = Color3.fromRGB(220, 150, 255)
 OpenBtn.TextSize = 22
 OpenBtn.Font = Enum.Font.GothamBold
 
@@ -466,8 +545,8 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.4 | BloxStrike"
-Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
+Watermark.Text = "Zertyx v3.6 | BloxStrike"
+Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
@@ -480,7 +559,7 @@ FPS.Size = UDim2.new(0, 60, 0, 30)
 FPS.Position = UDim2.new(1, -70, 1, -40)
 FPS.BackgroundTransparency = 1
 FPS.Text = "60 FPS"
-FPS.TextColor3 = Color3.fromRGB(150, 150, 150)
+FPS.TextColor3 = Color3.fromRGB(180, 150, 200)
 FPS.TextSize = 13
 FPS.Font = Enum.Font.GothamMedium
 FPS.TextXAlignment = Enum.TextXAlignment.Right
@@ -498,13 +577,9 @@ RunService.RenderStepped:Connect(function()
 end)
 
 _G.Zertyx = {
-    ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end,
-    ToggleESP = function() ESPEnabled = not ESPEnabled end,
-    ToggleBigHead = function() BigHeadEnabled = not BigHeadEnabled end,
-    ToggleSkyColor = function() SkyColorEnabled = not SkyColorEnabled end,
-    SetSkyColor = function(color) SelectedSkyColor = color; ApplySkyColor(color) end
+    ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v3.4 LOADED!")
+print("ZERTYX v3.6 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF | Sky Color: OFF")
+print("ESP: ON | Big Head: OFF | Atmosphere: OFF")
