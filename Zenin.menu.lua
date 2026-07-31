@@ -1,15 +1,8 @@
 --[[
-    ███████╗███████╗██████╗ ████████╗██╗   ██╗██╗  ██╗
-    ╚══███╔╝██╔════╝██╔══██╗╚══██╔══╝╚██╗ ██╔╝╚██╗██╔╝
-      ███╔╝ █████╗  ██████╔╝   ██║    ╚████╔╝  ╚███╔╝ 
-     ███╔╝  ██╔══╝  ██╔══██╗   ██║     ╚██╔╝   ██╔██╗ 
-    ███████╗███████╗██║  ██║   ██║      ██║   ██╔╝ ██╗
-    ╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝
-    
-    Zertyx - BloxStrike Menu (Mobile Version)
-    Version: 1.2
+    Zertyx - BloxStrike Menu (ESP + Skeleton)
+    Version: 1.4
     Size: 640x420
-    Open: Кнопка ≡ в левом верхнем углу
+    Open: Button ≡ in top-left corner
 ]]
 
 local Players = game:GetService("Players")
@@ -18,7 +11,15 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- === КОНФИГУРАЦИЯ ===
+-- === ESP STORAGE ===
+local espObjects = {}
+local skeletonObjects = {}
+local nameObjects = {}
+local espEnabled = true
+local skeletonEnabled = false
+local nameEnabled = true
+
+-- === CONFIG ===
 local ZertyxConfig = {
     MenuSize = UDim2.new(0, 640, 0, 420),
     MenuPosition = UDim2.new(0.5, -320, 0.5, -210),
@@ -32,13 +33,13 @@ local ZertyxConfig = {
     }
 }
 
--- === СОЗДАНИЕ GUI ===
+-- === CREATE GUI ===
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === ОСНОВНОЙ ФРЕЙМ ===
+-- === MAIN FRAME ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = ZertyxConfig.MenuSize
@@ -53,7 +54,7 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.Parent = MainFrame
 MainCorner.CornerRadius = UDim.new(0, 20)
 
--- === КНОПКА ОТКРЫТИЯ (ЛЕВЫЙ ВЕРХНИЙ УГОЛ) ===
+-- === OPEN BUTTON (TOP-LEFT) ===
 local OpenButton = Instance.new("TextButton")
 OpenButton.Parent = ScreenGui
 OpenButton.Size = UDim2.new(0, 50, 0, 30)
@@ -65,8 +66,6 @@ OpenButton.Text = "≡"
 OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 OpenButton.TextSize = 22
 OpenButton.Font = Enum.Font.GothamBold
-OpenButton.TextXAlignment = Enum.TextXAlignment.Center
-OpenButton.TextYAlignment = Enum.TextYAlignment.Center
 
 local OpenCorner = Instance.new("UICorner")
 OpenCorner.Parent = OpenButton
@@ -76,7 +75,7 @@ OpenButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- === ЗАГОЛОВОК ===
+-- === TITLE BAR ===
 local TitleBar = Instance.new("Frame")
 TitleBar.Parent = MainFrame
 TitleBar.Size = UDim2.new(1, -24, 0, 32)
@@ -99,7 +98,7 @@ VersionText.Parent = TitleBar
 VersionText.Size = UDim2.new(0, 50, 1, 0)
 VersionText.Position = UDim2.new(0, 105, 0, 0)
 VersionText.BackgroundTransparency = 1
-VersionText.Text = "v1.2"
+VersionText.Text = "v1.4"
 VersionText.TextColor3 = Color3.fromRGB(100, 120, 150)
 VersionText.TextSize = 12
 VersionText.Font = Enum.Font.GothamMedium
@@ -126,7 +125,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
 end)
 
--- === ВКЛАДКИ ===
+-- === TABS ===
 local TabsContainer = Instance.new("Frame")
 TabsContainer.Parent = MainFrame
 TabsContainer.Size = UDim2.new(1, -24, 0, 38)
@@ -200,12 +199,40 @@ local function CreateTab(tabName)
     end)
 end
 
--- === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+-- === SQUARE TOGGLE ===
+local function CreateSquareToggle(row, defaultState, callback)
+    local Toggle = Instance.new("TextButton")
+    Toggle.Parent = row
+    Toggle.Size = UDim2.new(0, 32, 0, 32)
+    Toggle.Position = UDim2.new(0, row.Size.X.Offset - 42, 0.5, -16)
+    Toggle.BackgroundColor3 = defaultState and ZertyxConfig.Theme.Accent or Color3.fromRGB(40, 40, 50)
+    Toggle.BorderSizePixel = 0
+    Toggle.Text = defaultState and "✓" or ""
+    Toggle.TextColor3 = ZertyxConfig.Theme.TextBright
+    Toggle.TextSize = 20
+    Toggle.Font = Enum.Font.GothamBold
+    Toggle.AutoButtonColor = false
+    
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.Parent = Toggle
+    ToggleCorner.CornerRadius = UDim.new(0, 4)
+    
+    local state = defaultState
+    Toggle.MouseButton1Click:Connect(function()
+        state = not state
+        Toggle.Text = state and "✓" or ""
+        Toggle.BackgroundColor3 = state and ZertyxConfig.Theme.Accent or Color3.fromRGB(40, 40, 50)
+        if callback then callback(state) end
+    end)
+    
+    return Toggle, function() return state end
+end
 
-local function CreateRow(parent, label, yPos, icon)
+-- === CREATE ROW ===
+local function CreateRow(parent, label, yPos)
     local Row = Instance.new("Frame")
     Row.Parent = parent
-    Row.Size = UDim2.new(1, -10, 0, 36)
+    Row.Size = UDim2.new(1, -10, 0, 42)
     Row.Position = UDim2.new(0, 5, 0, yPos)
     Row.BackgroundColor3 = ZertyxConfig.Theme.Primary
     Row.BackgroundTransparency = 0.85
@@ -215,28 +242,14 @@ local function CreateRow(parent, label, yPos, icon)
     RowCorner.Parent = Row
     RowCorner.CornerRadius = UDim.new(0, 12)
     
-    if icon then
-        local IconLabel = Instance.new("TextLabel")
-        IconLabel.Parent = Row
-        IconLabel.Size = UDim2.new(0, 24, 1, 0)
-        IconLabel.Position = UDim2.new(0, 8, 0, 0)
-        IconLabel.BackgroundTransparency = 1
-        IconLabel.Text = icon
-        IconLabel.TextColor3 = ZertyxConfig.Theme.Accent
-        IconLabel.TextSize = 16
-        IconLabel.Font = Enum.Font.GothamMedium
-        IconLabel.TextXAlignment = Enum.TextXAlignment.Center
-        IconLabel.TextYAlignment = Enum.TextYAlignment.Center
-    end
-    
     local Label = Instance.new("TextLabel")
     Label.Parent = Row
-    Label.Size = UDim2.new(0, icon and 90 or 110, 1, 0)
-    Label.Position = UDim2.new(0, icon and 38 or 12, 0, 0)
+    Label.Size = UDim2.new(0, 140, 1, 0)
+    Label.Position = UDim2.new(0, 12, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Text = label
     Label.TextColor3 = ZertyxConfig.Theme.Text
-    Label.TextSize = 13
+    Label.TextSize = 14
     Label.Font = Enum.Font.GothamMedium
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.TextYAlignment = Enum.TextYAlignment.Center
@@ -244,39 +257,12 @@ local function CreateRow(parent, label, yPos, icon)
     return Row
 end
 
-local function CreateToggle(row, defaultState, callback)
-    local Toggle = Instance.new("TextButton")
-    Toggle.Parent = row
-    Toggle.Size = UDim2.new(0, 60, 0, 26)
-    Toggle.Position = UDim2.new(0, row.Size.X.Offset - 70, 0.5, -13)
-    Toggle.BackgroundColor3 = defaultState and ZertyxConfig.Theme.Accent or Color3.fromRGB(50, 50, 50)
-    Toggle.BorderSizePixel = 0
-    Toggle.Text = defaultState and "ON" or "OFF"
-    Toggle.TextColor3 = ZertyxConfig.Theme.TextBright
-    Toggle.TextSize = 12
-    Toggle.Font = Enum.Font.GothamBold
-    Toggle.AutoButtonColor = false
-    
-    local ToggleCorner = Instance.new("UICorner")
-    ToggleCorner.Parent = Toggle
-    ToggleCorner.CornerRadius = UDim.new(0, 30)
-    
-    local state = defaultState
-    Toggle.MouseButton1Click:Connect(function()
-        state = not state
-        Toggle.Text = state and "ON" or "OFF"
-        Toggle.BackgroundColor3 = state and ZertyxConfig.Theme.Accent or Color3.fromRGB(50, 50, 50)
-        if callback then callback(state) end
-    end)
-    
-    return Toggle
-end
-
+-- === SLIDER ===
 local function CreateSlider(row, minVal, maxVal, defaultVal, callback)
     local SliderFrame = Instance.new("Frame")
     SliderFrame.Parent = row
-    SliderFrame.Size = UDim2.new(0, 160, 0, 6)
-    SliderFrame.Position = UDim2.new(0, row.Size.X.Offset - 170, 0.5, -3)
+    SliderFrame.Size = UDim2.new(0, 150, 0, 6)
+    SliderFrame.Position = UDim2.new(0, row.Size.X.Offset - 200, 0.5, -3)
     SliderFrame.BackgroundColor3 = ZertyxConfig.Theme.Border
     SliderFrame.BorderSizePixel = 0
     
@@ -296,12 +282,12 @@ local function CreateSlider(row, minVal, maxVal, defaultVal, callback)
     
     local ValueLabel = Instance.new("TextLabel")
     ValueLabel.Parent = row
-    ValueLabel.Size = UDim2.new(0, 30, 0, 20)
-    ValueLabel.Position = UDim2.new(0, row.Size.X.Offset - 10, 0.5, -10)
+    ValueLabel.Size = UDim2.new(0, 40, 0, 20)
+    ValueLabel.Position = UDim2.new(0, row.Size.X.Offset - 50, 0.5, -10)
     ValueLabel.BackgroundTransparency = 1
     ValueLabel.Text = tostring(defaultVal)
     ValueLabel.TextColor3 = ZertyxConfig.Theme.Text
-    ValueLabel.TextSize = 12
+    ValueLabel.TextSize = 13
     ValueLabel.Font = Enum.Font.GothamMedium
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     
@@ -337,11 +323,12 @@ local function CreateSlider(row, minVal, maxVal, defaultVal, callback)
     return function() return currentVal end
 end
 
+-- === DROPDOWN ===
 local function CreateDropdown(row, options, defaultIndex, callback)
     local Dropdown = Instance.new("TextButton")
     Dropdown.Parent = row
-    Dropdown.Size = UDim2.new(0, 120, 0, 26)
-    Dropdown.Position = UDim2.new(0, row.Size.X.Offset - 130, 0.5, -13)
+    Dropdown.Size = UDim2.new(0, 110, 0, 28)
+    Dropdown.Position = UDim2.new(0, row.Size.X.Offset - 120, 0.5, -14)
     Dropdown.BackgroundColor3 = ZertyxConfig.Theme.Background
     Dropdown.BackgroundTransparency = 0.3
     Dropdown.BorderSizePixel = 0
@@ -365,93 +352,297 @@ local function CreateDropdown(row, options, defaultIndex, callback)
     return Dropdown
 end
 
--- === ВКЛАДКА VISUALS ===
+-- === ESP FUNCTIONS ===
+
+-- Create Skeleton
+local function createSkeleton(player)
+    if skeletonObjects[player] then
+        for _, obj in pairs(skeletonObjects[player]) do
+            obj:Destroy()
+        end
+        skeletonObjects[player] = nil
+    end
+    
+    local character = player.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    local parts = {}
+    local joints = {
+        {"Head", "UpperTorso"},
+        {"UpperTorso", "LowerTorso"},
+        {"LeftUpperArm", "LeftLowerArm"},
+        {"RightUpperArm", "RightLowerArm"},
+        {"LeftUpperLeg", "LeftLowerLeg"},
+        {"RightUpperLeg", "RightLowerLeg"}
+    }
+    
+    for _, joint in pairs(joints) do
+        local part1 = character:FindFirstChild(joint[1])
+        local part2 = character:FindFirstChild(joint[2])
+        if part1 and part2 then
+            local attachment1 = Instance.new("Attachment")
+            attachment1.Parent = part1
+            attachment1.Position = Vector3.new(0, 0, 0)
+            
+            local attachment2 = Instance.new("Attachment")
+            attachment2.Parent = part2
+            attachment2.Position = Vector3.new(0, 0, 0)
+            
+            local constraint = Instance.new("RopeConstraint")
+            constraint.Parent = character
+            constraint.Attachment0 = attachment1
+            constraint.Attachment1 = attachment2
+            constraint.Thickness = 0.15
+            constraint.Color = Color3.fromRGB(0, 255, 100)
+            constraint.Visible = skeletonEnabled
+            
+            if not skeletonObjects[player] then
+                skeletonObjects[player] = {}
+            end
+            table.insert(skeletonObjects[player], attachment1)
+            table.insert(skeletonObjects[player], attachment2)
+            table.insert(skeletonObjects[player], constraint)
+        end
+    end
+end
+
+-- Create Name Tag
+local function createNameTag(player)
+    if nameObjects[player] then
+        nameObjects[player]:Destroy()
+        nameObjects[player] = nil
+    end
+    
+    local character = player.Character
+    if not character then return end
+    
+    local head = character:FindFirstChild("Head")
+    if not head then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Parent = head
+    billboard.Size = UDim2.new(0, 100, 0, 30)
+    billboard.Adornee = head
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.AlwaysOnTop = true
+    
+    local label = Instance.new("TextLabel")
+    label.Parent = billboard
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = player.Name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 14
+    label.Font = Enum.Font.GothamBold
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0.3
+    
+    nameObjects[player] = billboard
+end
+
+-- Create Highlight (ESP)
+local function createHighlight(playerObj)
+    if espObjects[playerObj] then
+        espObjects[playerObj]:Destroy()
+        espObjects[playerObj] = nil
+    end
+    
+    if not playerObj.Character then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Parent = playerObj.Character
+    highlight.FillColor = Color3.fromRGB(0, 255, 100)
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    
+    espObjects[playerObj] = highlight
+end
+
+-- Update all ESP
+local function updateESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local character = player.Character
+            local humanoid = character and character:FindFirstChild("Humanoid")
+            
+            if espEnabled and character and humanoid then
+                if not espObjects[player] then
+                    createHighlight(player)
+                end
+            else
+                if espObjects[player] then
+                    espObjects[player]:Destroy()
+                    espObjects[player] = nil
+                end
+            end
+            
+            if skeletonEnabled and character and humanoid then
+                if not skeletonObjects[player] then
+                    createSkeleton(player)
+                end
+            else
+                if skeletonObjects[player] then
+                    for _, obj in pairs(skeletonObjects[player]) do
+                        obj:Destroy()
+                    end
+                    skeletonObjects[player] = nil
+                end
+            end
+            
+            if nameEnabled and character and humanoid then
+                if not nameObjects[player] then
+                    createNameTag(player)
+                end
+            else
+                if nameObjects[player] then
+                    nameObjects[player]:Destroy()
+                    nameObjects[player] = nil
+                end
+            end
+        end
+    end
+end
+
+-- Clear all ESP
+local function clearESP()
+    for player, highlight in pairs(espObjects) do
+        highlight:Destroy()
+    end
+    espObjects = {}
+    
+    for player, objects in pairs(skeletonObjects) do
+        for _, obj in pairs(objects) do
+            obj:Destroy()
+        end
+    end
+    skeletonObjects = {}
+    
+    for player, nameTag in pairs(nameObjects) do
+        nameTag:Destroy()
+    end
+    nameObjects = {}
+end
+
+-- Toggle ESP
+local function toggleESP(state)
+    espEnabled = state
+    if state then
+        updateESP()
+    else
+        clearESP()
+        updateESP()
+    end
+end
+
+-- Toggle Skeleton
+local function toggleSkeleton(state)
+    skeletonEnabled = state
+    updateESP()
+end
+
+-- Toggle Name
+local function toggleName(state)
+    nameEnabled = state
+    updateESP()
+end
+
+-- === VISUALS TAB ===
 function CreateVisualsTab(parent)
     local yPos = 0
     
-    local row1 = CreateRow(parent, "ESP", yPos, "👁")
-    local espToggle = CreateToggle(row1, true)
-    yPos = yPos + 42
+    local row1 = CreateRow(parent, "ESP", yPos)
+    local espToggle, getEspState = CreateSquareToggle(row1, true, function(state)
+        toggleESP(state)
+    end)
+    yPos = yPos + 48
     
-    local row2 = CreateRow(parent, "Дальность", yPos, "📏")
-    local getRange = CreateSlider(row2, 0, 100, 75)
-    yPos = yPos + 42
+    local row2 = CreateRow(parent, "ESP Range", yPos)
+    local rangeSlider = CreateSlider(row2, 0, 100, 75)
+    yPos = yPos + 48
     
-    local row3 = CreateRow(parent, "Скелет", yPos, "🦴")
-    local skeletonToggle = CreateToggle(row3, false)
-    yPos = yPos + 42
+    local row3 = CreateRow(parent, "Skeleton", yPos)
+    local skeletonToggle, getSkeletonState = CreateSquareToggle(row3, false, function(state)
+        toggleSkeleton(state)
+    end)
+    yPos = yPos + 48
     
-    local row4 = CreateRow(parent, "Имя", yPos, "🏷")
-    local nameToggle = CreateToggle(row4, true)
-    yPos = yPos + 42
+    local row4 = CreateRow(parent, "Player Names", yPos)
+    local nameToggle, getNameState = CreateSquareToggle(row4, true, function(state)
+        toggleName(state)
+    end)
+    yPos = yPos + 48
     
-    local row5 = CreateRow(parent, "Цвет скелета", yPos, "🎨")
-    local colorDropdown = CreateDropdown(row5, {"Радуга", "Красный", "Синий", "Зеленый", "Желтый"}, 1)
-    yPos = yPos + 42
-    
-    local row6 = CreateRow(parent, "Размер имени", yPos, "📐")
-    local getNameSize = CreateSlider(row6, 8, 24, 14)
-    yPos = yPos + 42
+    local row5 = CreateRow(parent, "Skeleton Color", yPos)
+    local colorDropdown = CreateDropdown(row5, {"Rainbow", "Red", "Blue", "Green", "Yellow"}, 1)
+    yPos = yPos + 48
     
     parent.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
 end
 
--- === ВКЛАДКА AIM ===
+-- === AIM TAB ===
 function CreateAimTab(parent)
     local yPos = 0
     
-    local row1 = CreateRow(parent, "Aimbot", yPos, "🎯")
-    local aimToggle = CreateToggle(row1, false)
-    yPos = yPos + 42
+    local row1 = CreateRow(parent, "Aimbot", yPos)
+    local aimToggle = CreateSquareToggle(row1, false)
+    yPos = yPos + 48
     
-    local row2 = CreateRow(parent, "FOV", yPos, "🔲")
+    local row2 = CreateRow(parent, "FOV", yPos)
     local getFOV = CreateSlider(row2, 0, 360, 120)
-    yPos = yPos + 42
+    yPos = yPos + 48
     
-    local row3 = CreateRow(parent, "Smooth", yPos, "⚡")
+    local row3 = CreateRow(parent, "Smooth", yPos)
     local getSmooth = CreateSlider(row3, 0, 100, 50)
-    yPos = yPos + 42
+    yPos = yPos + 48
     
-    local row4 = CreateRow(parent, "Цель", yPos, "👤")
-    local targetDropdown = CreateDropdown(row4, {"Голова", "Тело", "Шея"}, 1)
-    yPos = yPos + 42
+    local row4 = CreateRow(parent, "Target", yPos)
+    local targetDropdown = CreateDropdown(row4, {"Head", "Body", "Neck"}, 1)
+    yPos = yPos + 48
     
-    local row5 = CreateRow(parent, "Безопасность", yPos, "🛡")
-    local safeToggle = CreateToggle(row5, true)
-    yPos = yPos + 42
+    local row5 = CreateRow(parent, "Safety", yPos)
+    local safeToggle = CreateSquareToggle(row5, true)
+    yPos = yPos + 48
     
-    local row6 = CreateRow(parent, "Rage", yPos, "🔥")
-    local rageToggle = CreateToggle(row6, false)
-    yPos = yPos + 42
+    local row6 = CreateRow(parent, "Rage", yPos)
+    local rageToggle = CreateSquareToggle(row6, false)
+    yPos = yPos + 48
     
     parent.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
 end
 
--- === ВКЛАДКА MISC ===
+-- === MISC TAB ===
 function CreateMiscTab(parent)
     local yPos = 0
     
-    local row1 = CreateRow(parent, "Watermark", yPos, "💧")
-    local watermarkToggle = CreateToggle(row1, true)
-    yPos = yPos + 42
+    local row1 = CreateRow(parent, "Watermark", yPos)
+    local watermarkToggle = CreateSquareToggle(row1, true)
+    yPos = yPos + 48
     
-    local row2 = CreateRow(parent, "FPS Counter", yPos, "📊")
-    local fpsToggle = CreateToggle(row2, true)
-    yPos = yPos + 42
+    local row2 = CreateRow(parent, "FPS Counter", yPos)
+    local fpsToggle = CreateSquareToggle(row2, true)
+    yPos = yPos + 48
     
-    local row3 = CreateRow(parent, "Crosshair", yPos, "➕")
-    local crosshairToggle = CreateToggle(row3, true)
-    yPos = yPos + 42
+    local row3 = CreateRow(parent, "Crosshair", yPos)
+    local crosshairToggle = CreateSquareToggle(row3, true)
+    yPos = yPos + 48
     
-    local row4 = CreateRow(parent, "Цвет прицела", yPos, "🎨")
-    local crosshairColor = CreateDropdown(row4, {"Красный", "Зеленый", "Синий", "Белый", "Желтый"}, 4)
-    yPos = yPos + 42
+    local row4 = CreateRow(parent, "Crosshair Color", yPos)
+    local crosshairColor = CreateDropdown(row4, {"Red", "Green", "Blue", "White", "Yellow"}, 4)
+    yPos = yPos + 48
     
-    local row5 = CreateRow(parent, "Клавиша меню", yPos, "⌨")
+    local row5 = CreateRow(parent, "Menu Key", yPos)
     local keyLabel = Instance.new("TextLabel")
     keyLabel.Parent = row5
-    keyLabel.Size = UDim2.new(0, 80, 0, 26)
-    keyLabel.Position = UDim2.new(0, row5.Size.X.Offset - 90, 0.5, -13)
+    keyLabel.Size = UDim2.new(0, 60, 0, 26)
+    keyLabel.Position = UDim2.new(0, row5.Size.X.Offset - 70, 0.5, -13)
     keyLabel.BackgroundColor3 = ZertyxConfig.Theme.Background
     keyLabel.BackgroundTransparency = 0.3
     keyLabel.BorderSizePixel = 0
@@ -464,30 +655,30 @@ function CreateMiscTab(parent)
     local KeyCorner = Instance.new("UICorner")
     KeyCorner.Parent = keyLabel
     KeyCorner.CornerRadius = UDim.new(0, 30)
-    yPos = yPos + 42
+    yPos = yPos + 48
     
     parent.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
 end
 
--- === СОЗДАНИЕ ВКЛАДОК ===
+-- === CREATE TABS ===
 CreateTab("Visuals")
 CreateTab("Aim")
 CreateTab("Misc")
 
--- Активируем первую вкладку
+-- Activate first tab
 local firstTab = TabButtons["Visuals"]
 if firstTab then
     firstTab.BackgroundTransparency = 0.2
     firstTab.TextColor3 = ZertyxConfig.Theme.TextBright
 end
 
--- === ВОДНЫЙ ЗНАК ===
+-- === WATERMARK ===
 local Watermark = Instance.new("TextLabel")
 Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v1.2 | BloxStrike"
+Watermark.Text = "Zertyx v1.4 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(106, 147, 199)
 Watermark.TextSize = 14
 Watermark.Font = Enum.Font.GothamBold
@@ -495,7 +686,7 @@ Watermark.TextXAlignment = Enum.TextXAlignment.Left
 Watermark.TextYAlignment = Enum.TextYAlignment.Bottom
 Watermark.Visible = true
 
--- === FPS СЧЕТЧИК ===
+-- === FPS COUNTER ===
 local FPSCounter = Instance.new("TextLabel")
 FPSCounter.Parent = ScreenGui
 FPSCounter.Size = UDim2.new(0, 60, 0, 30)
@@ -521,15 +712,58 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- === ГЛОБАЛЬНЫЙ ДОСТУП ===
+-- === ESP UPDATE EVENTS ===
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        updateESP()
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if espObjects[player] then
+        espObjects[player]:Destroy()
+        espObjects[player] = nil
+    end
+    if skeletonObjects[player] then
+        for _, obj in pairs(skeletonObjects[player]) do
+            obj:Destroy()
+        end
+        skeletonObjects[player] = nil
+    end
+    if nameObjects[player] then
+        nameObjects[player]:Destroy()
+        nameObjects[player] = nil
+    end
+end)
+
+-- Update ESP every second
+task.spawn(function()
+    while task.wait(1) do
+        updateESP()
+    end
+end)
+
+-- Initial ESP
+task.wait(1)
+toggleESP(true)
+toggleName(true)
+toggleSkeleton(false)
+
+-- === GLOBAL ACCESS ===
 _G.Zertyx = {
     ToggleMenu = function()
         MainFrame.Visible = not MainFrame.Visible
     end,
     IsOpen = function()
         return MainFrame.Visible
-    end
+    end,
+    ToggleESP = toggleESP,
+    ToggleSkeleton = toggleSkeleton,
+    ToggleName = toggleName,
+    ClearESP = clearESP
 }
 
-print("Zertyx v1.2 Loaded Successfully!")
-print("Нажмите кнопку ≡ в левом верхнем углу для открытия меню")
+print("Zertyx v1.4 Loaded Successfully!")
+print("Press ≡ button in top-left corner to open menu")
+print("ESP: ON | Skeleton: OFF | Names: ON")
