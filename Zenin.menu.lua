@@ -1,13 +1,19 @@
--- Zertyx CHEAT v3.2 - BIG HEAD ADDED
+-- Zertyx CHEAT v3.3 - SKY COLOR ADDED
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Lighting = game:GetService("Lighting")
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
 local BigHeadEnabled = false
+local SkyColorEnabled = false
+local SelectedSkyColor = Color3.fromRGB(0, 150, 255) -- Синий по умолчанию
 local espObjects = {}
 local bigHeadObjects = {}
+
+-- СОХРАНЯЕМ ОРИГИНАЛЬНЫЙ ЦВЕТ НЕБА
+local OriginalSkyColor = Lighting.SkyColor
 
 -- ГЛАВНОЕ МЕНЮ
 local ScreenGui = Instance.new("ScreenGui")
@@ -179,9 +185,101 @@ CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
--- ОБНОВЛЯЕМ РАЗМЕР КАНВАСА
+-- SKY COLOR TOGGLE
+local skyRow, skyToggle, skyState = CreateToggleRow(visualsContent, "Sky Color", SkyColorEnabled, function(state)
+    SkyColorEnabled = state
+    if state then 
+        ApplySkyColor(SelectedSkyColor)
+        colorPicker.Visible = true
+        colorPickerFrame.Visible = true
+    else 
+        ResetSkyColor()
+        colorPicker.Visible = false
+        colorPickerFrame.Visible = false
+    end
+end, yPos)
+yPos = yPos + 50
+
+-- === ЦВЕТОВАЯ ПАЛИТРА ===
+local colorPickerFrame = Instance.new("Frame")
+colorPickerFrame.Parent = visualsContent
+colorPickerFrame.Size = UDim2.new(1, -20, 0, 40)
+colorPickerFrame.Position = UDim2.new(0, 10, 0, yPos)
+colorPickerFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+colorPickerFrame.BackgroundTransparency = 0.5
+colorPickerFrame.BorderSizePixel = 0
+colorPickerFrame.Visible = false
+
+local colorPickerCorner = Instance.new("UICorner")
+colorPickerCorner.Parent = colorPickerFrame
+colorPickerCorner.CornerRadius = UDim.new(0, 8)
+
+-- ЦВЕТА
+local colors = {
+    {Color3.fromRGB(0, 150, 255), "Blue"},
+    {Color3.fromRGB(255, 0, 0), "Red"},
+    {Color3.fromRGB(0, 255, 0), "Green"},
+    {Color3.fromRGB(255, 255, 0), "Yellow"},
+    {Color3.fromRGB(255, 0, 255), "Purple"},
+    {Color3.fromRGB(255, 100, 0), "Orange"},
+    {Color3.fromRGB(0, 255, 255), "Cyan"},
+    {Color3.fromRGB(255, 200, 255), "Pink"}
+}
+
+local colorButtons = {}
+local colorPicker = Instance.new("Frame")
+colorPicker.Parent = colorPickerFrame
+colorPicker.Size = UDim2.new(1, 0, 1, 0)
+colorPicker.BackgroundTransparency = 1
+
+for i = 1, #colors do
+    local colorBtn = Instance.new("TextButton")
+    colorBtn.Parent = colorPicker
+    colorBtn.Size = UDim2.new(0, 30, 0, 30)
+    colorBtn.Position = UDim2.new(0, 10 + (i-1) * 40, 0.5, -15)
+    colorBtn.BackgroundColor3 = colors[i][1]
+    colorBtn.BackgroundTransparency = 0
+    colorBtn.BorderSizePixel = 0
+    colorBtn.Text = ""
+    colorBtn.AutoButtonColor = false
+    
+    local colorCorner = Instance.new("UICorner")
+    colorCorner.Parent = colorBtn
+    colorCorner.CornerRadius = UDim.new(0, 6)
+    
+    -- Подсветка выбранного цвета
+    if colors[i][1] == SelectedSkyColor then
+        colorBtn.BorderSizePixel = 2
+        colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    end
+    
+    colorBtn.MouseButton1Click:Connect(function()
+        SelectedSkyColor = colors[i][1]
+        if SkyColorEnabled then
+            ApplySkyColor(SelectedSkyColor)
+        end
+        -- Обновляем подсветку
+        for _, btn in pairs(colorButtons) do
+            btn.BorderSizePixel = 0
+        end
+        colorBtn.BorderSizePixel = 2
+        colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    
+    colorButtons[i] = colorBtn
+end
+
+-- ОБНОВЛЯЕМ РАЗМЕР
 visualsContent.Size = UDim2.new(1, 0, 1, -90)
-visualsContent.ClipsDescendants = true
+
+-- === SKY COLOR ФУНКЦИИ ===
+function ApplySkyColor(color)
+    Lighting.SkyColor = color
+end
+
+function ResetSkyColor()
+    Lighting.SkyColor = OriginalSkyColor
+end
 
 -- === ESP ФУНКЦИИ ===
 function CreateESP(targetPlayer)
@@ -189,9 +287,7 @@ function CreateESP(targetPlayer)
         espObjects[targetPlayer]:Destroy()
         espObjects[targetPlayer] = nil
     end
-    
     if not targetPlayer.Character then return end
-    
     local highlight = Instance.new("Highlight")
     highlight.Parent = targetPlayer.Character
     highlight.FillColor = Color3.fromRGB(0, 255, 0)
@@ -199,7 +295,6 @@ function CreateESP(targetPlayer)
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
     highlight.OutlineTransparency = 0
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    
     espObjects[targetPlayer] = highlight
 end
 
@@ -235,20 +330,13 @@ function CreateBigHead(targetPlayer)
         bigHeadObjects[targetPlayer]:Destroy()
         bigHeadObjects[targetPlayer] = nil
     end
-    
     if not targetPlayer.Character then return end
-    
     local head = targetPlayer.Character:FindFirstChild("Head")
     if not head then return end
-    
-    -- Сохраняем оригинальный размер
     if not head:GetAttribute("OriginalSize") then
         head:SetAttribute("OriginalSize", head.Size)
     end
-    
-    -- Увеличиваем голову в 2 раза
     head.Size = head.Size * 2
-    
     bigHeadObjects[targetPlayer] = head
 end
 
@@ -362,7 +450,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.2 | BloxStrike"
+Watermark.Text = "Zertyx v3.3 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -396,9 +484,11 @@ end)
 _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end,
     ToggleESP = function() ESPEnabled = not ESPEnabled end,
-    ToggleBigHead = function() BigHeadEnabled = not BigHeadEnabled end
+    ToggleBigHead = function() BigHeadEnabled = not BigHeadEnabled end,
+    ToggleSkyColor = function() SkyColorEnabled = not SkyColorEnabled end,
+    SetSkyColor = function(color) SelectedSkyColor = color; ApplySkyColor(color) end
 }
 
-print("ZERTYX v3.2 LOADED!")
+print("ZERTYX v3.3 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF")
+print("ESP: ON | Big Head: OFF | Sky Color: OFF")
