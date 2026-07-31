@@ -1,7 +1,8 @@
--- Zertyx CHEAT v4.6 - THIRD PERSON
+-- Zertyx CHEAT v4.6 - THIRD PERSON (FULL CONTROL)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
@@ -10,7 +11,9 @@ local ThirdPersonEnabled = false
 local ZoomDistance = 10
 local espObjects = {}
 local bigHeadObjects = {}
-local originalCameraOffset = Vector3.new(0, 0, 0)
+local originalCameraOffset = nil
+local originalCameraType = nil
+local originalCameraSubject = nil
 
 -- === ГЛАВНОЕ МЕНЮ ===
 local ScreenGui = Instance.new("ScreenGui")
@@ -277,10 +280,10 @@ CreateToggleRow(visualsContent, "Third Person", ThirdPersonEnabled, function(sta
     ThirdPersonEnabled = state
     if state then 
         zoomSlider.Visible = true
-        UpdateCamera()
+        SetThirdPerson(true)
     else 
         zoomSlider.Visible = false
-        ResetCamera()
+        SetThirdPerson(false)
     end
 end, yPos)
 yPos = yPos + 50
@@ -289,7 +292,7 @@ yPos = yPos + 50
 local zoomSlider = CreateSlider(visualsContent, "Zoom", 3, 20, 10, function(val)
     ZoomDistance = val
     if ThirdPersonEnabled then
-        UpdateCamera()
+        SetThirdPerson(true) -- обновляем расстояние
     end
 end, yPos)
 zoomSlider.Visible = false
@@ -324,43 +327,33 @@ miscLabel.TextXAlignment = Enum.TextXAlignment.Center
 miscLabel.TextYAlignment = Enum.TextYAlignment.Center
 
 -- === THIRD PERSON ФУНКЦИИ ===
-local function GetHumanoid()
+function SetThirdPerson(enable)
     local char = LocalPlayer.Character
-    if char then
-        return char:FindFirstChild("Humanoid")
-    end
-    return nil
-end
-
-function UpdateCamera()
-    local humanoid = GetHumanoid()
-    if humanoid then
-        if ThirdPersonEnabled then
-            -- Сохраняем оригинальный оффсет (если не сохранён)
-            if originalCameraOffset == Vector3.new(0, 0, 0) then
-                originalCameraOffset = humanoid.CameraOffset
-            end
-            -- Устанавливаем смещение камеры (назад и чуть вверх)
-            humanoid.CameraOffset = Vector3.new(0, 2, -ZoomDistance)
+    if not char then return end
+    local humanoid = char:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    if enable then
+        -- Сохраняем оригинальные настройки камеры
+        originalCameraOffset = humanoid.CameraOffset
+        -- Устанавливаем смещение (назад и чуть вверх)
+        humanoid.CameraOffset = Vector3.new(0, 2, -ZoomDistance)
+    else
+        -- Восстанавливаем оригинальное смещение
+        if originalCameraOffset then
+            humanoid.CameraOffset = originalCameraOffset
         else
-            ResetCamera()
+            humanoid.CameraOffset = Vector3.new(0, 0, 0)
         end
-    end
-end
-
-function ResetCamera()
-    local humanoid = GetHumanoid()
-    if humanoid then
-        humanoid.CameraOffset = originalCameraOffset
+        originalCameraOffset = nil
     end
 end
 
 -- Подписываемся на смену персонажа
 LocalPlayer.CharacterAdded:Connect(function(char)
-    -- Даем время на загрузку
-    task.wait(0.5)
+    task.wait(0.5) -- ждём появления Humanoid
     if ThirdPersonEnabled then
-        UpdateCamera()
+        SetThirdPerson(true)
     end
 end)
 
