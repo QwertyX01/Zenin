@@ -1,24 +1,16 @@
--- Zertyx CHEAT v4.5 - 2D BOX ESP (REAL WHITE BOX)
+-- Zertyx CHEAT v4.6 - THIRD PERSON
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
 local BigHeadEnabled = false
-local BoxEnabled = false
-local BoxThickness = 2
+local ThirdPersonEnabled = false
+local ZoomDistance = 10
 local espObjects = {}
 local bigHeadObjects = {}
-local boxObjects = {}
-
--- === СОЗДАЁМ ОТДЕЛЬНЫЙ GUI ДЛЯ БОКСОВ ===
-local BoxGui = Instance.new("ScreenGui")
-BoxGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-BoxGui.Name = "BoxESP"
-BoxGui.ResetOnSpawn = false
-BoxGui.Enabled = false
+local originalCameraOffset = Vector3.new(0, 0, 0)
 
 -- === ГЛАВНОЕ МЕНЮ ===
 local ScreenGui = Instance.new("ScreenGui")
@@ -280,28 +272,27 @@ CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
--- 2D BOX TOGGLE
-CreateToggleRow(visualsContent, "2D Box", BoxEnabled, function(state)
-    BoxEnabled = state
-    BoxGui.Enabled = state
+-- THIRD PERSON TOGGLE
+CreateToggleRow(visualsContent, "Third Person", ThirdPersonEnabled, function(state)
+    ThirdPersonEnabled = state
     if state then 
-        thicknessSlider.Visible = true
-        ClearBox()
+        zoomSlider.Visible = true
+        UpdateCamera()
     else 
-        ClearBox()
-        thicknessSlider.Visible = false
+        zoomSlider.Visible = false
+        ResetCamera()
     end
 end, yPos)
 yPos = yPos + 50
 
--- СЛАЙДЕР ТОЛЩИНЫ
-local thicknessSlider = CreateSlider(visualsContent, "Thickness", 1, 5, 2, function(val)
-    BoxThickness = val
-    if BoxEnabled then
-        ClearBox()
+-- СЛАЙДЕР ZOOM
+local zoomSlider = CreateSlider(visualsContent, "Zoom", 3, 20, 10, function(val)
+    ZoomDistance = val
+    if ThirdPersonEnabled then
+        UpdateCamera()
     end
 end, yPos)
-thicknessSlider.Visible = false
+zoomSlider.Visible = false
 yPos = yPos + 50
 
 -- AIM TAB
@@ -332,14 +323,54 @@ miscLabel.Font = Enum.Font.GothamBold
 miscLabel.TextXAlignment = Enum.TextXAlignment.Center
 miscLabel.TextYAlignment = Enum.TextYAlignment.Center
 
--- === ESP (ГОЛУБОЙ) ===
+-- === THIRD PERSON ФУНКЦИИ ===
+local function GetHumanoid()
+    local char = LocalPlayer.Character
+    if char then
+        return char:FindFirstChild("Humanoid")
+    end
+    return nil
+end
+
+function UpdateCamera()
+    local humanoid = GetHumanoid()
+    if humanoid then
+        if ThirdPersonEnabled then
+            -- Сохраняем оригинальный оффсет (если не сохранён)
+            if originalCameraOffset == Vector3.new(0, 0, 0) then
+                originalCameraOffset = humanoid.CameraOffset
+            end
+            -- Устанавливаем смещение камеры (назад и чуть вверх)
+            humanoid.CameraOffset = Vector3.new(0, 2, -ZoomDistance)
+        else
+            ResetCamera()
+        end
+    end
+end
+
+function ResetCamera()
+    local humanoid = GetHumanoid()
+    if humanoid then
+        humanoid.CameraOffset = originalCameraOffset
+    end
+end
+
+-- Подписываемся на смену персонажа
+LocalPlayer.CharacterAdded:Connect(function(char)
+    -- Даем время на загрузку
+    task.wait(0.5)
+    if ThirdPersonEnabled then
+        UpdateCamera()
+    end
+end)
+
+-- === ESP ===
 function CreateESP(targetPlayer)
     if espObjects[targetPlayer] then
         espObjects[targetPlayer]:Destroy()
         espObjects[targetPlayer] = nil
     end
     if not targetPlayer.Character then return end
-    
     local highlight = Instance.new("Highlight")
     highlight.Parent = targetPlayer.Character
     highlight.FillColor = Color3.fromRGB(50, 150, 255)
@@ -347,7 +378,6 @@ function CreateESP(targetPlayer)
     highlight.OutlineColor = Color3.fromRGB(100, 200, 255)
     highlight.OutlineTransparency = 0.1
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    
     espObjects[targetPlayer] = highlight
 end
 
@@ -431,95 +461,31 @@ function ClearBigHead()
     bigHeadObjects = {}
 end
 
--- === 2D BOX (НАСТОЯЩАЯ БЕЛАЯ РАМКА) ===
-function CreateBox(player)
-    if boxObjects[player] then
-        boxObjects[player]:Destroy()
-        boxObjects[player] = nil
-    end
-    
-    local character = player.Character
-    if not character then return end
-    
-    -- Создаём Frame для бокса
-    local frame = Instance.new("Frame")
-    frame.Parent = BoxGui
-    frame.BackgroundTransparency = 1
-    frame.BorderSizePixel = BoxThickness
-    frame.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    frame.Size = UDim2.new(0, 0, 0, 0)
-    frame.Position = UDim2.new(0, 0, 0, 0)
-    frame.Visible = true
-    frame.ZIndex = 10
-    
-    boxObjects[player] = {
-        frame = frame,
-        character = character,
-        head = character:FindFirstChild("Head"),
-        root = character:FindFirstChild("HumanoidRootPart")
-    }
-end
-
-function RemoveBox(player)
-    if boxObjects[player] then
-        if boxObjects[player].frame then
-            boxObjects[player].frame:Destroy()
-        end
-        boxObjects[player] = nil
-    end
-end
-
-function ClearBox()
-    for player, data in pairs(boxObjects) do
-        if data.frame then
-            data.frame:Destroy()
+-- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
+RunService.Heartbeat:Connect(function()
+    -- ESP
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                CreateESP(targetPlayer)
+            else
+                RemoveESP(targetPlayer)
+            end
         end
     end
-    boxObjects = {}
-end
-
--- ОБНОВЛЕНИЕ ПОЗИЦИИ БОКСОВ (КАЖДЫЙ КАДР)
-RunService.RenderStepped:Connect(function()
-    if not BoxEnabled then return end
     
-    for player, data in pairs(boxObjects) do
-        if not player or not player.Character or not data.frame then
-            RemoveBox(player)
-            continue
+    -- Big Head
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if BigHeadEnabled and targetPlayer.Character then
+                local head = targetPlayer.Character:FindFirstChild("Head")
+                if head and not bigHeadObjects[targetPlayer] then
+                    CreateBigHead(targetPlayer)
+                end
+            else
+                RemoveBigHead(targetPlayer)
+            end
         end
-        
-        local character = player.Character
-        local head = character:FindFirstChild("Head")
-        local root = character:FindFirstChild("HumanoidRootPart")
-        
-        if not head or not root then
-            data.frame.Visible = false
-            continue
-        end
-        
-        -- Получаем позиции на экране
-        local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position)
-        local rootPos, rootOnScreen = Camera:WorldToViewportPoint(root.Position)
-        
-        -- Если игрок за пределами экрана - скрываем бокс
-        if not headOnScreen and not rootOnScreen then
-            data.frame.Visible = false
-            continue
-        end
-        
-        -- Вычисляем размеры бокса
-        local height = math.abs(headPos.Y - rootPos.Y) + 1.5
-        local width = height * 0.5
-        
-        -- Центрируем бокс
-        local centerX = (headPos.X + rootPos.X) / 2
-        local centerY = (headPos.Y + rootPos.Y) / 2
-        
-        -- Обновляем позицию и размер
-        data.frame.Position = UDim2.new(0, centerX - width/2, 0, centerY - height/2)
-        data.frame.Size = UDim2.new(0, width, 0, height)
-        data.frame.Visible = true
-        data.frame.BorderSizePixel = BoxThickness
     end
 end)
 
@@ -528,16 +494,12 @@ Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         UpdateESP()
         UpdateBigHead()
-        if BoxEnabled then
-            CreateBox(player)
-        end
     end)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
     RemoveESP(player)
     RemoveBigHead(player)
-    RemoveBox(player)
 end)
 
 -- === ЗАПУСК ===
@@ -571,7 +533,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v4.5 | BloxStrike"
+Watermark.Text = "Zertyx v4.6 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -606,6 +568,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v4.5 LOADED!")
+print("ZERTYX v4.6 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF | 2D Box: OFF")
+print("ESP: ON | Big Head: OFF | Third Person: OFF")
