@@ -1,4 +1,4 @@
--- Zertyx CHEAT v4.6 - THIRD PERSON (FULL CONTROL)
+-- Zertyx CHEAT v4.6 - THIRD PERSON (FULL CONTROL, FIXED SLIDER)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -12,8 +12,6 @@ local ZoomDistance = 10
 local espObjects = {}
 local bigHeadObjects = {}
 local originalCameraOffset = nil
-local originalCameraType = nil
-local originalCameraSubject = nil
 
 -- === ГЛАВНОЕ МЕНЮ ===
 local ScreenGui = Instance.new("ScreenGui")
@@ -118,7 +116,9 @@ end
 local visualsContent = tabContents["Visuals"]
 local yPos = 10
 
--- ФУНКЦИЯ СОЗДАНИЯ РЯДА С ТОГГЛЕМ
+-- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СОЗДАНИЯ ЭЛЕМЕНТОВ
+
+-- Ряд с тогглом
 local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     local row = Instance.new("Frame")
     row.Parent = parent
@@ -172,7 +172,7 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     return row, toggle
 end
 
--- ФУНКЦИЯ СОЗДАНИЯ СЛАЙДЕРА
+-- Слайдер
 local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback, yPos)
     local row = Instance.new("Frame")
     row.Parent = parent
@@ -261,22 +261,24 @@ local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback,
     return row
 end
 
--- ESP TOGGLE
+-- === СОЗДАНИЕ ЭЛЕМЕНТОВ В VISUALS ===
+
+-- 1. ESP Toggle
 CreateToggleRow(visualsContent, "ESP", ESPEnabled, function(state)
     ESPEnabled = state
     if state then UpdateESP() else ClearESP() end
 end, yPos)
 yPos = yPos + 50
 
--- BIG HEAD TOGGLE
+-- 2. Big Head Toggle
 CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
     BigHeadEnabled = state
     if state then UpdateBigHead() else ClearBigHead() end
 end, yPos)
 yPos = yPos + 50
 
--- THIRD PERSON TOGGLE
-CreateToggleRow(visualsContent, "Third Person", ThirdPersonEnabled, function(state)
+-- 3. Third Person Toggle (создаём до слайдера, чтобы слайдер был после)
+local thirdPersonRow, thirdPersonToggle = CreateToggleRow(visualsContent, "Third Person", ThirdPersonEnabled, function(state)
     ThirdPersonEnabled = state
     if state then 
         zoomSlider.Visible = true
@@ -288,17 +290,17 @@ CreateToggleRow(visualsContent, "Third Person", ThirdPersonEnabled, function(sta
 end, yPos)
 yPos = yPos + 50
 
--- СЛАЙДЕР ZOOM
-local zoomSlider = CreateSlider(visualsContent, "Zoom", 3, 20, 10, function(val)
+-- 4. Zoom Slider (создаём после, но сохраняем в переменную для управления видимостью)
+local zoomSlider = CreateSlider(visualsContent, "Zoom", 3, 20, ZoomDistance, function(val)
     ZoomDistance = val
     if ThirdPersonEnabled then
         SetThirdPerson(true) -- обновляем расстояние
     end
 end, yPos)
-zoomSlider.Visible = false
+zoomSlider.Visible = false  -- изначально скрыт
 yPos = yPos + 50
 
--- AIM TAB
+-- AIM TAB (пустой)
 local aimContent = tabContents["Aim"]
 local aimLabel = Instance.new("TextLabel")
 aimLabel.Parent = aimContent
@@ -312,7 +314,7 @@ aimLabel.Font = Enum.Font.GothamBold
 aimLabel.TextXAlignment = Enum.TextXAlignment.Center
 aimLabel.TextYAlignment = Enum.TextYAlignment.Center
 
--- MISC TAB
+-- MISC TAB (пустой)
 local miscContent = tabContents["Misc"]
 local miscLabel = Instance.new("TextLabel")
 miscLabel.Parent = miscContent
@@ -334,24 +336,24 @@ function SetThirdPerson(enable)
     if not humanoid then return end
     
     if enable then
-        -- Сохраняем оригинальные настройки камеры
-        originalCameraOffset = humanoid.CameraOffset
-        -- Устанавливаем смещение (назад и чуть вверх)
+        -- Сохраняем оригинальный оффсет, если ещё не сохранён
+        if originalCameraOffset == nil then
+            originalCameraOffset = humanoid.CameraOffset
+        end
         humanoid.CameraOffset = Vector3.new(0, 2, -ZoomDistance)
     else
-        -- Восстанавливаем оригинальное смещение
-        if originalCameraOffset then
+        if originalCameraOffset ~= nil then
             humanoid.CameraOffset = originalCameraOffset
+            originalCameraOffset = nil
         else
             humanoid.CameraOffset = Vector3.new(0, 0, 0)
         end
-        originalCameraOffset = nil
     end
 end
 
 -- Подписываемся на смену персонажа
 LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(0.5) -- ждём появления Humanoid
+    task.wait(0.5)
     if ThirdPersonEnabled then
         SetThirdPerson(true)
     end
