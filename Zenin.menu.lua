@@ -1,4 +1,4 @@
--- Zertyx CHEAT v3.0 - FULL WORKING
+-- Zertyx CHEAT v3.1 - ESP WORKING
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -108,7 +108,7 @@ end
 -- VISUALS TAB
 local visualsContent = tabContents["Visuals"]
 
--- ESP Toggle
+-- ESP Toggle (квадратный)
 local espRow = Instance.new("Frame")
 espRow.Parent = visualsContent
 espRow.Size = UDim2.new(1, -20, 0, 40)
@@ -133,6 +133,7 @@ espLabel.Font = Enum.Font.GothamMedium
 espLabel.TextXAlignment = Enum.TextXAlignment.Left
 espLabel.TextYAlignment = Enum.TextYAlignment.Center
 
+-- Квадратный toggle (без слова ON/OFF)
 local espToggle = Instance.new("TextButton")
 espToggle.Parent = espRow
 espToggle.Size = UDim2.new(0, 30, 0, 30)
@@ -140,22 +141,22 @@ espToggle.Position = UDim2.new(1, -40, 0.5, -15)
 espToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 espToggle.BackgroundTransparency = 0
 espToggle.BorderSizePixel = 0
-espToggle.Text = "ON"
+espToggle.Text = "✓"
 espToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-espToggle.TextSize = 12
+espToggle.TextSize = 18
 espToggle.Font = Enum.Font.GothamBold
 espToggle.AutoButtonColor = false
 
 local espCorner2 = Instance.new("UICorner")
 espCorner2.Parent = espToggle
-espCorner2.CornerRadius = UDim.new(0, 6)
+espCorner2.CornerRadius = UDim.new(0, 4)
 
 local espState = true
 espToggle.MouseButton1Click:Connect(function()
     espState = not espState
     ESPEnabled = espState
-    espToggle.Text = espState and "ON" or "OFF"
-    espToggle.BackgroundColor3 = espState and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 50, 50)
+    espToggle.Text = espState and "✓" or ""
+    espToggle.BackgroundColor3 = espState and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(60, 60, 65)
     if espState then
         UpdateESP()
     else
@@ -163,36 +164,40 @@ espToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- ESP FUNCTIONS
-function CreateESP(player)
-    if espObjects[player] then
-        espObjects[player]:Destroy()
-        espObjects[player] = nil
+-- === ESP ФУНКЦИИ (твой способ) ===
+function CreateESP(targetPlayer)
+    if espObjects[targetPlayer] then
+        espObjects[targetPlayer]:Destroy()
+        espObjects[targetPlayer] = nil
     end
-    if not player.Character then return end
+    
+    if not targetPlayer.Character then return end
+    
     local highlight = Instance.new("Highlight")
-    highlight.Parent = player.Character
-    highlight.FillColor = Color3.fromRGB(0, 255, 100)
-    highlight.FillTransparency = 0.4
+    highlight.Parent = targetPlayer.Character
+    highlight.FillColor = Color3.fromRGB(0, 255, 0)
+    highlight.FillTransparency = 0.5
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
     highlight.OutlineTransparency = 0
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    espObjects[player] = highlight
+    
+    espObjects[targetPlayer] = highlight
+end
+
+function RemoveESP(targetPlayer)
+    if espObjects[targetPlayer] then
+        espObjects[targetPlayer]:Destroy()
+        espObjects[targetPlayer] = nil
+    end
 end
 
 function UpdateESP()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local char = player.Character
-            if ESPEnabled and char and char:FindFirstChild("Humanoid") then
-                if not espObjects[player] then
-                    CreateESP(player)
-                end
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                CreateESP(targetPlayer)
             else
-                if espObjects[player] then
-                    espObjects[player]:Destroy()
-                    espObjects[player] = nil
-                end
+                RemoveESP(targetPlayer)
             end
         end
     end
@@ -205,31 +210,32 @@ function ClearESP()
     espObjects = {}
 end
 
--- EVENTS
+-- ПОСТОЯННОЕ ОБНОВЛЕНИЕ (твой способ)
+RunService.Heartbeat:Connect(function()
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                CreateESP(targetPlayer)
+            else
+                RemoveESP(targetPlayer)
+            end
+        end
+    end
+end)
+
+-- СОБЫТИЯ
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(UpdateESP)
-    UpdateESP()
 end)
 
 Players.PlayerRemoving:Connect(function(player)
-    if espObjects[player] then
-        espObjects[player]:Destroy()
-        espObjects[player] = nil
-    end
+    RemoveESP(player)
 end)
 
--- AUTO UPDATE
-local lastUpdate = tick()
-RunService.Heartbeat:Connect(function()
-    if tick() - lastUpdate >= 1 then
-        UpdateESP()
-        lastUpdate = tick()
-    end
-end)
-
+-- ЗАПУСК
 UpdateESP()
 
--- OPEN BUTTON
+-- ОТКРЫТИЕ МЕНЮ
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Parent = ScreenGui
 OpenBtn.Size = UDim2.new(0, 50, 0, 30)
@@ -256,7 +262,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.0 | BloxStrike"
+Watermark.Text = "Zertyx v3.1 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -291,6 +297,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX CHEAT LOADED!")
+print("ZERTYX v3.1 LOADED!")
 print("Press ≡ to open menu")
-print("ESP is ON by default")
+print("ESP: ON")
