@@ -1,4 +1,4 @@
--- Zertyx CHEAT v3.9 - RAINBOW AURA HAT (3D NEON)
+-- Zertyx CHEAT v4.0 - RAINBOW AURA HAT (FIXED MESH)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -22,7 +22,7 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === МЕНЮ (ФИОЛЕТОВОЕ) ===
+-- === МЕНЮ ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -214,7 +214,7 @@ CreateToggleRow(visualsContent, "Atmosphere", AtmosphereEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
--- === ЦВЕТОВАЯ ПАЛИТРА ДЛЯ ATMOSPHERE ===
+-- === ПАЛИТРА ДЛЯ ATMOSPHERE ===
 local colorPickerFrame = Instance.new("Frame")
 colorPickerFrame.Parent = visualsContent
 colorPickerFrame.Size = UDim2.new(1, -20, 0, 40)
@@ -361,7 +361,7 @@ function ResetAtmosphere()
     end)
 end
 
--- === RAINBOW AURA HAT ФУНКЦИИ (3D NEON) ===
+-- === RAINBOW AURA HAT (ИСПРАВЛЕННАЯ ВЕРСИЯ) ===
 function CreateHat(player)
     if hatObjects[player] then
         for _, obj in pairs(hatObjects[player]) do
@@ -374,52 +374,34 @@ function CreateHat(player)
     local head = player.Character:FindFirstChild("Head")
     if not head then return end
     
-    -- === СОЗДАЁМ ТРЕУГОЛЬНУЮ ШЛЯПУ ===
+    -- === СОЗДАЁМ ОСНОВНУЮ ЧАСТЬ ШЛЯПЫ (КОНУС) ===
     local hat = Instance.new("Part")
     hat.Parent = player.Character
     hat.Name = "RainbowHat"
-    hat.Size = Vector3.new(2, 2, 2)
-    hat.Position = head.Position + Vector3.new(0, 2.5, 0)
-    hat.Material = Enum.Material.Neon -- Светящийся материал
+    hat.Size = Vector3.new(2, 2.5, 2)
+    hat.Position = head.Position + Vector3.new(0, 3, 0)
+    hat.Material = Enum.Material.Neon
     hat.Anchored = false
     hat.CanCollide = false
-    hat.Shape = Enum.PartType.Ball -- Шар как основа
     
-    -- === ПРИВЯЗЫВАЕМ К ГОЛОВЕ ===
+    -- SpecialMesh для конуса (используем "FileMesh" с формой конуса)
+    local mesh = Instance.new("SpecialMesh")
+    mesh.Parent = hat
+    mesh.MeshType = Enum.MeshType.FileMesh
+    mesh.MeshId = "rbxassetid://6025443232" -- Конус
+    mesh.Scale = Vector3.new(1.2, 1.5, 1.2)
+    
+    -- Привязываем к голове
     local weld = Instance.new("WeldConstraint")
     weld.Parent = hat
     weld.Part0 = head
     weld.Part1 = hat
     
-    -- === ДОБАВЛЯЕМ ТРЕУГОЛЬНУЮ ФОРМУ ===
-    -- Создаём MeshPart для треугольника
-    local meshPart = Instance.new("Part")
-    meshPart.Parent = player.Character
-    meshPart.Name = "HatMesh"
-    meshPart.Size = Vector3.new(2, 2.5, 2)
-    meshPart.Position = head.Position + Vector3.new(0, 3.5, 0)
-    meshPart.Material = Enum.Material.Neon
-    meshPart.Anchored = false
-    meshPart.CanCollide = false
-    meshPart.Shape = Enum.PartType.Cylinder
-    
-    -- Создаём SpecialMesh для формы треугольника/конуса
-    local mesh = Instance.new("SpecialMesh")
-    mesh.Parent = meshPart
-    mesh.MeshType = Enum.MeshType.Cone
-    mesh.Scale = Vector3.new(1.5, 2, 1.5)
-    
-    -- Привязываем к голове
-    local weld2 = Instance.new("WeldConstraint")
-    weld2.Parent = meshPart
-    weld2.Part0 = head
-    weld2.Part1 = meshPart
-    
-    -- === ДОБАВЛЯЕМ ОСНОВАНИЕ ШЛЯПЫ ===
+    -- === ОСНОВАНИЕ ШЛЯПЫ ===
     local brim = Instance.new("Part")
     brim.Parent = player.Character
     brim.Name = "HatBrim"
-    brim.Size = Vector3.new(3, 0.3, 3)
+    brim.Size = Vector3.new(3.5, 0.3, 3.5)
     brim.Position = head.Position + Vector3.new(0, 1.8, 0)
     brim.Material = Enum.Material.Neon
     brim.Anchored = false
@@ -431,15 +413,31 @@ function CreateHat(player)
     brimWeld.Part0 = head
     brimWeld.Part1 = brim
     
-    -- === СОХРАНЯЕМ ВСЕ ЧАСТИ ===
+    -- === ШАРИК НА КОНЧИКЕ ===
+    local tip = Instance.new("Part")
+    tip.Parent = player.Character
+    tip.Name = "HatTip"
+    tip.Size = Vector3.new(0.5, 0.5, 0.5)
+    tip.Position = head.Position + Vector3.new(0, 4.2, 0)
+    tip.Material = Enum.Material.Neon
+    tip.Anchored = false
+    tip.CanCollide = false
+    tip.Shape = Enum.PartType.Ball
+    
+    local tipWeld = Instance.new("WeldConstraint")
+    tipWeld.Parent = tip
+    tipWeld.Part0 = head
+    tipWeld.Part1 = tip
+    
+    -- === СОХРАНЯЕМ ===
     hatObjects[player] = {
         hat = hat,
-        meshPart = meshPart,
+        mesh = mesh,
         brim = brim,
+        tip = tip,
         weld = weld,
-        weld2 = weld2,
         brimWeld = brimWeld,
-        mesh = mesh
+        tipWeld = tipWeld
     }
 end
 
@@ -476,14 +474,14 @@ function ClearHat()
     hatObjects = {}
 end
 
--- === ОБНОВЛЕНИЕ ЦВЕТА ШЛЯПЫ (RAINBOW) ===
+-- === ОБНОВЛЕНИЕ ЦВЕТА ШЛЯПЫ ===
 function UpdateHatColors()
     for _, objects in pairs(hatObjects) do
-        if objects and objects.hat and objects.meshPart and objects.brim then
+        if objects then
             local color = Color3.fromHSV(hue, 1, 1)
-            objects.hat.Color = color
-            objects.meshPart.Color = color
-            objects.brim.Color = color
+            if objects.hat then objects.hat.Color = color end
+            if objects.brim then objects.brim.Color = color end
+            if objects.tip then objects.tip.Color = color end
         end
     end
 end
@@ -680,7 +678,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.9 | BloxStrike"
+Watermark.Text = "Zertyx v4.0 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -715,6 +713,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v3.9 LOADED!")
+print("ZERTYX v4.0 LOADED!")
 print("Press ≡ to open menu")
 print("ESP: ON | Big Head: OFF | Rainbow Aura Hat: OFF | Atmosphere: OFF")
