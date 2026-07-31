@@ -1,111 +1,32 @@
--- Zertyx CHEAT v3.6 - ATMOSPHERE
+-- Zertyx CHEAT v3.7 - RAINBOW AURA
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Lighting = game:GetService("Lighting")
-local StarterGui = game:GetService("StarterGui")
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
 local BigHeadEnabled = false
 local AtmosphereEnabled = false
-local SelectedAtmoColor = Color3.fromRGB(150, 50, 200) -- Фиолетовый по умолчанию
+local RainbowAuraEnabled = false
+local SelectedAtmoColor = Color3.fromRGB(150, 50, 200)
 local espObjects = {}
 local bigHeadObjects = {}
+local auraObjects = {}
 local originalGuiColor = nil
 
--- ГЛАВНОЕ МЕНЮ
+-- === СОЗДАНИЕ ГЛАВНОГО GUI ===
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === СТИЛЬ GUI (ФИОЛЕТОВЫЙ ВАЙБ) ===
-local function ApplyGUIStyle(enable)
-    if enable then
-        -- Меняем цвет фона GUI
-        pcall(function()
-            local guiService = game:GetService("GuiService")
-            if guiService then
-                originalGuiColor = guiService.BackgroundColor3
-                guiService.BackgroundColor3 = Color3.fromRGB(80, 30, 120)
-            end
-        end)
-        -- Меняем цвет кнопок в игре (если есть)
-        pcall(function()
-            for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
-                if gui:IsA("ScreenGui") then
-                    for _, child in pairs(gui:GetDescendants()) do
-                        if child:IsA("TextButton") or child:IsA("TextLabel") then
-                            if child.BackgroundColor3 ~= Color3.fromRGB(0, 0, 0) then
-                                child.BackgroundColor3 = Color3.fromRGB(80, 30, 120)
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    else
-        -- Возвращаем оригинальный цвет
-        pcall(function()
-            local guiService = game:GetService("GuiService")
-            if guiService and originalGuiColor then
-                guiService.BackgroundColor3 = originalGuiColor
-            end
-        end)
-    end
-end
-
--- === ЦВЕТ ОБЛАКОВ ===
-local function ApplyCloudColor(color)
-    pcall(function()
-        -- Меняем цвет облаков через Lighting
-        if Lighting:FindFirstChild("Clouds") then
-            local clouds = Lighting:FindFirstChild("Clouds")
-            clouds.Color = color
-        end
-        -- Если есть свойство CloudColor
-        if Lighting.CloudColor ~= nil then
-            Lighting.CloudColor = color
-        end
-        -- Меняем атмосферу
-        if Lighting:FindFirstChild("Atmosphere") then
-            local atmosphere = Lighting:FindFirstChild("Atmosphere")
-            atmosphere.Color = color
-            atmosphere.Density = 0.3
-        end
-        -- Меняем цвет тумана под цвет
-        Lighting.FogColor = color
-        Lighting.FogEnd = 1000
-    end)
-end
-
-local function ResetAtmosphere()
-    pcall(function()
-        if Lighting:FindFirstChild("Clouds") then
-            local clouds = Lighting:FindFirstChild("Clouds")
-            clouds.Color = Color3.fromRGB(255, 255, 255)
-        end
-        if Lighting.CloudColor ~= nil then
-            Lighting.CloudColor = Color3.fromRGB(255, 255, 255)
-        end
-        if Lighting:FindFirstChild("Atmosphere") then
-            local atmosphere = Lighting:FindFirstChild("Atmosphere")
-            atmosphere.Color = Color3.fromRGB(255, 255, 255)
-            atmosphere.Density = 0.5
-        end
-        Lighting.FogColor = Color3.fromRGB(150, 150, 150)
-        Lighting.FogEnd = 2000
-        ApplyGUIStyle(false)
-    end)
-end
-
--- ГЛАВНОЕ МЕНЮ (ТЕМНО-ФИОЛЕТОВАЯ ТЕМА)
+-- === ГЛАВНОЕ МЕНЮ (ФИОЛЕТОВАЯ ТЕМА) ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 20, 40) -- Фиолетовый фон
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 20, 40)
 MainFrame.BackgroundTransparency = 0
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
@@ -265,13 +186,23 @@ CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
+-- RAINBOW AURA TOGGLE
+CreateToggleRow(visualsContent, "Rainbow Aura", RainbowAuraEnabled, function(state)
+    RainbowAuraEnabled = state
+    if state then 
+        UpdateRainbowAura()
+    else 
+        ClearRainbowAura()
+    end
+end, yPos)
+yPos = yPos + 50
+
 -- ATMOSPHERE TOGGLE
 CreateToggleRow(visualsContent, "Atmosphere", AtmosphereEnabled, function(state)
     AtmosphereEnabled = state
     if state then 
         ApplyCloudColor(SelectedAtmoColor)
         ApplyGUIStyle(true)
-        -- Показываем цветовую палитру
         colorPicker.Visible = true
         colorPickerFrame.Visible = true
     else 
@@ -282,7 +213,7 @@ CreateToggleRow(visualsContent, "Atmosphere", AtmosphereEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
--- === ЦВЕТОВАЯ ПАЛИТРА (ФИОЛЕТОВЫЕ ОТТЕНКИ) ===
+-- === ЦВЕТОВАЯ ПАЛИТРА ===
 local colorPickerFrame = Instance.new("Frame")
 colorPickerFrame.Parent = visualsContent
 colorPickerFrame.Size = UDim2.new(1, -20, 0, 40)
@@ -296,16 +227,15 @@ local colorPickerCorner = Instance.new("UICorner")
 colorPickerCorner.Parent = colorPickerFrame
 colorPickerCorner.CornerRadius = UDim.new(0, 8)
 
--- ЦВЕТА (ФИОЛЕТОВАЯ ГАММА + НЕСКОЛЬКО ВАЙБОВЫХ)
 local colors = {
-    {Color3.fromRGB(150, 50, 200), "Purple"},    -- Фиолетовый
-    {Color3.fromRGB(200, 100, 255), "Lavender"}, -- Лавандовый
+    {Color3.fromRGB(150, 50, 200), "Purple"},
+    {Color3.fromRGB(200, 100, 255), "Lavender"},
     {Color3.fromRGB(100, 50, 200), "Deep Purple"},
-    {Color3.fromRGB(255, 100, 200), "Pink"},     -- Розовый
-    {Color3.fromRGB(50, 150, 255), "Blue"},      -- Синий
-    {Color3.fromRGB(200, 50, 100), "Red"},       -- Красный
-    {Color3.fromRGB(0, 200, 255), "Cyan"},       -- Циан
-    {Color3.fromRGB(255, 150, 50), "Orange"}     -- Оранжевый
+    {Color3.fromRGB(255, 100, 200), "Pink"},
+    {Color3.fromRGB(50, 150, 255), "Blue"},
+    {Color3.fromRGB(200, 50, 100), "Red"},
+    {Color3.fromRGB(0, 200, 255), "Cyan"},
+    {Color3.fromRGB(255, 150, 50), "Orange"}
 }
 
 local colorButtons = {}
@@ -350,7 +280,7 @@ for i = 1, #colors do
     colorButtons[i] = colorBtn
 end
 
--- AIM TAB (пустая)
+-- AIM TAB
 local aimContent = tabContents["Aim"]
 local aimLabel = Instance.new("TextLabel")
 aimLabel.Parent = aimContent
@@ -364,7 +294,7 @@ aimLabel.Font = Enum.Font.GothamBold
 aimLabel.TextXAlignment = Enum.TextXAlignment.Center
 aimLabel.TextYAlignment = Enum.TextYAlignment.Center
 
--- MISC TAB (пустая)
+-- MISC TAB
 local miscContent = tabContents["Misc"]
 local miscLabel = Instance.new("TextLabel")
 miscLabel.Parent = miscContent
@@ -377,6 +307,154 @@ miscLabel.TextSize = 24
 miscLabel.Font = Enum.Font.GothamBold
 miscLabel.TextXAlignment = Enum.TextXAlignment.Center
 miscLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+-- === ATMOSPHERE ФУНКЦИИ ===
+function ApplyGUIStyle(enable)
+    pcall(function()
+        local guiService = game:GetService("GuiService")
+        if enable then
+            originalGuiColor = guiService.BackgroundColor3
+            guiService.BackgroundColor3 = Color3.fromRGB(80, 30, 120)
+        else
+            if originalGuiColor then
+                guiService.BackgroundColor3 = originalGuiColor
+            end
+        end
+    end)
+end
+
+function ApplyCloudColor(color)
+    pcall(function()
+        if Lighting:FindFirstChild("Clouds") then
+            Lighting:FindFirstChild("Clouds").Color = color
+        end
+        if Lighting.CloudColor ~= nil then
+            Lighting.CloudColor = color
+        end
+        if Lighting:FindFirstChild("Atmosphere") then
+            local atmosphere = Lighting:FindFirstChild("Atmosphere")
+            atmosphere.Color = color
+            atmosphere.Density = 0.3
+        end
+        Lighting.FogColor = color
+        Lighting.FogEnd = 1000
+    end)
+end
+
+function ResetAtmosphere()
+    pcall(function()
+        if Lighting:FindFirstChild("Clouds") then
+            Lighting:FindFirstChild("Clouds").Color = Color3.fromRGB(255, 255, 255)
+        end
+        if Lighting.CloudColor ~= nil then
+            Lighting.CloudColor = Color3.fromRGB(255, 255, 255)
+        end
+        if Lighting:FindFirstChild("Atmosphere") then
+            local atmosphere = Lighting:FindFirstChild("Atmosphere")
+            atmosphere.Color = Color3.fromRGB(255, 255, 255)
+            atmosphere.Density = 0.5
+        end
+        Lighting.FogColor = Color3.fromRGB(150, 150, 150)
+        Lighting.FogEnd = 2000
+        ApplyGUIStyle(false)
+    end)
+end
+
+-- === RAINBOW AURA ФУНКЦИИ ===
+function CreateRainbowAura(targetPlayer)
+    if auraObjects[targetPlayer] then
+        for _, obj in pairs(auraObjects[targetPlayer]) do
+            obj:Destroy()
+        end
+        auraObjects[targetPlayer] = nil
+    end
+    
+    if not targetPlayer.Character then return end
+    local head = targetPlayer.Character:FindFirstChild("Head")
+    if not head then return end
+    
+    -- Создаем BillboardGui над головой
+    local billboard = Instance.new("BillboardGui")
+    billboard.Parent = head
+    billboard.Size = UDim2.new(0, 60, 0, 60)
+    billboard.Adornee = head
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = 300
+    
+    -- Создаем Frame с эффектом свечения
+    local frame = Instance.new("Frame")
+    frame.Parent = billboard
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    frame.BackgroundTransparency = 0
+    frame.BorderSizePixel = 0
+    
+    local frameCorner = Instance.new("UICorner")
+    frameCorner.Parent = frame
+    frameCorner.CornerRadius = UDim.new(0, 30)
+    
+    -- Создаем UIGradient для радужного эффекта
+    local gradient = Instance.new("UIGradient")
+    gradient.Parent = frame
+    gradient.Rotation = 45
+    
+    -- Создаем цветовые точки для радуги
+    local colors = {
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+    }
+    gradient.Color = ColorSequence.new(colors)
+    
+    -- Добавляем свечение
+    local glow = Instance.new("ImageLabel")
+    glow.Parent = frame
+    glow.Size = UDim2.new(1.5, 0, 1.5, 0)
+    glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
+    glow.BackgroundTransparency = 1
+    glow.Image = "rbxassetid://13063196338"
+    glow.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    glow.ImageTransparency = 0.3
+    
+    auraObjects[targetPlayer] = {billboard, gradient, frame, glow}
+end
+
+function RemoveRainbowAura(targetPlayer)
+    if auraObjects[targetPlayer] then
+        for _, obj in pairs(auraObjects[targetPlayer]) do
+            obj:Destroy()
+        end
+        auraObjects[targetPlayer] = nil
+    end
+end
+
+function UpdateRainbowAura()
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if RainbowAuraEnabled and targetPlayer.Character then
+                local head = targetPlayer.Character:FindFirstChild("Head")
+                if head and not auraObjects[targetPlayer] then
+                    CreateRainbowAura(targetPlayer)
+                end
+            else
+                RemoveRainbowAura(targetPlayer)
+            end
+        end
+    end
+end
+
+function ClearRainbowAura()
+    for player, objects in pairs(auraObjects) do
+        for _, obj in pairs(objects) do
+            obj:Destroy()
+        end
+    end
+    auraObjects = {}
+end
 
 -- === ESP ФУНКЦИИ ===
 function CreateESP(targetPlayer)
@@ -477,6 +555,7 @@ end
 
 -- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
 RunService.Heartbeat:Connect(function()
+    -- ESP
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -487,6 +566,7 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
+    -- Big Head
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if BigHeadEnabled and targetPlayer.Character then
@@ -499,6 +579,20 @@ RunService.Heartbeat:Connect(function()
             end
         end
     end
+    
+    -- Rainbow Aura
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if RainbowAuraEnabled and targetPlayer.Character then
+                local head = targetPlayer.Character:FindFirstChild("Head")
+                if head and not auraObjects[targetPlayer] then
+                    CreateRainbowAura(targetPlayer)
+                end
+            else
+                RemoveRainbowAura(targetPlayer)
+            end
+        end
+    end
 end)
 
 -- === СОБЫТИЯ ===
@@ -506,17 +600,20 @@ Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         UpdateESP()
         UpdateBigHead()
+        UpdateRainbowAura()
     end)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
     RemoveESP(player)
     RemoveBigHead(player)
+    RemoveRainbowAura(player)
 end)
 
 -- === ЗАПУСК ===
 UpdateESP()
 UpdateBigHead()
+UpdateRainbowAura()
 
 -- === ОТКРЫТИЕ МЕНЮ ===
 local OpenBtn = Instance.new("TextButton")
@@ -545,7 +642,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.6 | BloxStrike"
+Watermark.Text = "Zertyx v3.7 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -580,6 +677,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v3.6 LOADED!")
+print("ZERTYX v3.7 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF | Atmosphere: OFF")
+print("ESP: ON | Big Head: OFF | Rainbow Aura: OFF | Atmosphere: OFF")
