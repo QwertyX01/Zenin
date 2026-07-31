@@ -1,7 +1,8 @@
--- Zertyx CHEAT v4.3 - ESP + 2D BOX
+-- Zertyx CHEAT v4.4 - 2D BOX ESP (REAL)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
@@ -195,7 +196,6 @@ local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback,
     labelText.TextXAlignment = Enum.TextXAlignment.Left
     labelText.TextYAlignment = Enum.TextYAlignment.Center
     
-    -- Слайдер
     local sliderFrame = Instance.new("Frame")
     sliderFrame.Parent = row
     sliderFrame.Size = UDim2.new(0, 120, 0, 6)
@@ -274,10 +274,9 @@ end, yPos)
 yPos = yPos + 50
 
 -- 2D BOX TOGGLE
-local boxRow, boxToggle = CreateToggleRow(visualsContent, "2D Box", BoxEnabled, function(state)
+CreateToggleRow(visualsContent, "2D Box", BoxEnabled, function(state)
     BoxEnabled = state
     if state then 
-        UpdateBox()
         thicknessSlider.Visible = true
     else 
         ClearBox()
@@ -286,13 +285,9 @@ local boxRow, boxToggle = CreateToggleRow(visualsContent, "2D Box", BoxEnabled, 
 end, yPos)
 yPos = yPos + 50
 
--- СЛАЙДЕР ТОЛЩИНЫ (появляется при включении Box)
+-- СЛАЙДЕР ТОЛЩИНЫ
 local thicknessSlider = CreateSlider(visualsContent, "Thickness", 1, 5, 2, function(val)
     BoxThickness = val
-    if BoxEnabled then
-        ClearBox()
-        UpdateBox()
-    end
 end, yPos)
 thicknessSlider.Visible = false
 yPos = yPos + 50
@@ -325,7 +320,7 @@ miscLabel.Font = Enum.Font.GothamBold
 miscLabel.TextXAlignment = Enum.TextXAlignment.Center
 miscLabel.TextYAlignment = Enum.TextYAlignment.Center
 
--- === ESP ФУНКЦИИ (ГОЛУБОЙ) ===
+-- === ESP (ГОЛУБОЙ) ===
 function CreateESP(targetPlayer)
     if espObjects[targetPlayer] then
         espObjects[targetPlayer]:Destroy()
@@ -424,7 +419,31 @@ function ClearBigHead()
     bigHeadObjects = {}
 end
 
--- === 2D BOX ФУНКЦИИ ===
+-- === 2D BOX (НАСТОЯЩИЙ) ===
+local function GetPlayerBox(player)
+    local character = player.Character
+    if not character then return nil end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    local head = character:FindFirstChild("Head")
+    if not root or not head then return nil end
+    
+    -- Получаем позиции в мировом пространстве
+    local rootPos = root.Position
+    local headPos = head.Position
+    
+    -- Вычисляем размеры (высота от ног до головы + небольшой запас)
+    local height = (rootPos - headPos).Magnitude + 2
+    local width = 3.5
+    
+    return {
+        Position = rootPos,
+        Size = Vector3.new(width, height, 0.5),
+        Height = height,
+        Width = width
+    }
+end
+
 function CreateBox(player)
     if boxObjects[player] then
         for _, obj in pairs(boxObjects[player]) do
@@ -439,27 +458,27 @@ function CreateBox(player)
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then return end
     
-    -- Создаём BoxHandleAdornment для 2D рамки
+    -- Создаём BoxHandleAdornment
     local box = Instance.new("BoxHandleAdornment")
     box.Parent = character
     box.Adornee = root
-    box.Size = Vector3.new(4, 6, 0.5)
-    box.Position = Vector3.new(0, 0.5, 0)
+    box.Size = Vector3.new(3.5, 6, 0.5)
+    box.Position = Vector3.new(0, 1.5, 0)
     box.Color3 = Color3.fromRGB(255, 255, 255)
     box.Transparency = 0
     box.ZIndex = 10
     box.AlwaysOnTop = true
-    
-    -- Устанавливаем толщину
     box.Thickness = BoxThickness
     
-    boxObjects[player] = {box}
+    boxObjects[player] = {box, root}
 end
 
 function RemoveBox(player)
     if boxObjects[player] then
         for _, obj in pairs(boxObjects[player]) do
-            obj:Destroy()
+            if obj:IsA("BasePart") or obj:IsA("Adornment") then
+                obj:Destroy()
+            end
         end
         boxObjects[player] = nil
     end
@@ -470,8 +489,26 @@ function UpdateBox()
         if targetPlayer ~= LocalPlayer then
             if BoxEnabled and targetPlayer.Character then
                 local root = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if root and not boxObjects[targetPlayer] then
-                    CreateBox(targetPlayer)
+                if root then
+                    if not boxObjects[targetPlayer] then
+                        CreateBox(targetPlayer)
+                    else
+                        -- Обновляем размер и позицию
+                        local boxData = boxObjects[targetPlayer]
+                        if boxData and #boxData > 0 then
+                            local box = boxData[1]
+                            if box and box:IsA("BoxHandleAdornment") then
+                                -- Динамически обновляем размер под рост игрока
+                                local head = targetPlayer.Character:FindFirstChild("Head")
+                                local rootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if head and rootPart then
+                                    local height = (rootPart.Position - head.Position).Magnitude + 2.5
+                                    box.Size = Vector3.new(3.5, height, 0.5)
+                                    box.Position = Vector3.new(0, height/2 - 0.5, 0)
+                                end
+                            end
+                        end
+                    end
                 end
             else
                 RemoveBox(targetPlayer)
@@ -483,7 +520,9 @@ end
 function ClearBox()
     for player, objects in pairs(boxObjects) do
         for _, obj in pairs(objects) do
-            obj:Destroy()
+            if obj and obj:IsA("BasePart") or obj:IsA("Adornment") then
+                obj:Destroy()
+            end
         end
     end
     boxObjects = {}
@@ -517,18 +556,7 @@ RunService.Heartbeat:Connect(function()
     end
     
     -- 2D Box
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if BoxEnabled and targetPlayer.Character then
-                local root = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if root and not boxObjects[targetPlayer] then
-                    CreateBox(targetPlayer)
-                end
-            else
-                RemoveBox(targetPlayer)
-            end
-        end
-    end
+    UpdateBox()
 end)
 
 -- === СОБЫТИЯ ===
@@ -578,7 +606,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v4.3 | BloxStrike"
+Watermark.Text = "Zertyx v4.4 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -613,6 +641,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v4.3 LOADED!")
+print("ZERTYX v4.4 LOADED!")
 print("Press ≡ to open menu")
 print("ESP: ON | Big Head: OFF | 2D Box: OFF")
