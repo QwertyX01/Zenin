@@ -1,206 +1,170 @@
--- Zertyx v2.4 - MAX COMPATIBILITY
+-- Zertyx CHEAT v3.0 - FULL WORKING
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- Настройки
-local Settings = {ESP = true}
+-- НАСТРОЙКИ
+local ESPEnabled = true
 local espObjects = {}
 
--- GUI
+-- ГЛАВНОЕ МЕНЮ
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- Главное меню
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 MainFrame.BackgroundTransparency = 0
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 
--- Хедер
+local MainCorner = Instance.new("UICorner")
+MainCorner.Parent = MainFrame
+MainCorner.CornerRadius = UDim.new(0, 12)
+
+-- ХЕДЕР
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
-Header.Size = UDim2.new(1, 0, 0, 45)
+Header.Size = UDim2.new(1, 0, 0, 40)
 Header.Position = UDim2.new(0, 0, 0, 0)
-Header.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+Header.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 Header.BackgroundTransparency = 0
 Header.BorderSizePixel = 0
 
--- Заголовок
 local Title = Instance.new("TextLabel")
 Title.Parent = Header
-Title.Size = UDim2.new(0, 150, 1, 0)
-Title.Position = UDim2.new(0, 15, 0, 0)
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Zertyx"
-Title.TextColor3 = Color3.fromRGB(255, 0, 0)
-Title.TextSize = 22
+Title.Text = "ZERTYX CHEAT"
+Title.TextColor3 = Color3.fromRGB(255, 50, 50)
+Title.TextSize = 20
 Title.Font = Enum.Font.GothamBold
-Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.TextYAlignment = Enum.TextYAlignment.Center
 
--- Вкладки
-local TabsContainer = Instance.new("Frame")
-TabsContainer.Parent = MainFrame
-TabsContainer.Size = UDim2.new(1, 0, 0, 40)
-TabsContainer.Position = UDim2.new(0, 0, 0, 45)
-TabsContainer.BackgroundTransparency = 1
+-- ВКЛАДКИ
+local TabContainer = Instance.new("Frame")
+TabContainer.Parent = MainFrame
+TabContainer.Size = UDim2.new(1, 0, 0, 35)
+TabContainer.Position = UDim2.new(0, 0, 0, 40)
+TabContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+TabContainer.BackgroundTransparency = 0
+TabContainer.BorderSizePixel = 0
 
-local tabNames = {"Visuals", "Aim", "Misc"}
-local TabButtons = {}
-local TabContents = {}
+local tabs = {"Visuals", "Aim", "Misc"}
+local tabBtns = {}
+local tabContents = {}
 
 for i = 1, 3 do
-    local tabName = tabNames[i]
-    local TabBtn = Instance.new("TextButton")
-    TabBtn.Parent = TabsContainer
-    TabBtn.Size = UDim2.new(0, 80, 0, 28)
-    TabBtn.Position = UDim2.new(0, 15 + (i-1) * 90, 0.5, -14)
-    TabBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    TabBtn.BackgroundTransparency = 0
-    TabBtn.BorderSizePixel = 0
-    TabBtn.Text = string.upper(tabName)
-    TabBtn.TextColor3 = Color3.fromRGB(80, 80, 80)
-    TabBtn.TextSize = 12
-    TabBtn.Font = Enum.Font.GothamMedium
-    TabBtn.AutoButtonColor = false
+    local btn = Instance.new("TextButton")
+    btn.Parent = TabContainer
+    btn.Size = UDim2.new(0, 80, 0, 28)
+    btn.Position = UDim2.new(0, 15 + (i-1) * 90, 0.5, -14)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    btn.BackgroundTransparency = 0
+    btn.BorderSizePixel = 0
+    btn.Text = string.upper(tabs[i])
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 12
+    btn.Font = Enum.Font.GothamMedium
+    btn.AutoButtonColor = false
     
-    local TabCorner = Instance.new("UICorner")
-    TabCorner.Parent = TabBtn
-    TabCorner.CornerRadius = UDim.new(0, 20)
+    local corner = Instance.new("UICorner")
+    corner.Parent = btn
+    corner.CornerRadius = UDim.new(0, 15)
     
-    local Content = Instance.new("ScrollingFrame")
-    Content.Parent = MainFrame
-    Content.Size = UDim2.new(1, -20, 1, -100)
-    Content.Position = UDim2.new(0, 10, 0, 90)
-    Content.BackgroundTransparency = 1
-    Content.BorderSizePixel = 0
-    Content.Visible = (i == 1)
-    Content.CanvasSize = UDim2.new(0, 0, 0, 0)
-    Content.ScrollBarThickness = 4
-    Content.ScrollBarImageColor3 = Color3.fromRGB(200, 200, 200)
-    Content.Name = tabName .. "Content"
+    local content = Instance.new("Frame")
+    content.Parent = MainFrame
+    content.Size = UDim2.new(1, 0, 1, -90)
+    content.Position = UDim2.new(0, 0, 0, 75)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.Visible = (i == 1)
+    content.Name = tabs[i] .. "Content"
     
-    -- Только для Visuals добавляем ESP
-    if tabName == "Visuals" then
-        local row = Instance.new("Frame")
-        row.Parent = Content
-        row.Size = UDim2.new(1, -10, 0, 42)
-        row.Position = UDim2.new(0, 5, 0, 10)
-        row.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
-        row.BackgroundTransparency = 0.3
-        row.BorderSizePixel = 0
-        
-        local rowCorner = Instance.new("UICorner")
-        rowCorner.Parent = row
-        rowCorner.CornerRadius = UDim.new(0, 10)
-        
-        local label = Instance.new("TextLabel")
-        label.Parent = row
-        label.Size = UDim2.new(0, 140, 1, 0)
-        label.Position = UDim2.new(0, 12, 0, 0)
-        label.BackgroundTransparency = 1
-        label.Text = "ESP"
-        label.TextColor3 = Color3.fromRGB(50, 50, 50)
-        label.TextSize = 14
-        label.Font = Enum.Font.GothamMedium
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextYAlignment = Enum.TextYAlignment.Center
-        
-        local toggle = Instance.new("TextButton")
-        toggle.Parent = row
-        toggle.Size = UDim2.new(0, 32, 0, 32)
-        toggle.Position = UDim2.new(1, -42, 0.5, -16)
-        toggle.BackgroundColor3 = Color3.fromRGB(79, 124, 176)
-        toggle.BorderSizePixel = 0
-        toggle.Text = "✓"
-        toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-        toggle.TextSize = 20
-        toggle.Font = Enum.Font.GothamBold
-        toggle.AutoButtonColor = false
-        
-        local toggleCorner = Instance.new("UICorner")
-        toggleCorner.Parent = toggle
-        toggleCorner.CornerRadius = UDim.new(0, 4)
-        
-        local espState = true
-        toggle.MouseButton1Click:Connect(function()
-            espState = not espState
-            Settings.ESP = espState
-            toggle.Text = espState and "✓" or ""
-            toggle.BackgroundColor3 = espState and Color3.fromRGB(79, 124, 176) or Color3.fromRGB(180, 180, 180)
-            if espState then
-                UpdateESP()
-            else
-                ClearESP()
-            end
-        end)
-        
-        Content.CanvasSize = UDim2.new(0, 0, 0, 60)
-    else
-        -- Пустые вкладки
-        local emptyText = Instance.new("TextLabel")
-        emptyText.Parent = Content
-        emptyText.Size = UDim2.new(1, 0, 1, 0)
-        emptyText.Position = UDim2.new(0, 0, 0, 0)
-        emptyText.BackgroundTransparency = 1
-        emptyText.Text = string.upper(tabName) .. " TAB"
-        emptyText.TextColor3 = Color3.fromRGB(180, 180, 180)
-        emptyText.TextSize = 24
-        emptyText.Font = Enum.Font.GothamBold
-        emptyText.TextXAlignment = Enum.TextXAlignment.Center
-        emptyText.TextYAlignment = Enum.TextYAlignment.Center
-    end
+    tabBtns[tabs[i]] = btn
+    tabContents[tabs[i]] = content
     
-    TabButtons[tabName] = TabBtn
-    TabContents[tabName] = Content
-    
-    TabBtn.MouseButton1Click:Connect(function()
-        for name, btn in pairs(TabButtons) do
-            btn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-            btn.TextColor3 = Color3.fromRGB(80, 80, 80)
-            TabContents[name].Visible = false
+    btn.MouseButton1Click:Connect(function()
+        for _, b in pairs(tabBtns) do
+            b.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+            b.TextColor3 = Color3.fromRGB(200, 200, 200)
         end
-        TabBtn.BackgroundColor3 = Color3.fromRGB(160, 160, 160)
-        TabBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-        Content.Visible = true
+        for _, c in pairs(tabContents) do
+            c.Visible = false
+        end
+        btn.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        content.Visible = true
     end)
 end
 
--- Активируем первую вкладку
-TabButtons["Visuals"].BackgroundColor3 = Color3.fromRGB(160, 160, 160)
-TabButtons["Visuals"].TextColor3 = Color3.fromRGB(0, 0, 0)
+-- VISUALS TAB
+local visualsContent = tabContents["Visuals"]
 
--- Кнопка открытия
-local OpenButton = Instance.new("TextButton")
-OpenButton.Parent = ScreenGui
-OpenButton.Size = UDim2.new(0, 50, 0, 30)
-OpenButton.Position = UDim2.new(0, 10, 0, 10)
-OpenButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-OpenButton.BackgroundTransparency = 0.3
-OpenButton.BorderSizePixel = 0
-OpenButton.Text = "≡"
-OpenButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-OpenButton.TextSize = 22
-OpenButton.Font = Enum.Font.GothamBold
+-- ESP Toggle
+local espRow = Instance.new("Frame")
+espRow.Parent = visualsContent
+espRow.Size = UDim2.new(1, -20, 0, 40)
+espRow.Position = UDim2.new(0, 10, 0, 10)
+espRow.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+espRow.BackgroundTransparency = 0.5
+espRow.BorderSizePixel = 0
 
-local OpenCorner = Instance.new("UICorner")
-OpenCorner.Parent = OpenButton
-OpenCorner.CornerRadius = UDim.new(0, 30)
+local espCorner = Instance.new("UICorner")
+espCorner.Parent = espRow
+espCorner.CornerRadius = UDim.new(0, 8)
 
-OpenButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+local espLabel = Instance.new("TextLabel")
+espLabel.Parent = espRow
+espLabel.Size = UDim2.new(0, 100, 1, 0)
+espLabel.Position = UDim2.new(0, 12, 0, 0)
+espLabel.BackgroundTransparency = 1
+espLabel.Text = "ESP"
+espLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+espLabel.TextSize = 14
+espLabel.Font = Enum.Font.GothamMedium
+espLabel.TextXAlignment = Enum.TextXAlignment.Left
+espLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+local espToggle = Instance.new("TextButton")
+espToggle.Parent = espRow
+espToggle.Size = UDim2.new(0, 30, 0, 30)
+espToggle.Position = UDim2.new(1, -40, 0.5, -15)
+espToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+espToggle.BackgroundTransparency = 0
+espToggle.BorderSizePixel = 0
+espToggle.Text = "ON"
+espToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+espToggle.TextSize = 12
+espToggle.Font = Enum.Font.GothamBold
+espToggle.AutoButtonColor = false
+
+local espCorner2 = Instance.new("UICorner")
+espCorner2.Parent = espToggle
+espCorner2.CornerRadius = UDim.new(0, 6)
+
+local espState = true
+espToggle.MouseButton1Click:Connect(function()
+    espState = not espState
+    ESPEnabled = espState
+    espToggle.Text = espState and "ON" or "OFF"
+    espToggle.BackgroundColor3 = espState and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 50, 50)
+    if espState then
+        UpdateESP()
+    else
+        ClearESP()
+    end
 end)
 
--- ESP функции
-function CreateHighlight(player)
+-- ESP FUNCTIONS
+function CreateESP(player)
     if espObjects[player] then
         espObjects[player]:Destroy()
         espObjects[player] = nil
@@ -220,9 +184,9 @@ function UpdateESP()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             local char = player.Character
-            if Settings.ESP and char and char:FindFirstChild("Humanoid") then
+            if ESPEnabled and char and char:FindFirstChild("Humanoid") then
                 if not espObjects[player] then
-                    CreateHighlight(player)
+                    CreateESP(player)
                 end
             else
                 if espObjects[player] then
@@ -235,13 +199,13 @@ function UpdateESP()
 end
 
 function ClearESP()
-    for _, highlight in pairs(espObjects) do
-        highlight:Destroy()
+    for _, obj in pairs(espObjects) do
+        obj:Destroy()
     end
     espObjects = {}
 end
 
--- События
+-- EVENTS
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(UpdateESP)
     UpdateESP()
@@ -254,7 +218,7 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Обновление ESP каждую секунду
+-- AUTO UPDATE
 local lastUpdate = tick()
 RunService.Heartbeat:Connect(function()
     if tick() - lastUpdate >= 1 then
@@ -263,50 +227,70 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Запуск
 UpdateESP()
 
--- Watermark
+-- OPEN BUTTON
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Parent = ScreenGui
+OpenBtn.Size = UDim2.new(0, 50, 0, 30)
+OpenBtn.Position = UDim2.new(0, 10, 0, 10)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+OpenBtn.BackgroundTransparency = 0
+OpenBtn.BorderSizePixel = 0
+OpenBtn.Text = "≡"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 22
+OpenBtn.Font = Enum.Font.GothamBold
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.Parent = OpenBtn
+OpenCorner.CornerRadius = UDim.new(0, 30)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- WATERMARK
 local Watermark = Instance.new("TextLabel")
 Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v2.4 | BloxStrike"
-Watermark.TextColor3 = Color3.fromRGB(100, 100, 100)
-Watermark.TextSize = 14
+Watermark.Text = "Zertyx v3.0 | BloxStrike"
+Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
+Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
 Watermark.TextYAlignment = Enum.TextYAlignment.Bottom
 
--- FPS Counter
-local FPSCounter = Instance.new("TextLabel")
-FPSCounter.Parent = ScreenGui
-FPSCounter.Size = UDim2.new(0, 60, 0, 30)
-FPSCounter.Position = UDim2.new(1, -70, 1, -40)
-FPSCounter.BackgroundTransparency = 1
-FPSCounter.Text = "60 FPS"
-FPSCounter.TextColor3 = Color3.fromRGB(100, 100, 100)
-FPSCounter.TextSize = 13
-FPSCounter.Font = Enum.Font.GothamMedium
-FPSCounter.TextXAlignment = Enum.TextXAlignment.Right
-FPSCounter.TextYAlignment = Enum.TextYAlignment.Bottom
+-- FPS
+local FPS = Instance.new("TextLabel")
+FPS.Parent = ScreenGui
+FPS.Size = UDim2.new(0, 60, 0, 30)
+FPS.Position = UDim2.new(1, -70, 1, -40)
+FPS.BackgroundTransparency = 1
+FPS.Text = "60 FPS"
+FPS.TextColor3 = Color3.fromRGB(150, 150, 150)
+FPS.TextSize = 13
+FPS.Font = Enum.Font.GothamMedium
+FPS.TextXAlignment = Enum.TextXAlignment.Right
+FPS.TextYAlignment = Enum.TextYAlignment.Bottom
 
-local fcount = 0
-local flast = tick()
+local fc = 0
+local ft = tick()
 RunService.RenderStepped:Connect(function()
-    fcount = fcount + 1
-    if tick() - flast >= 1 then
-        FPSCounter.Text = fcount .. " FPS"
-        fcount = 0
-        flast = tick()
+    fc = fc + 1
+    if tick() - ft >= 1 then
+        FPS.Text = fc .. " FPS"
+        fc = 0
+        ft = tick()
     end
 end)
 
 _G.Zertyx = {
-    ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end,
-    IsOpen = function() return MainFrame.Visible end,
-    UpdateESP = UpdateESP
+    ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("Zertyx v2.4 Loaded! Press ≡ to open menu")
+print("ZERTYX CHEAT LOADED!")
+print("Press ≡ to open menu")
+print("ESP is ON by default")
