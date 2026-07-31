@@ -1,4 +1,4 @@
--- Zertyx CHEAT v3.3 - SKY COLOR ADDED
+-- Zertyx CHEAT v3.4 - SKY COLOR FIXED
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -8,12 +8,9 @@ local Lighting = game:GetService("Lighting")
 local ESPEnabled = true
 local BigHeadEnabled = false
 local SkyColorEnabled = false
-local SelectedSkyColor = Color3.fromRGB(0, 150, 255) -- Синий по умолчанию
+local SelectedSkyColor = Color3.fromRGB(0, 150, 255)
 local espObjects = {}
 local bigHeadObjects = {}
-
--- СОХРАНЯЕМ ОРИГИНАЛЬНЫЙ ЦВЕТ НЕБА
-local OriginalSkyColor = Lighting.SkyColor
 
 -- ГЛАВНОЕ МЕНЮ
 local ScreenGui = Instance.new("ScreenGui")
@@ -247,7 +244,6 @@ for i = 1, #colors do
     colorCorner.Parent = colorBtn
     colorCorner.CornerRadius = UDim.new(0, 6)
     
-    -- Подсветка выбранного цвета
     if colors[i][1] == SelectedSkyColor then
         colorBtn.BorderSizePixel = 2
         colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
@@ -258,7 +254,6 @@ for i = 1, #colors do
         if SkyColorEnabled then
             ApplySkyColor(SelectedSkyColor)
         end
-        -- Обновляем подсветку
         for _, btn in pairs(colorButtons) do
             btn.BorderSizePixel = 0
         end
@@ -269,16 +264,39 @@ for i = 1, #colors do
     colorButtons[i] = colorBtn
 end
 
--- ОБНОВЛЯЕМ РАЗМЕР
-visualsContent.Size = UDim2.new(1, 0, 1, -90)
-
--- === SKY COLOR ФУНКЦИИ ===
+-- === SKY COLOR ФУНКЦИИ (FIXED) ===
 function ApplySkyColor(color)
-    Lighting.SkyColor = color
+    pcall(function()
+        -- Пробуем разные способы
+        if Lighting:FindFirstChild("Sky") then
+            local sky = Lighting:FindFirstChild("Sky")
+            sky.SkyColor = color
+        end
+        if Lighting:FindFirstChild("Skybox") then
+            local skybox = Lighting:FindFirstChild("Skybox")
+            skybox.SkyColor = color
+        end
+        -- Если есть свойство SkyColor
+        if Lighting.SkyColor ~= nil then
+            Lighting.SkyColor = color
+        end
+    end)
 end
 
 function ResetSkyColor()
-    Lighting.SkyColor = OriginalSkyColor
+    pcall(function()
+        if Lighting:FindFirstChild("Sky") then
+            local sky = Lighting:FindFirstChild("Sky")
+            sky.SkyColor = Color3.fromRGB(0, 150, 255)
+        end
+        if Lighting:FindFirstChild("Skybox") then
+            local skybox = Lighting:FindFirstChild("Skybox")
+            skybox.SkyColor = Color3.fromRGB(0, 150, 255)
+        end
+        if Lighting.SkyColor ~= nil then
+            Lighting.SkyColor = Color3.fromRGB(0, 150, 255)
+        end
+    end)
 end
 
 -- === ESP ФУНКЦИИ ===
@@ -380,7 +398,6 @@ end
 
 -- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
 RunService.Heartbeat:Connect(function()
-    -- ESP
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -391,7 +408,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
-    -- Big Head
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if BigHeadEnabled and targetPlayer.Character then
@@ -450,7 +466,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.3 | BloxStrike"
+Watermark.Text = "Zertyx v3.4 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -489,6 +505,6 @@ _G.Zertyx = {
     SetSkyColor = function(color) SelectedSkyColor = color; ApplySkyColor(color) end
 }
 
-print("ZERTYX v3.3 LOADED!")
+print("ZERTYX v3.4 LOADED!")
 print("Press ≡ to open menu")
 print("ESP: ON | Big Head: OFF | Sky Color: OFF")
