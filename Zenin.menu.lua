@@ -1,4 +1,4 @@
--- Zertyx CHEAT v4.4 - 2D BOX ESP (REAL)
+-- Zertyx CHEAT v4.5 - 2D BOX ESP (REAL WHITE BOX)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -12,6 +12,13 @@ local BoxThickness = 2
 local espObjects = {}
 local bigHeadObjects = {}
 local boxObjects = {}
+
+-- === СОЗДАЁМ ОТДЕЛЬНЫЙ GUI ДЛЯ БОКСОВ ===
+local BoxGui = Instance.new("ScreenGui")
+BoxGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+BoxGui.Name = "BoxESP"
+BoxGui.ResetOnSpawn = false
+BoxGui.Enabled = false
 
 -- === ГЛАВНОЕ МЕНЮ ===
 local ScreenGui = Instance.new("ScreenGui")
@@ -276,8 +283,10 @@ yPos = yPos + 50
 -- 2D BOX TOGGLE
 CreateToggleRow(visualsContent, "2D Box", BoxEnabled, function(state)
     BoxEnabled = state
+    BoxGui.Enabled = state
     if state then 
         thicknessSlider.Visible = true
+        ClearBox()
     else 
         ClearBox()
         thicknessSlider.Visible = false
@@ -288,6 +297,9 @@ yPos = yPos + 50
 -- СЛАЙДЕР ТОЛЩИНЫ
 local thicknessSlider = CreateSlider(visualsContent, "Thickness", 1, 5, 2, function(val)
     BoxThickness = val
+    if BoxEnabled then
+        ClearBox()
+    end
 end, yPos)
 thicknessSlider.Visible = false
 yPos = yPos + 50
@@ -419,144 +431,96 @@ function ClearBigHead()
     bigHeadObjects = {}
 end
 
--- === 2D BOX (НАСТОЯЩИЙ) ===
-local function GetPlayerBox(player)
-    local character = player.Character
-    if not character then return nil end
-    
-    local root = character:FindFirstChild("HumanoidRootPart")
-    local head = character:FindFirstChild("Head")
-    if not root or not head then return nil end
-    
-    -- Получаем позиции в мировом пространстве
-    local rootPos = root.Position
-    local headPos = head.Position
-    
-    -- Вычисляем размеры (высота от ног до головы + небольшой запас)
-    local height = (rootPos - headPos).Magnitude + 2
-    local width = 3.5
-    
-    return {
-        Position = rootPos,
-        Size = Vector3.new(width, height, 0.5),
-        Height = height,
-        Width = width
-    }
-end
-
+-- === 2D BOX (НАСТОЯЩАЯ БЕЛАЯ РАМКА) ===
 function CreateBox(player)
     if boxObjects[player] then
-        for _, obj in pairs(boxObjects[player]) do
-            obj:Destroy()
-        end
+        boxObjects[player]:Destroy()
         boxObjects[player] = nil
     end
     
     local character = player.Character
     if not character then return end
     
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    -- Создаём Frame для бокса
+    local frame = Instance.new("Frame")
+    frame.Parent = BoxGui
+    frame.BackgroundTransparency = 1
+    frame.BorderSizePixel = BoxThickness
+    frame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    frame.Size = UDim2.new(0, 0, 0, 0)
+    frame.Position = UDim2.new(0, 0, 0, 0)
+    frame.Visible = true
+    frame.ZIndex = 10
     
-    -- Создаём BoxHandleAdornment
-    local box = Instance.new("BoxHandleAdornment")
-    box.Parent = character
-    box.Adornee = root
-    box.Size = Vector3.new(3.5, 6, 0.5)
-    box.Position = Vector3.new(0, 1.5, 0)
-    box.Color3 = Color3.fromRGB(255, 255, 255)
-    box.Transparency = 0
-    box.ZIndex = 10
-    box.AlwaysOnTop = true
-    box.Thickness = BoxThickness
-    
-    boxObjects[player] = {box, root}
+    boxObjects[player] = {
+        frame = frame,
+        character = character,
+        head = character:FindFirstChild("Head"),
+        root = character:FindFirstChild("HumanoidRootPart")
+    }
 end
 
 function RemoveBox(player)
     if boxObjects[player] then
-        for _, obj in pairs(boxObjects[player]) do
-            if obj:IsA("BasePart") or obj:IsA("Adornment") then
-                obj:Destroy()
-            end
+        if boxObjects[player].frame then
+            boxObjects[player].frame:Destroy()
         end
         boxObjects[player] = nil
     end
 end
 
-function UpdateBox()
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if BoxEnabled and targetPlayer.Character then
-                local root = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    if not boxObjects[targetPlayer] then
-                        CreateBox(targetPlayer)
-                    else
-                        -- Обновляем размер и позицию
-                        local boxData = boxObjects[targetPlayer]
-                        if boxData and #boxData > 0 then
-                            local box = boxData[1]
-                            if box and box:IsA("BoxHandleAdornment") then
-                                -- Динамически обновляем размер под рост игрока
-                                local head = targetPlayer.Character:FindFirstChild("Head")
-                                local rootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                                if head and rootPart then
-                                    local height = (rootPart.Position - head.Position).Magnitude + 2.5
-                                    box.Size = Vector3.new(3.5, height, 0.5)
-                                    box.Position = Vector3.new(0, height/2 - 0.5, 0)
-                                end
-                            end
-                        end
-                    end
-                end
-            else
-                RemoveBox(targetPlayer)
-            end
-        end
-    end
-end
-
 function ClearBox()
-    for player, objects in pairs(boxObjects) do
-        for _, obj in pairs(objects) do
-            if obj and obj:IsA("BasePart") or obj:IsA("Adornment") then
-                obj:Destroy()
-            end
+    for player, data in pairs(boxObjects) do
+        if data.frame then
+            data.frame:Destroy()
         end
     end
     boxObjects = {}
 end
 
--- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
-RunService.Heartbeat:Connect(function()
-    -- ESP
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                CreateESP(targetPlayer)
-            else
-                RemoveESP(targetPlayer)
-            end
-        end
-    end
+-- ОБНОВЛЕНИЕ ПОЗИЦИИ БОКСОВ (КАЖДЫЙ КАДР)
+RunService.RenderStepped:Connect(function()
+    if not BoxEnabled then return end
     
-    -- Big Head
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if BigHeadEnabled and targetPlayer.Character then
-                local head = targetPlayer.Character:FindFirstChild("Head")
-                if head and not bigHeadObjects[targetPlayer] then
-                    CreateBigHead(targetPlayer)
-                end
-            else
-                RemoveBigHead(targetPlayer)
-            end
+    for player, data in pairs(boxObjects) do
+        if not player or not player.Character or not data.frame then
+            RemoveBox(player)
+            continue
         end
+        
+        local character = player.Character
+        local head = character:FindFirstChild("Head")
+        local root = character:FindFirstChild("HumanoidRootPart")
+        
+        if not head or not root then
+            data.frame.Visible = false
+            continue
+        end
+        
+        -- Получаем позиции на экране
+        local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position)
+        local rootPos, rootOnScreen = Camera:WorldToViewportPoint(root.Position)
+        
+        -- Если игрок за пределами экрана - скрываем бокс
+        if not headOnScreen and not rootOnScreen then
+            data.frame.Visible = false
+            continue
+        end
+        
+        -- Вычисляем размеры бокса
+        local height = math.abs(headPos.Y - rootPos.Y) + 1.5
+        local width = height * 0.5
+        
+        -- Центрируем бокс
+        local centerX = (headPos.X + rootPos.X) / 2
+        local centerY = (headPos.Y + rootPos.Y) / 2
+        
+        -- Обновляем позицию и размер
+        data.frame.Position = UDim2.new(0, centerX - width/2, 0, centerY - height/2)
+        data.frame.Size = UDim2.new(0, width, 0, height)
+        data.frame.Visible = true
+        data.frame.BorderSizePixel = BoxThickness
     end
-    
-    -- 2D Box
-    UpdateBox()
 end)
 
 -- === СОБЫТИЯ ===
@@ -564,7 +528,9 @@ Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         UpdateESP()
         UpdateBigHead()
-        UpdateBox()
+        if BoxEnabled then
+            CreateBox(player)
+        end
     end)
 end)
 
@@ -577,7 +543,6 @@ end)
 -- === ЗАПУСК ===
 UpdateESP()
 UpdateBigHead()
-UpdateBox()
 
 -- === ОТКРЫТИЕ МЕНЮ ===
 local OpenBtn = Instance.new("TextButton")
@@ -606,7 +571,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v4.4 | BloxStrike"
+Watermark.Text = "Zertyx v4.5 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -641,6 +606,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v4.4 LOADED!")
+print("ZERTYX v4.5 LOADED!")
 print("Press ≡ to open menu")
 print("ESP: ON | Big Head: OFF | 2D Box: OFF")
