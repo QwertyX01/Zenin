@@ -6,21 +6,20 @@
     ███████╗███████╗██║  ██║   ██║      ██║   ██╔╝ ██╗
     ╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝
     
-    Zertyx - BloxStrike Menu (FIXED)
-    Version: 1.1
+    Zertyx - BloxStrike Menu (Mobile Version)
+    Version: 1.2
     Size: 640x420
+    Open: Кнопка ≡ в левом верхнем углу
 ]]
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 -- === КОНФИГУРАЦИЯ ===
 local ZertyxConfig = {
-    OpenKey = Enum.KeyCode.RightShift,
     MenuSize = UDim2.new(0, 640, 0, 420),
     MenuPosition = UDim2.new(0.5, -320, 0.5, -210),
     Theme = {
@@ -29,7 +28,6 @@ local ZertyxConfig = {
         Accent = Color3.fromRGB(79, 124, 176),
         Text = Color3.fromRGB(191, 209, 232),
         TextBright = Color3.fromRGB(255, 255, 255),
-        Hover = Color3.fromRGB(42, 54, 71),
         Border = Color3.fromRGB(42, 52, 64)
     }
 }
@@ -51,22 +49,34 @@ MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 
--- Мягкие углы (главное меню)
 local MainCorner = Instance.new("UICorner")
 MainCorner.Parent = MainFrame
 MainCorner.CornerRadius = UDim.new(0, 20)
 
--- Тень
-local Shadow = Instance.new("ImageLabel")
-Shadow.Parent = MainFrame
-Shadow.Size = UDim2.new(1, 10, 1, 10)
-Shadow.Position = UDim2.new(0, -5, 0, -5)
-Shadow.BackgroundTransparency = 1
-Shadow.Image = "rbxassetid://1317777270"
-Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-Shadow.ImageTransparency = 0.7
+-- === КНОПКА ОТКРЫТИЯ (ЛЕВЫЙ ВЕРХНИЙ УГОЛ) ===
+local OpenButton = Instance.new("TextButton")
+OpenButton.Parent = ScreenGui
+OpenButton.Size = UDim2.new(0, 50, 0, 30)
+OpenButton.Position = UDim2.new(0, 10, 0, 10)
+OpenButton.BackgroundColor3 = Color3.fromRGB(30, 40, 55)
+OpenButton.BackgroundTransparency = 0.2
+OpenButton.BorderSizePixel = 0
+OpenButton.Text = "≡"
+OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenButton.TextSize = 22
+OpenButton.Font = Enum.Font.GothamBold
+OpenButton.TextXAlignment = Enum.TextXAlignment.Center
+OpenButton.TextYAlignment = Enum.TextYAlignment.Center
 
--- === ЗАГОЛОВОК С НАЗВАНИЕМ ===
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.Parent = OpenButton
+OpenCorner.CornerRadius = UDim.new(0, 30)
+
+OpenButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- === ЗАГОЛОВОК ===
 local TitleBar = Instance.new("Frame")
 TitleBar.Parent = MainFrame
 TitleBar.Size = UDim2.new(1, -24, 0, 32)
@@ -76,29 +86,26 @@ TitleBar.BackgroundTransparency = 1
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleBar
 TitleText.Size = UDim2.new(0, 100, 1, 0)
-TitleText.Position = UDim2.new(0, 0, 0, 0)
 TitleText.BackgroundTransparency = 1
 TitleText.Text = "ZERTYX"
 TitleText.TextColor3 = Color3.fromRGB(106, 147, 199)
 TitleText.TextSize = 18
-TitleText.Font = Enum.Font.GothamBold  -- FIXED
+TitleText.Font = Enum.Font.GothamBold
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.TextYAlignment = Enum.TextYAlignment.Center
 
--- Версия
 local VersionText = Instance.new("TextLabel")
 VersionText.Parent = TitleBar
 VersionText.Size = UDim2.new(0, 50, 1, 0)
 VersionText.Position = UDim2.new(0, 105, 0, 0)
 VersionText.BackgroundTransparency = 1
-VersionText.Text = "v1.1"
+VersionText.Text = "v1.2"
 VersionText.TextColor3 = Color3.fromRGB(100, 120, 150)
 VersionText.TextSize = 12
-VersionText.Font = Enum.Font.GothamMedium  -- FIXED
+VersionText.Font = Enum.Font.GothamMedium
 VersionText.TextXAlignment = Enum.TextXAlignment.Left
 VersionText.TextYAlignment = Enum.TextYAlignment.Center
 
--- Кнопка закрытия
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TitleBar
 CloseBtn.Size = UDim2.new(0, 28, 0, 28)
@@ -109,7 +116,7 @@ CloseBtn.BorderSizePixel = 0
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.TextSize = 16
-CloseBtn.Font = Enum.Font.GothamBold  -- FIXED
+CloseBtn.Font = Enum.Font.GothamBold
 
 local CloseCorner = Instance.new("UICorner")
 CloseCorner.Parent = CloseBtn
@@ -119,7 +126,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
 end)
 
--- === ВКЛАДКИ (верхняя панель) ===
+-- === ВКЛАДКИ ===
 local TabsContainer = Instance.new("Frame")
 TabsContainer.Parent = MainFrame
 TabsContainer.Size = UDim2.new(1, -24, 0, 38)
@@ -129,7 +136,6 @@ TabsContainer.BackgroundTransparency = 1
 local TabButtons = {}
 local TabContents = {}
 
--- Функция создания вкладки
 local function CreateTab(tabName)
     local TabBtn = Instance.new("TextButton")
     TabBtn.Parent = TabsContainer
@@ -141,15 +147,13 @@ local function CreateTab(tabName)
     TabBtn.Text = tabName:upper()
     TabBtn.TextColor3 = ZertyxConfig.Theme.Text
     TabBtn.TextSize = 13
-    TabBtn.Font = Enum.Font.GothamMedium  -- FIXED
+    TabBtn.Font = Enum.Font.GothamMedium
     TabBtn.AutoButtonColor = false
     
-    -- Мягкие углы вкладок
     local TabCorner = Instance.new("UICorner")
     TabCorner.Parent = TabBtn
     TabCorner.CornerRadius = UDim.new(0, 30)
     
-    -- Эффект наведения
     TabBtn.MouseEnter:Connect(function()
         if TabBtn.BackgroundTransparency > 0.3 then
             TabBtn.BackgroundTransparency = 0.4
@@ -161,7 +165,6 @@ local function CreateTab(tabName)
         end
     end)
     
-    -- Контент вкладки
     local Content = Instance.new("ScrollingFrame")
     Content.Parent = MainFrame
     Content.Size = UDim2.new(1, -24, 1, -110)
@@ -174,7 +177,6 @@ local function CreateTab(tabName)
     Content.ScrollBarImageColor3 = ZertyxConfig.Theme.Primary
     Content.Name = tabName .. "Content"
     
-    -- Создаем содержимое
     if tabName == "Visuals" then
         CreateVisualsTab(Content)
     elseif tabName == "Aim" then
@@ -186,7 +188,6 @@ local function CreateTab(tabName)
     TabButtons[tabName] = TabBtn
     TabContents[tabName] = Content
     
-    -- Обработка клика
     TabBtn.MouseButton1Click:Connect(function()
         for name, btn in pairs(TabButtons) do
             btn.BackgroundTransparency = 0.7
@@ -196,13 +197,11 @@ local function CreateTab(tabName)
         TabBtn.BackgroundTransparency = 0.2
         TabBtn.TextColor3 = ZertyxConfig.Theme.TextBright
         Content.Visible = true
-        ZertyxConfig.ActiveTab = tabName
     end)
 end
 
 -- === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
 
--- Создание строки с элементом
 local function CreateRow(parent, label, yPos, icon)
     local Row = Instance.new("Frame")
     Row.Parent = parent
@@ -216,7 +215,6 @@ local function CreateRow(parent, label, yPos, icon)
     RowCorner.Parent = Row
     RowCorner.CornerRadius = UDim.new(0, 12)
     
-    -- Иконка (если есть)
     if icon then
         local IconLabel = Instance.new("TextLabel")
         IconLabel.Parent = Row
@@ -226,7 +224,7 @@ local function CreateRow(parent, label, yPos, icon)
         IconLabel.Text = icon
         IconLabel.TextColor3 = ZertyxConfig.Theme.Accent
         IconLabel.TextSize = 16
-        IconLabel.Font = Enum.Font.GothamMedium  -- FIXED
+        IconLabel.Font = Enum.Font.GothamMedium
         IconLabel.TextXAlignment = Enum.TextXAlignment.Center
         IconLabel.TextYAlignment = Enum.TextYAlignment.Center
     end
@@ -239,14 +237,13 @@ local function CreateRow(parent, label, yPos, icon)
     Label.Text = label
     Label.TextColor3 = ZertyxConfig.Theme.Text
     Label.TextSize = 13
-    Label.Font = Enum.Font.GothamMedium  -- FIXED
+    Label.Font = Enum.Font.GothamMedium
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.TextYAlignment = Enum.TextYAlignment.Center
     
     return Row
 end
 
--- Создание Toggle
 local function CreateToggle(row, defaultState, callback)
     local Toggle = Instance.new("TextButton")
     Toggle.Parent = row
@@ -257,7 +254,7 @@ local function CreateToggle(row, defaultState, callback)
     Toggle.Text = defaultState and "ON" or "OFF"
     Toggle.TextColor3 = ZertyxConfig.Theme.TextBright
     Toggle.TextSize = 12
-    Toggle.Font = Enum.Font.GothamBold  -- FIXED
+    Toggle.Font = Enum.Font.GothamBold
     Toggle.AutoButtonColor = false
     
     local ToggleCorner = Instance.new("UICorner")
@@ -272,11 +269,10 @@ local function CreateToggle(row, defaultState, callback)
         if callback then callback(state) end
     end)
     
-    return Toggle, function() return state end
+    return Toggle
 end
 
--- Создание слайдера
-local function CreateSlider(row, minVal, maxVal, defaultVal, label, callback)
+local function CreateSlider(row, minVal, maxVal, defaultVal, callback)
     local SliderFrame = Instance.new("Frame")
     SliderFrame.Parent = row
     SliderFrame.Size = UDim2.new(0, 160, 0, 6)
@@ -306,7 +302,7 @@ local function CreateSlider(row, minVal, maxVal, defaultVal, label, callback)
     ValueLabel.Text = tostring(defaultVal)
     ValueLabel.TextColor3 = ZertyxConfig.Theme.Text
     ValueLabel.TextSize = 12
-    ValueLabel.Font = Enum.Font.GothamMedium  -- FIXED
+    ValueLabel.Font = Enum.Font.GothamMedium
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     
     local dragging = false
@@ -341,7 +337,6 @@ local function CreateSlider(row, minVal, maxVal, defaultVal, label, callback)
     return function() return currentVal end
 end
 
--- Создание дропдауна
 local function CreateDropdown(row, options, defaultIndex, callback)
     local Dropdown = Instance.new("TextButton")
     Dropdown.Parent = row
@@ -353,7 +348,7 @@ local function CreateDropdown(row, options, defaultIndex, callback)
     Dropdown.Text = options[defaultIndex or 1]
     Dropdown.TextColor3 = ZertyxConfig.Theme.Text
     Dropdown.TextSize = 12
-    Dropdown.Font = Enum.Font.GothamMedium  -- FIXED
+    Dropdown.Font = Enum.Font.GothamMedium
     Dropdown.AutoButtonColor = false
     
     local DropCorner = Instance.new("UICorner")
@@ -374,32 +369,26 @@ end
 function CreateVisualsTab(parent)
     local yPos = 0
     
-    -- ESP
     local row1 = CreateRow(parent, "ESP", yPos, "👁")
-    local espToggle, getEspState = CreateToggle(row1, true)
+    local espToggle = CreateToggle(row1, true)
     yPos = yPos + 42
     
-    -- Дальность
     local row2 = CreateRow(parent, "Дальность", yPos, "📏")
-    local getRange = CreateSlider(row2, 0, 100, 75, "м")
+    local getRange = CreateSlider(row2, 0, 100, 75)
     yPos = yPos + 42
     
-    -- Скелет
     local row3 = CreateRow(parent, "Скелет", yPos, "🦴")
     local skeletonToggle = CreateToggle(row3, false)
     yPos = yPos + 42
     
-    -- Имя
     local row4 = CreateRow(parent, "Имя", yPos, "🏷")
     local nameToggle = CreateToggle(row4, true)
     yPos = yPos + 42
     
-    -- Цвет скелета
     local row5 = CreateRow(parent, "Цвет скелета", yPos, "🎨")
     local colorDropdown = CreateDropdown(row5, {"Радуга", "Красный", "Синий", "Зеленый", "Желтый"}, 1)
     yPos = yPos + 42
     
-    -- Размер имени
     local row6 = CreateRow(parent, "Размер имени", yPos, "📐")
     local getNameSize = CreateSlider(row6, 8, 24, 14)
     yPos = yPos + 42
@@ -411,32 +400,26 @@ end
 function CreateAimTab(parent)
     local yPos = 0
     
-    -- Aimbot
     local row1 = CreateRow(parent, "Aimbot", yPos, "🎯")
-    local aimToggle, getAimState = CreateToggle(row1, false)
+    local aimToggle = CreateToggle(row1, false)
     yPos = yPos + 42
     
-    -- FOV
     local row2 = CreateRow(parent, "FOV", yPos, "🔲")
-    local getFOV = CreateSlider(row2, 0, 360, 120, "°")
+    local getFOV = CreateSlider(row2, 0, 360, 120)
     yPos = yPos + 42
     
-    -- Smooth
     local row3 = CreateRow(parent, "Smooth", yPos, "⚡")
     local getSmooth = CreateSlider(row3, 0, 100, 50)
     yPos = yPos + 42
     
-    -- Цель (голова/тело)
     local row4 = CreateRow(parent, "Цель", yPos, "👤")
     local targetDropdown = CreateDropdown(row4, {"Голова", "Тело", "Шея"}, 1)
     yPos = yPos + 42
     
-    -- Безопасность
     local row5 = CreateRow(parent, "Безопасность", yPos, "🛡")
     local safeToggle = CreateToggle(row5, true)
     yPos = yPos + 42
     
-    -- Рейдж (Rage)
     local row6 = CreateRow(parent, "Rage", yPos, "🔥")
     local rageToggle = CreateToggle(row6, false)
     yPos = yPos + 42
@@ -448,27 +431,22 @@ end
 function CreateMiscTab(parent)
     local yPos = 0
     
-    -- Watermark
     local row1 = CreateRow(parent, "Watermark", yPos, "💧")
     local watermarkToggle = CreateToggle(row1, true)
     yPos = yPos + 42
     
-    -- FPS Counter
     local row2 = CreateRow(parent, "FPS Counter", yPos, "📊")
     local fpsToggle = CreateToggle(row2, true)
     yPos = yPos + 42
     
-    -- Crosshair
     local row3 = CreateRow(parent, "Crosshair", yPos, "➕")
     local crosshairToggle = CreateToggle(row3, true)
     yPos = yPos + 42
     
-    -- Цвет прицела
     local row4 = CreateRow(parent, "Цвет прицела", yPos, "🎨")
     local crosshairColor = CreateDropdown(row4, {"Красный", "Зеленый", "Синий", "Белый", "Желтый"}, 4)
     yPos = yPos + 42
     
-    -- Настройки меню
     local row5 = CreateRow(parent, "Клавиша меню", yPos, "⌨")
     local keyLabel = Instance.new("TextLabel")
     keyLabel.Parent = row5
@@ -477,10 +455,10 @@ function CreateMiscTab(parent)
     keyLabel.BackgroundColor3 = ZertyxConfig.Theme.Background
     keyLabel.BackgroundTransparency = 0.3
     keyLabel.BorderSizePixel = 0
-    keyLabel.Text = "RSHIFT"
+    keyLabel.Text = "≡"
     keyLabel.TextColor3 = ZertyxConfig.Theme.Text
-    keyLabel.TextSize = 12
-    keyLabel.Font = Enum.Font.GothamBold  -- FIXED
+    keyLabel.TextSize = 14
+    keyLabel.Font = Enum.Font.GothamBold
     keyLabel.TextXAlignment = Enum.TextXAlignment.Center
     
     local KeyCorner = Instance.new("UICorner")
@@ -503,27 +481,16 @@ if firstTab then
     firstTab.TextColor3 = ZertyxConfig.Theme.TextBright
 end
 
--- === УПРАВЛЕНИЕ ОТКРЫТИЕМ/ЗАКРЫТИЕМ ===
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == ZertyxConfig.OpenKey then
-        MainFrame.Visible = not MainFrame.Visible
-        if MainFrame.Visible then
-            MainFrame.Position = ZertyxConfig.MenuPosition
-        end
-    end
-end)
-
--- === ВОДНЫЙ ЗНАК (WATERMARK) ===
+-- === ВОДНЫЙ ЗНАК ===
 local Watermark = Instance.new("TextLabel")
 Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v1.1 | BloxStrike"
+Watermark.Text = "Zertyx v1.2 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(106, 147, 199)
 Watermark.TextSize = 14
-Watermark.Font = Enum.Font.GothamBold  -- FIXED
+Watermark.Font = Enum.Font.GothamBold
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
 Watermark.TextYAlignment = Enum.TextYAlignment.Bottom
 Watermark.Visible = true
@@ -537,7 +504,7 @@ FPSCounter.BackgroundTransparency = 1
 FPSCounter.Text = "60 FPS"
 FPSCounter.TextColor3 = Color3.fromRGB(100, 255, 100)
 FPSCounter.TextSize = 13
-FPSCounter.Font = Enum.Font.GothamMedium  -- FIXED
+FPSCounter.Font = Enum.Font.GothamMedium
 FPSCounter.TextXAlignment = Enum.TextXAlignment.Right
 FPSCounter.TextYAlignment = Enum.TextYAlignment.Bottom
 
@@ -554,18 +521,15 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- === ПЕРЕМЕННЫЕ ДЛЯ ВНЕШНЕГО ДОСТУПА ===
+-- === ГЛОБАЛЬНЫЙ ДОСТУП ===
 _G.Zertyx = {
     ToggleMenu = function()
         MainFrame.Visible = not MainFrame.Visible
-    end,
-    GetConfig = function()
-        return ZertyxConfig
     end,
     IsOpen = function()
         return MainFrame.Visible
     end
 }
 
-print("Zertyx v1.1 Loaded Successfully!")
-print("Press RSHIFT to open menu")
+print("Zertyx v1.2 Loaded Successfully!")
+print("Нажмите кнопку ≡ в левом верхнем углу для открытия меню")
