@@ -1,6 +1,6 @@
 --[[
-    Zertyx - Menu with ESP (FIXED)
-    Version: 2.2
+    Zertyx - Menu with ESP (FIXED v2)
+    Version: 2.3
     Size: 640x420
     Open: Button ≡ in top-left corner
 ]]
@@ -316,7 +316,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v2.2 | BloxStrike"
+Watermark.Text = "Zertyx v2.3 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(100, 100, 100)
 Watermark.TextSize = 14
 Watermark.Font = Enum.Font.GothamBold
@@ -351,12 +351,16 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- === ESP EVENTS ===
+-- === ESP EVENTS (БЕЗ wait и spawn) ===
+-- Обновляем ESP при появлении игрока
 Players.PlayerAdded:Connect(function(player)
+    -- Используем CharacterAdded без задержки
     player.CharacterAdded:Connect(function()
-        wait(0.5)  -- Исправлено: wait вместо task.wait
         updateESP()
     end)
+    -- Небольшая задержка через RunService
+    RunService.Heartbeat:Wait()
+    updateESP()
 end)
 
 Players.PlayerRemoving:Connect(function(player)
@@ -366,15 +370,18 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Исправлено: spawn вместо task.spawn
-spawn(function()
-    while wait(1) do  -- Исправлено: wait вместо task.wait
+-- Обновляем ESP каждую секунду через RunService
+local lastUpdate = tick()
+RunService.Heartbeat:Connect(function()
+    local currentTime = tick()
+    if currentTime - lastUpdate >= 1 then
         updateESP()
+        lastUpdate = currentTime
     end
 end)
 
-wait(1)  -- Исправлено: wait вместо task.wait
-toggleESP(true)
+-- Запускаем ESP сразу
+updateESP()
 
 -- === GLOBAL ACCESS ===
 _G.Zertyx = {
@@ -389,6 +396,6 @@ _G.Zertyx = {
     UpdateESP = updateESP
 }
 
-print("Zertyx v2.2 Loaded Successfully!")
+print("Zertyx v2.3 Loaded Successfully!")
 print("Press ≡ button in top-left corner to open menu")
 print("ESP: ON")
