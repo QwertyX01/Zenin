@@ -1,4 +1,4 @@
--- Zertyx CHEAT v3.7 - RAINBOW AURA
+-- Zertyx CHEAT v3.8 - CHROMATIC HAT
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -8,20 +8,21 @@ local Lighting = game:GetService("Lighting")
 local ESPEnabled = true
 local BigHeadEnabled = false
 local AtmosphereEnabled = false
-local RainbowAuraEnabled = false
+local HatEnabled = false
+local HatColor = Color3.fromRGB(255, 0, 0) -- Красный по умолчанию
 local SelectedAtmoColor = Color3.fromRGB(150, 50, 200)
 local espObjects = {}
 local bigHeadObjects = {}
-local auraObjects = {}
+local hatObjects = {}
 local originalGuiColor = nil
 
--- === СОЗДАНИЕ ГЛАВНОГО GUI ===
+-- === ГЛАВНОЕ МЕНЮ ===
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === ГЛАВНОЕ МЕНЮ (ФИОЛЕТОВАЯ ТЕМА) ===
+-- === МЕНЮ (ФИОЛЕТОВОЕ) ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -186,15 +187,87 @@ CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
 end, yPos)
 yPos = yPos + 50
 
--- RAINBOW AURA TOGGLE
-CreateToggleRow(visualsContent, "Rainbow Aura", RainbowAuraEnabled, function(state)
-    RainbowAuraEnabled = state
+-- CHROMATIC HAT TOGGLE
+CreateToggleRow(visualsContent, "Chromatic Hat", HatEnabled, function(state)
+    HatEnabled = state
     if state then 
-        UpdateRainbowAura()
+        UpdateHat()
+        colorPickerHat.Visible = true
+        colorPickerHatFrame.Visible = true
     else 
-        ClearRainbowAura()
+        ClearHat()
+        colorPickerHat.Visible = false
+        colorPickerHatFrame.Visible = false
     end
 end, yPos)
+yPos = yPos + 50
+
+-- === ПАЛИТРА ДЛЯ ШЛЯПЫ ===
+local colorPickerHatFrame = Instance.new("Frame")
+colorPickerHatFrame.Parent = visualsContent
+colorPickerHatFrame.Size = UDim2.new(1, -20, 0, 40)
+colorPickerHatFrame.Position = UDim2.new(0, 10, 0, yPos)
+colorPickerHatFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
+colorPickerHatFrame.BackgroundTransparency = 0.5
+colorPickerHatFrame.BorderSizePixel = 0
+colorPickerHatFrame.Visible = false
+
+local colorPickerHatCorner = Instance.new("UICorner")
+colorPickerHatCorner.Parent = colorPickerHatFrame
+colorPickerHatCorner.CornerRadius = UDim.new(0, 8)
+
+local hatColors = {
+    {Color3.fromRGB(255, 0, 0), "Red"},
+    {Color3.fromRGB(0, 255, 0), "Green"},
+    {Color3.fromRGB(0, 150, 255), "Blue"},
+    {Color3.fromRGB(255, 255, 0), "Yellow"},
+    {Color3.fromRGB(255, 0, 255), "Purple"},
+    {Color3.fromRGB(255, 100, 0), "Orange"},
+    {Color3.fromRGB(0, 255, 255), "Cyan"},
+    {Color3.fromRGB(255, 200, 255), "Pink"}
+}
+
+local hatColorButtons = {}
+local hatColorPicker = Instance.new("Frame")
+hatColorPicker.Parent = colorPickerHatFrame
+hatColorPicker.Size = UDim2.new(1, 0, 1, 0)
+hatColorPicker.BackgroundTransparency = 1
+
+for i = 1, #hatColors do
+    local colorBtn = Instance.new("TextButton")
+    colorBtn.Parent = hatColorPicker
+    colorBtn.Size = UDim2.new(0, 30, 0, 30)
+    colorBtn.Position = UDim2.new(0, 10 + (i-1) * 40, 0.5, -15)
+    colorBtn.BackgroundColor3 = hatColors[i][1]
+    colorBtn.BackgroundTransparency = 0
+    colorBtn.BorderSizePixel = 0
+    colorBtn.Text = ""
+    colorBtn.AutoButtonColor = false
+    
+    local colorCorner = Instance.new("UICorner")
+    colorCorner.Parent = colorBtn
+    colorCorner.CornerRadius = UDim.new(0, 6)
+    
+    if hatColors[i][1] == HatColor then
+        colorBtn.BorderSizePixel = 2
+        colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    end
+    
+    colorBtn.MouseButton1Click:Connect(function()
+        HatColor = hatColors[i][1]
+        if HatEnabled then
+            ClearHat()
+            UpdateHat()
+        end
+        for _, btn in pairs(hatColorButtons) do
+            btn.BorderSizePixel = 0
+        end
+        colorBtn.BorderSizePixel = 2
+        colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    
+    hatColorButtons[i] = colorBtn
+end
 yPos = yPos + 50
 
 -- ATMOSPHERE TOGGLE
@@ -203,31 +276,31 @@ CreateToggleRow(visualsContent, "Atmosphere", AtmosphereEnabled, function(state)
     if state then 
         ApplyCloudColor(SelectedAtmoColor)
         ApplyGUIStyle(true)
-        colorPicker.Visible = true
-        colorPickerFrame.Visible = true
+        colorPickerAtmo.Visible = true
+        colorPickerAtmoFrame.Visible = true
     else 
         ResetAtmosphere()
-        colorPicker.Visible = false
-        colorPickerFrame.Visible = false
+        colorPickerAtmo.Visible = false
+        colorPickerAtmoFrame.Visible = false
     end
 end, yPos)
 yPos = yPos + 50
 
--- === ЦВЕТОВАЯ ПАЛИТРА ===
-local colorPickerFrame = Instance.new("Frame")
-colorPickerFrame.Parent = visualsContent
-colorPickerFrame.Size = UDim2.new(1, -20, 0, 40)
-colorPickerFrame.Position = UDim2.new(0, 10, 0, yPos)
-colorPickerFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
-colorPickerFrame.BackgroundTransparency = 0.5
-colorPickerFrame.BorderSizePixel = 0
-colorPickerFrame.Visible = false
+-- === ПАЛИТРА ДЛЯ ATMOSPHERE ===
+local colorPickerAtmoFrame = Instance.new("Frame")
+colorPickerAtmoFrame.Parent = visualsContent
+colorPickerAtmoFrame.Size = UDim2.new(1, -20, 0, 40)
+colorPickerAtmoFrame.Position = UDim2.new(0, 10, 0, yPos)
+colorPickerAtmoFrame.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
+colorPickerAtmoFrame.BackgroundTransparency = 0.5
+colorPickerAtmoFrame.BorderSizePixel = 0
+colorPickerAtmoFrame.Visible = false
 
-local colorPickerCorner = Instance.new("UICorner")
-colorPickerCorner.Parent = colorPickerFrame
-colorPickerCorner.CornerRadius = UDim.new(0, 8)
+local colorPickerAtmoCorner = Instance.new("UICorner")
+colorPickerAtmoCorner.Parent = colorPickerAtmoFrame
+colorPickerAtmoCorner.CornerRadius = UDim.new(0, 8)
 
-local colors = {
+local atmoColors = {
     {Color3.fromRGB(150, 50, 200), "Purple"},
     {Color3.fromRGB(200, 100, 255), "Lavender"},
     {Color3.fromRGB(100, 50, 200), "Deep Purple"},
@@ -238,18 +311,18 @@ local colors = {
     {Color3.fromRGB(255, 150, 50), "Orange"}
 }
 
-local colorButtons = {}
-local colorPicker = Instance.new("Frame")
-colorPicker.Parent = colorPickerFrame
-colorPicker.Size = UDim2.new(1, 0, 1, 0)
-colorPicker.BackgroundTransparency = 1
+local atmoColorButtons = {}
+local atmoColorPicker = Instance.new("Frame")
+atmoColorPicker.Parent = colorPickerAtmoFrame
+atmoColorPicker.Size = UDim2.new(1, 0, 1, 0)
+atmoColorPicker.BackgroundTransparency = 1
 
-for i = 1, #colors do
+for i = 1, #atmoColors do
     local colorBtn = Instance.new("TextButton")
-    colorBtn.Parent = colorPicker
+    colorBtn.Parent = atmoColorPicker
     colorBtn.Size = UDim2.new(0, 30, 0, 30)
     colorBtn.Position = UDim2.new(0, 10 + (i-1) * 40, 0.5, -15)
-    colorBtn.BackgroundColor3 = colors[i][1]
+    colorBtn.BackgroundColor3 = atmoColors[i][1]
     colorBtn.BackgroundTransparency = 0
     colorBtn.BorderSizePixel = 0
     colorBtn.Text = ""
@@ -259,54 +332,134 @@ for i = 1, #colors do
     colorCorner.Parent = colorBtn
     colorCorner.CornerRadius = UDim.new(0, 6)
     
-    if colors[i][1] == SelectedAtmoColor then
+    if atmoColors[i][1] == SelectedAtmoColor then
         colorBtn.BorderSizePixel = 2
         colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
     end
     
     colorBtn.MouseButton1Click:Connect(function()
-        SelectedAtmoColor = colors[i][1]
+        SelectedAtmoColor = atmoColors[i][1]
         if AtmosphereEnabled then
             ApplyCloudColor(SelectedAtmoColor)
             ApplyGUIStyle(true)
         end
-        for _, btn in pairs(colorButtons) do
+        for _, btn in pairs(atmoColorButtons) do
             btn.BorderSizePixel = 0
         end
         colorBtn.BorderSizePixel = 2
         colorBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
     end)
     
-    colorButtons[i] = colorBtn
+    atmoColorButtons[i] = colorBtn
 end
 
--- AIM TAB
-local aimContent = tabContents["Aim"]
-local aimLabel = Instance.new("TextLabel")
-aimLabel.Parent = aimContent
-aimLabel.Size = UDim2.new(1, 0, 1, 0)
-aimLabel.Position = UDim2.new(0, 0, 0, 0)
-aimLabel.BackgroundTransparency = 1
-aimLabel.Text = "AIM TAB"
-aimLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
-aimLabel.TextSize = 24
-aimLabel.Font = Enum.Font.GothamBold
-aimLabel.TextXAlignment = Enum.TextXAlignment.Center
-aimLabel.TextYAlignment = Enum.TextYAlignment.Center
+-- === HAT ФУНКЦИИ (ТАКАЯ ЖЕ ШЛЯПА КАК НА ФОТО) ===
+function CreateHat(player)
+    if hatObjects[player] then
+        for _, obj in pairs(hatObjects[player]) do
+            obj:Destroy()
+        end
+        hatObjects[player] = nil
+    end
+    
+    if not player.Character then return end
+    local head = player.Character:FindFirstChild("Head")
+    if not head then return end
+    
+    -- Создаем BillboardGui
+    local billboard = Instance.new("BillboardGui")
+    billboard.Parent = head
+    billboard.Size = UDim2.new(0, 80, 0, 80)
+    billboard.Adornee = head
+    billboard.StudsOffset = Vector3.new(0, 3.5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = 500
+    
+    -- Основная шляпа (круг с градиентом)
+    local hat = Instance.new("Frame")
+    hat.Parent = billboard
+    hat.Size = UDim2.new(1, 0, 1, 0)
+    hat.BackgroundColor3 = HatColor
+    hat.BackgroundTransparency = 0.2
+    hat.BorderSizePixel = 0
+    
+    local hatCorner = Instance.new("UICorner")
+    hatCorner.Parent = hat
+    hatCorner.CornerRadius = UDim.new(0, 40) -- Круглая шляпа
+    
+    -- Свечение
+    local glow = Instance.new("ImageLabel")
+    glow.Parent = hat
+    glow.Size = UDim2.new(1.8, 0, 1.8, 0)
+    glow.Position = UDim2.new(-0.4, 0, -0.4, 0)
+    glow.BackgroundTransparency = 1
+    glow.Image = "rbxassetid://13063196338"
+    glow.ImageColor3 = HatColor
+    glow.ImageTransparency = 0.3
+    
+    -- Ободок шляпы (второй круг)
+    local rim = Instance.new("Frame")
+    rim.Parent = hat
+    rim.Size = UDim2.new(0.8, 0, 0.8, 0)
+    rim.Position = UDim2.new(0.1, 0, 0.1, 0)
+    rim.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    rim.BackgroundTransparency = 0.8
+    rim.BorderSizePixel = 0
+    
+    local rimCorner = Instance.new("UICorner")
+    rimCorner.Parent = rim
+    rimCorner.CornerRadius = UDim.new(0, 40)
+    
+    -- Радужный градиент (как на фото)
+    local gradient = Instance.new("UIGradient")
+    gradient.Parent = hat
+    gradient.Rotation = 45
+    local gradColors = {
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+    }
+    gradient.Color = ColorSequence.new(gradColors)
+    
+    -- Храним все объекты
+    hatObjects[player] = {billboard, hat, glow, rim, gradient}
+end
 
--- MISC TAB
-local miscContent = tabContents["Misc"]
-local miscLabel = Instance.new("TextLabel")
-miscLabel.Parent = miscContent
-miscLabel.Size = UDim2.new(1, 0, 1, 0)
-miscLabel.Position = UDim2.new(0, 0, 0, 0)
-miscLabel.BackgroundTransparency = 1
-miscLabel.Text = "MISC TAB"
-miscLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
-miscLabel.TextSize = 24
-miscLabel.Font = Enum.Font.GothamBold
-miscLabel.TextXAlignment = Enum.TextXAlignment.Center
-miscLabel.TextYAlignment = Enum.TextYAlignment.Center
+function RemoveHat(player)
+    if hatObjects[player] then
+        for _, obj in pairs(hatObjects[player]) do
+            obj:Destroy()
+        end
+        hatObjects[player] = nil
+    end
+end
+
+function UpdateHat()
+    for _, targetPlayer in ipairs(Players:GetPlayers()) do
+        if targetPlayer ~= LocalPlayer then
+            if HatEnabled and targetPlayer.Character then
+                local head = targetPlayer.Character:FindFirstChild("Head")
+                if head and not hatObjects[targetPlayer] then
+                    CreateHat(targetPlayer)
+                end
+            else
+                RemoveHat(targetPlayer)
+            end
+        end
+    end
+end
+
+function ClearHat()
+    for player, objects in pairs(hatObjects) do
+        for _, obj in pairs(objects) do
+            obj:Destroy()
+        end
+    end
+    hatObjects = {}
+end
 
 -- === ATMOSPHERE ФУНКЦИИ ===
 function ApplyGUIStyle(enable)
@@ -358,102 +511,6 @@ function ResetAtmosphere()
         Lighting.FogEnd = 2000
         ApplyGUIStyle(false)
     end)
-end
-
--- === RAINBOW AURA ФУНКЦИИ ===
-function CreateRainbowAura(targetPlayer)
-    if auraObjects[targetPlayer] then
-        for _, obj in pairs(auraObjects[targetPlayer]) do
-            obj:Destroy()
-        end
-        auraObjects[targetPlayer] = nil
-    end
-    
-    if not targetPlayer.Character then return end
-    local head = targetPlayer.Character:FindFirstChild("Head")
-    if not head then return end
-    
-    -- Создаем BillboardGui над головой
-    local billboard = Instance.new("BillboardGui")
-    billboard.Parent = head
-    billboard.Size = UDim2.new(0, 60, 0, 60)
-    billboard.Adornee = head
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
-    billboard.AlwaysOnTop = true
-    billboard.MaxDistance = 300
-    
-    -- Создаем Frame с эффектом свечения
-    local frame = Instance.new("Frame")
-    frame.Parent = billboard
-    frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    frame.BackgroundTransparency = 0
-    frame.BorderSizePixel = 0
-    
-    local frameCorner = Instance.new("UICorner")
-    frameCorner.Parent = frame
-    frameCorner.CornerRadius = UDim.new(0, 30)
-    
-    -- Создаем UIGradient для радужного эффекта
-    local gradient = Instance.new("UIGradient")
-    gradient.Parent = frame
-    gradient.Rotation = 45
-    
-    -- Создаем цветовые точки для радуги
-    local colors = {
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 255, 0)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
-        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
-        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
-    }
-    gradient.Color = ColorSequence.new(colors)
-    
-    -- Добавляем свечение
-    local glow = Instance.new("ImageLabel")
-    glow.Parent = frame
-    glow.Size = UDim2.new(1.5, 0, 1.5, 0)
-    glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
-    glow.BackgroundTransparency = 1
-    glow.Image = "rbxassetid://13063196338"
-    glow.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    glow.ImageTransparency = 0.3
-    
-    auraObjects[targetPlayer] = {billboard, gradient, frame, glow}
-end
-
-function RemoveRainbowAura(targetPlayer)
-    if auraObjects[targetPlayer] then
-        for _, obj in pairs(auraObjects[targetPlayer]) do
-            obj:Destroy()
-        end
-        auraObjects[targetPlayer] = nil
-    end
-end
-
-function UpdateRainbowAura()
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if RainbowAuraEnabled and targetPlayer.Character then
-                local head = targetPlayer.Character:FindFirstChild("Head")
-                if head and not auraObjects[targetPlayer] then
-                    CreateRainbowAura(targetPlayer)
-                end
-            else
-                RemoveRainbowAura(targetPlayer)
-            end
-        end
-    end
-end
-
-function ClearRainbowAura()
-    for player, objects in pairs(auraObjects) do
-        for _, obj in pairs(objects) do
-            obj:Destroy()
-        end
-    end
-    auraObjects = {}
 end
 
 -- === ESP ФУНКЦИИ ===
@@ -555,7 +612,6 @@ end
 
 -- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
 RunService.Heartbeat:Connect(function()
-    -- ESP
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -566,7 +622,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
-    -- Big Head
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if BigHeadEnabled and targetPlayer.Character then
@@ -580,16 +635,15 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
-    -- Rainbow Aura
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
-            if RainbowAuraEnabled and targetPlayer.Character then
+            if HatEnabled and targetPlayer.Character then
                 local head = targetPlayer.Character:FindFirstChild("Head")
-                if head and not auraObjects[targetPlayer] then
-                    CreateRainbowAura(targetPlayer)
+                if head and not hatObjects[targetPlayer] then
+                    CreateHat(targetPlayer)
                 end
             else
-                RemoveRainbowAura(targetPlayer)
+                RemoveHat(targetPlayer)
             end
         end
     end
@@ -600,20 +654,20 @@ Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         UpdateESP()
         UpdateBigHead()
-        UpdateRainbowAura()
+        UpdateHat()
     end)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
     RemoveESP(player)
     RemoveBigHead(player)
-    RemoveRainbowAura(player)
+    RemoveHat(player)
 end)
 
 -- === ЗАПУСК ===
 UpdateESP()
 UpdateBigHead()
-UpdateRainbowAura()
+UpdateHat()
 
 -- === ОТКРЫТИЕ МЕНЮ ===
 local OpenBtn = Instance.new("TextButton")
@@ -642,7 +696,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v3.7 | BloxStrike"
+Watermark.Text = "Zertyx v3.8 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -677,6 +731,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v3.7 LOADED!")
+print("ZERTYX v3.8 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF | Rainbow Aura: OFF | Atmosphere: OFF")
+print("ESP: ON | Big Head: OFF | Chromatic Hat: OFF | Atmosphere: OFF")
