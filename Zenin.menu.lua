@@ -1,6 +1,6 @@
 --[[
-    Zertyx - Menu with ESP
-    Version: 2.1
+    Zertyx - Menu with ESP (FIXED)
+    Version: 2.2
     Size: 640x420
     Open: Button ≡ in top-left corner
 ]]
@@ -316,7 +316,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v2.1 | BloxStrike"
+Watermark.Text = "Zertyx v2.2 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(100, 100, 100)
 Watermark.TextSize = 14
 Watermark.Font = Enum.Font.GothamBold
@@ -354,7 +354,7 @@ end)
 -- === ESP EVENTS ===
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
-        task.wait(0.5)
+        wait(0.5)  -- Исправлено: wait вместо task.wait
         updateESP()
     end)
 end)
@@ -366,13 +366,14 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
-task.spawn(function()
-    while task.wait(1) do
+-- Исправлено: spawn вместо task.spawn
+spawn(function()
+    while wait(1) do  -- Исправлено: wait вместо task.wait
         updateESP()
     end
 end)
 
-task.wait(1)
+wait(1)  -- Исправлено: wait вместо task.wait
 toggleESP(true)
 
 -- === GLOBAL ACCESS ===
@@ -388,6 +389,6 @@ _G.Zertyx = {
     UpdateESP = updateESP
 }
 
-print("Zertyx v2.1 Loaded Successfully!")
+print("Zertyx v2.2 Loaded Successfully!")
 print("Press ≡ button in top-left corner to open menu")
 print("ESP: ON")
