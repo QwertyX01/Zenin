@@ -1,30 +1,41 @@
--- Zertyx CHEAT v4.6 - THIRD PERSON (FULL CONTROL, FIXED SLIDER)
+-- Zertyx CHEAT v5.1 - WHITE HEADER + FIXED TABS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- НАСТРОЙКИ
+-- НАСТРОЙКИ (все функции по умолчанию выключены, кроме ESP)
 local ESPEnabled = true
 local BigHeadEnabled = false
 local ThirdPersonEnabled = false
+local FOVEnabled = false
+local MoveBeforeTimeEnabled = false
 local ZoomDistance = 10
+local FOVValue = 120
 local espObjects = {}
 local bigHeadObjects = {}
 local originalCameraOffset = nil
+local originalFOV = nil
+local originalWalkSpeed = nil
 
--- === ГЛАВНОЕ МЕНЮ ===
+-- УДАЛЯЕМ СТАРОЕ МЕНЮ
+pcall(function()
+    LocalPlayer.PlayerGui:FindFirstChild("Zertyx"):Destroy()
+end)
+
+-- === GUI ===
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === МЕНЮ ===
+-- === ОСНОВНАЯ РАМКА (БЕЛЫЙ ФОН) ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -320, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 20, 40)
+MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 MainFrame.BackgroundTransparency = 0
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
@@ -32,36 +43,66 @@ MainFrame.Visible = false
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.Parent = MainFrame
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 24)
 
--- ХЕДЕР
+-- Тень
+local Shadow = Instance.new("ImageLabel")
+Shadow.Parent = MainFrame
+Shadow.Size = UDim2.new(1, 20, 1, 20)
+Shadow.Position = UDim2.new(0, -10, 0, -10)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://1317777270"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.5
+
+-- === ВЕРХНЯЯ ПАНЕЛЬ (БЕЛАЯ, НЕ СЕРАЯ) ===
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
-Header.Size = UDim2.new(1, 0, 0, 40)
+Header.Size = UDim2.new(1, 0, 0, 48)
 Header.Position = UDim2.new(0, 0, 0, 0)
-Header.BackgroundColor3 = Color3.fromRGB(60, 30, 80)
+Header.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- БЕЛЫЙ
 Header.BackgroundTransparency = 0
 Header.BorderSizePixel = 0
+-- небольшая разделительная линия снизу
+local BottomLine = Instance.new("Frame")
+BottomLine.Parent = Header
+BottomLine.Size = UDim2.new(1, 0, 0, 1)
+BottomLine.Position = UDim2.new(0, 0, 1, 0)
+BottomLine.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+BottomLine.BorderSizePixel = 0
 
+-- === ЗАГОЛОВОК (КРАСНЫЙ) ===
 local Title = Instance.new("TextLabel")
 Title.Parent = Header
-Title.Size = UDim2.new(1, 0, 1, 0)
-Title.Position = UDim2.new(0, 0, 0, 0)
+Title.Size = UDim2.new(0, 200, 1, 0)
+Title.Position = UDim2.new(0, 16, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "ZERTYX CHEAT"
-Title.TextColor3 = Color3.fromRGB(220, 150, 255)
-Title.TextSize = 20
+Title.Text = "Zertyx"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 28
 Title.Font = Enum.Font.GothamBold
-Title.TextXAlignment = Enum.TextXAlignment.Center
+Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextYAlignment = Enum.TextYAlignment.Center
 
--- ВКЛАДКИ
+-- Версия
+local Version = Instance.new("TextLabel")
+Version.Parent = Header
+Version.Size = UDim2.new(0, 50, 0, 20)
+Version.Position = UDim2.new(0, 120, 0, 28)
+Version.BackgroundTransparency = 1
+Version.Text = "v5.1"
+Version.TextColor3 = Color3.fromRGB(150, 150, 150)
+Version.TextSize = 12
+Version.Font = Enum.Font.GothamMedium
+Version.TextXAlignment = Enum.TextXAlignment.Left
+Version.TextYAlignment = Enum.TextYAlignment.Top
+
+-- === ВКЛАДКИ (расположены под заголовком) ===
 local TabContainer = Instance.new("Frame")
 TabContainer.Parent = MainFrame
-TabContainer.Size = UDim2.new(1, 0, 0, 35)
-TabContainer.Position = UDim2.new(0, 0, 0, 40)
-TabContainer.BackgroundColor3 = Color3.fromRGB(40, 20, 55)
-TabContainer.BackgroundTransparency = 0
+TabContainer.Size = UDim2.new(1, 0, 0, 40)
+TabContainer.Position = UDim2.new(0, 0, 0, 48)
+TabContainer.BackgroundTransparency = 1
 TabContainer.BorderSizePixel = 0
 
 local tabs = {"Visuals", "Aim", "Misc"}
@@ -71,74 +112,81 @@ local tabContents = {}
 for i = 1, 3 do
     local btn = Instance.new("TextButton")
     btn.Parent = TabContainer
-    btn.Size = UDim2.new(0, 80, 0, 28)
-    btn.Position = UDim2.new(0, 15 + (i-1) * 90, 0.5, -14)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
+    btn.Size = UDim2.new(0, 80, 0, 30)
+    btn.Position = UDim2.new(0, 16 + (i-1) * 90, 0.5, -15)
+    btn.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
     btn.BackgroundTransparency = 0
     btn.BorderSizePixel = 0
     btn.Text = string.upper(tabs[i])
-    btn.TextColor3 = Color3.fromRGB(200, 180, 220)
-    btn.TextSize = 12
+    btn.TextColor3 = Color3.fromRGB(80, 80, 80)
+    btn.TextSize = 13
     btn.Font = Enum.Font.GothamMedium
     btn.AutoButtonColor = false
     
     local corner = Instance.new("UICorner")
     corner.Parent = btn
-    corner.CornerRadius = UDim.new(0, 15)
+    corner.CornerRadius = UDim.new(0, 16)
     
-    local content = Instance.new("Frame")
+    local content = Instance.new("ScrollingFrame")
     content.Parent = MainFrame
-    content.Size = UDim2.new(1, 0, 1, -90)
-    content.Position = UDim2.new(0, 0, 0, 75)
+    content.Size = UDim2.new(1, -20, 1, -100)
+    content.Position = UDim2.new(0, 10, 0, 96)
     content.BackgroundTransparency = 1
     content.BorderSizePixel = 0
     content.Visible = (i == 1)
+    content.CanvasSize = UDim2.new(0, 0, 0, 0)
+    content.ScrollBarThickness = 4
+    content.ScrollBarImageColor3 = Color3.fromRGB(200, 200, 200)
     content.Name = tabs[i] .. "Content"
     
     tabBtns[tabs[i]] = btn
     tabContents[tabs[i]] = content
     
     btn.MouseButton1Click:Connect(function()
-        for _, b in pairs(tabBtns) do
-            b.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
-            b.TextColor3 = Color3.fromRGB(200, 180, 220)
+        for name, b in pairs(tabBtns) do
+            local tween = TweenService:Create(b, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(240, 240, 240),
+                TextColor3 = Color3.fromRGB(80, 80, 80)
+            })
+            tween:Play()
+            TabContents[name].Visible = false
         end
-        for _, c in pairs(tabContents) do
-            c.Visible = false
-        end
-        btn.BackgroundColor3 = Color3.fromRGB(80, 50, 100)
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        local tween = TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = Color3.fromRGB(200, 200, 200),
+            TextColor3 = Color3.fromRGB(0, 0, 0)
+        })
+        tween:Play()
         content.Visible = true
     end)
 end
 
--- VISUALS TAB
-local visualsContent = tabContents["Visuals"]
-local yPos = 10
+-- Активируем первую вкладку
+if tabBtns["Visuals"] then
+    tabBtns["Visuals"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    tabBtns["Visuals"].TextColor3 = Color3.fromRGB(0, 0, 0)
+end
 
--- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СОЗДАНИЯ ЭЛЕМЕНТОВ
-
--- Ряд с тогглом
+-- === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
 local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     local row = Instance.new("Frame")
     row.Parent = parent
-    row.Size = UDim2.new(1, -20, 0, 40)
-    row.Position = UDim2.new(0, 10, 0, yPos)
-    row.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
-    row.BackgroundTransparency = 0.5
+    row.Size = UDim2.new(1, -10, 0, 40)
+    row.Position = UDim2.new(0, 5, 0, yPos)
+    row.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    row.BackgroundTransparency = 0
     row.BorderSizePixel = 0
     
     local rowCorner = Instance.new("UICorner")
     rowCorner.Parent = row
-    rowCorner.CornerRadius = UDim.new(0, 8)
+    rowCorner.CornerRadius = UDim.new(0, 12)
     
     local labelText = Instance.new("TextLabel")
     labelText.Parent = row
-    labelText.Size = UDim2.new(0, 140, 1, 0)
+    labelText.Size = UDim2.new(0, 180, 1, 0)
     labelText.Position = UDim2.new(0, 12, 0, 0)
     labelText.BackgroundTransparency = 1
     labelText.Text = label
-    labelText.TextColor3 = Color3.fromRGB(220, 200, 240)
+    labelText.TextColor3 = Color3.fromRGB(40, 40, 40)
     labelText.TextSize = 14
     labelText.Font = Enum.Font.GothamMedium
     labelText.TextXAlignment = Enum.TextXAlignment.Left
@@ -148,7 +196,7 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     toggle.Parent = row
     toggle.Size = UDim2.new(0, 30, 0, 30)
     toggle.Position = UDim2.new(1, -40, 0.5, -15)
-    toggle.BackgroundColor3 = defaultState and Color3.fromRGB(100, 150, 255) or Color3.fromRGB(60, 40, 75)
+    toggle.BackgroundColor3 = defaultState and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(200, 200, 200)
     toggle.BackgroundTransparency = 0
     toggle.BorderSizePixel = 0
     toggle.Text = defaultState and "✓" or ""
@@ -159,32 +207,31 @@ local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     
     local toggleCorner = Instance.new("UICorner")
     toggleCorner.Parent = toggle
-    toggleCorner.CornerRadius = UDim.new(0, 4)
+    toggleCorner.CornerRadius = UDim.new(0, 6)
     
     local state = defaultState
     toggle.MouseButton1Click:Connect(function()
         state = not state
         toggle.Text = state and "✓" or ""
-        toggle.BackgroundColor3 = state and Color3.fromRGB(100, 150, 255) or Color3.fromRGB(60, 40, 75)
+        toggle.BackgroundColor3 = state and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(200, 200, 200)
         if callback then callback(state) end
     end)
     
     return row, toggle
 end
 
--- Слайдер
 local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback, yPos)
     local row = Instance.new("Frame")
     row.Parent = parent
-    row.Size = UDim2.new(1, -20, 0, 40)
-    row.Position = UDim2.new(0, 10, 0, yPos)
-    row.BackgroundColor3 = Color3.fromRGB(50, 30, 65)
-    row.BackgroundTransparency = 0.5
+    row.Size = UDim2.new(1, -10, 0, 40)
+    row.Position = UDim2.new(0, 5, 0, yPos)
+    row.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    row.BackgroundTransparency = 0
     row.BorderSizePixel = 0
     
     local rowCorner = Instance.new("UICorner")
     rowCorner.Parent = row
-    rowCorner.CornerRadius = UDim.new(0, 8)
+    rowCorner.CornerRadius = UDim.new(0, 12)
     
     local labelText = Instance.new("TextLabel")
     labelText.Parent = row
@@ -192,7 +239,7 @@ local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback,
     labelText.Position = UDim2.new(0, 12, 0, 0)
     labelText.BackgroundTransparency = 1
     labelText.Text = label
-    labelText.TextColor3 = Color3.fromRGB(220, 200, 240)
+    labelText.TextColor3 = Color3.fromRGB(40, 40, 40)
     labelText.TextSize = 14
     labelText.Font = Enum.Font.GothamMedium
     labelText.TextXAlignment = Enum.TextXAlignment.Left
@@ -202,7 +249,7 @@ local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback,
     sliderFrame.Parent = row
     sliderFrame.Size = UDim2.new(0, 120, 0, 6)
     sliderFrame.Position = UDim2.new(0, 120, 0.5, -3)
-    sliderFrame.BackgroundColor3 = Color3.fromRGB(60, 50, 70)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
     sliderFrame.BorderSizePixel = 0
     
     local sliderCorner = Instance.new("UICorner")
@@ -212,7 +259,7 @@ local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback,
     local fill = Instance.new("Frame")
     fill.Parent = sliderFrame
     fill.Size = UDim2.new((defaultVal - minVal) / (maxVal - minVal), 0, 1, 0)
-    fill.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+    fill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
     fill.BorderSizePixel = 0
     
     local fillCorner = Instance.new("UICorner")
@@ -225,7 +272,7 @@ local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback,
     valueLabel.Position = UDim2.new(0, 250, 0.5, -10)
     valueLabel.BackgroundTransparency = 1
     valueLabel.Text = tostring(defaultVal)
-    valueLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+    valueLabel.TextColor3 = Color3.fromRGB(40, 40, 40)
     valueLabel.TextSize = 13
     valueLabel.Font = Enum.Font.GothamMedium
     
@@ -261,101 +308,146 @@ local function CreateSlider(parent, label, minVal, maxVal, defaultVal, callback,
     return row
 end
 
--- === СОЗДАНИЕ ЭЛЕМЕНТОВ В VISUALS ===
+-- === НАПОЛНЕНИЕ ВКЛАДКИ VISUALS ===
+local visualsContent = tabContents["Visuals"]
+local yPos = 10
 
--- 1. ESP Toggle
 CreateToggleRow(visualsContent, "ESP", ESPEnabled, function(state)
     ESPEnabled = state
     if state then UpdateESP() else ClearESP() end
 end, yPos)
 yPos = yPos + 50
 
--- 2. Big Head Toggle
 CreateToggleRow(visualsContent, "Big Head", BigHeadEnabled, function(state)
     BigHeadEnabled = state
     if state then UpdateBigHead() else ClearBigHead() end
 end, yPos)
 yPos = yPos + 50
 
--- 3. Third Person Toggle (создаём до слайдера, чтобы слайдер был после)
 local thirdPersonRow, thirdPersonToggle = CreateToggleRow(visualsContent, "Third Person", ThirdPersonEnabled, function(state)
     ThirdPersonEnabled = state
     if state then 
         zoomSlider.Visible = true
-        SetThirdPerson(true)
+        if originalCameraOffset == nil then
+            local char = LocalPlayer.Character
+            if char then
+                local humanoid = char:FindFirstChild("Humanoid")
+                if humanoid then
+                    originalCameraOffset = humanoid.CameraOffset
+                end
+            end
+        end
     else 
         zoomSlider.Visible = false
-        SetThirdPerson(false)
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChild("Humanoid")
+            if humanoid then
+                if originalCameraOffset ~= nil then
+                    humanoid.CameraOffset = originalCameraOffset
+                else
+                    humanoid.CameraOffset = Vector3.new(0, 0, 0)
+                end
+            end
+        end
     end
 end, yPos)
 yPos = yPos + 50
 
--- 4. Zoom Slider (создаём после, но сохраняем в переменную для управления видимостью)
 local zoomSlider = CreateSlider(visualsContent, "Zoom", 3, 20, ZoomDistance, function(val)
     ZoomDistance = val
-    if ThirdPersonEnabled then
-        SetThirdPerson(true) -- обновляем расстояние
-    end
 end, yPos)
-zoomSlider.Visible = false  -- изначально скрыт
+zoomSlider.Visible = false
 yPos = yPos + 50
 
--- AIM TAB (пустой)
-local aimContent = tabContents["Aim"]
-local aimLabel = Instance.new("TextLabel")
-aimLabel.Parent = aimContent
-aimLabel.Size = UDim2.new(1, 0, 1, 0)
-aimLabel.Position = UDim2.new(0, 0, 0, 0)
-aimLabel.BackgroundTransparency = 1
-aimLabel.Text = "AIM TAB"
-aimLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
-aimLabel.TextSize = 24
-aimLabel.Font = Enum.Font.GothamBold
-aimLabel.TextXAlignment = Enum.TextXAlignment.Center
-aimLabel.TextYAlignment = Enum.TextYAlignment.Center
-
--- MISC TAB (пустой)
-local miscContent = tabContents["Misc"]
-local miscLabel = Instance.new("TextLabel")
-miscLabel.Parent = miscContent
-miscLabel.Size = UDim2.new(1, 0, 1, 0)
-miscLabel.Position = UDim2.new(0, 0, 0, 0)
-miscLabel.BackgroundTransparency = 1
-miscLabel.Text = "MISC TAB"
-miscLabel.TextColor3 = Color3.fromRGB(180, 150, 200)
-miscLabel.TextSize = 24
-miscLabel.Font = Enum.Font.GothamBold
-miscLabel.TextXAlignment = Enum.TextXAlignment.Center
-miscLabel.TextYAlignment = Enum.TextYAlignment.Center
-
--- === THIRD PERSON ФУНКЦИИ ===
-function SetThirdPerson(enable)
-    local char = LocalPlayer.Character
-    if not char then return end
-    local humanoid = char:FindFirstChild("Humanoid")
-    if not humanoid then return end
-    
-    if enable then
-        -- Сохраняем оригинальный оффсет, если ещё не сохранён
-        if originalCameraOffset == nil then
-            originalCameraOffset = humanoid.CameraOffset
+local fovRow, fovToggle = CreateToggleRow(visualsContent, "FOV", FOVEnabled, function(state)
+    FOVEnabled = state
+    if state then 
+        fovSlider.Visible = true
+        if originalFOV == nil then
+            originalFOV = Camera.FieldOfView
         end
-        humanoid.CameraOffset = Vector3.new(0, 2, -ZoomDistance)
-    else
-        if originalCameraOffset ~= nil then
-            humanoid.CameraOffset = originalCameraOffset
-            originalCameraOffset = nil
-        else
-            humanoid.CameraOffset = Vector3.new(0, 0, 0)
+        Camera.FieldOfView = FOVValue
+    else 
+        fovSlider.Visible = false
+        if originalFOV ~= nil then
+            Camera.FieldOfView = originalFOV
         end
     end
-end
+end, yPos)
+yPos = yPos + 50
 
--- Подписываемся на смену персонажа
-LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(0.5)
+local fovSlider = CreateSlider(visualsContent, "FOV Value", 70, 120, FOVValue, function(val)
+    FOVValue = val
+    if FOVEnabled then
+        Camera.FieldOfView = FOVValue
+    end
+end, yPos)
+fovSlider.Visible = false
+yPos = yPos + 50
+
+visualsContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
+
+-- === НАПОЛНЕНИЕ ВКЛАДКИ MISC ===
+local miscContent = tabContents["Misc"]
+local miscY = 10
+
+CreateToggleRow(miscContent, "Move before time", MoveBeforeTimeEnabled, function(state)
+    MoveBeforeTimeEnabled = state
+    if state then
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChild("Humanoid")
+            if humanoid then
+                if originalWalkSpeed == nil then
+                    originalWalkSpeed = humanoid.WalkSpeed
+                end
+                humanoid.WalkSpeed = 16
+            end
+        end
+    else
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChild("Humanoid")
+            if humanoid then
+                if originalWalkSpeed ~= nil then
+                    humanoid.WalkSpeed = originalWalkSpeed
+                    originalWalkSpeed = nil
+                else
+                    humanoid.WalkSpeed = 16
+                end
+            end
+        end
+    end
+end, miscY)
+miscY = miscY + 50
+
+miscContent.CanvasSize = UDim2.new(0, 0, 0, miscY + 20)
+
+-- === ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ФУНКЦИЙ (КАЖДЫЙ КАДР) ===
+RunService.RenderStepped:Connect(function()
     if ThirdPersonEnabled then
-        SetThirdPerson(true)
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.CameraOffset = Vector3.new(0, 2, -ZoomDistance)
+            end
+        end
+    end
+    
+    if FOVEnabled then
+        Camera.FieldOfView = FOVValue
+    end
+    
+    if MoveBeforeTimeEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChild("Humanoid")
+            if humanoid and humanoid.WalkSpeed ~= 16 then
+                humanoid.WalkSpeed = 16
+            end
+        end
     end
 end)
 
@@ -458,7 +550,6 @@ end
 
 -- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
 RunService.Heartbeat:Connect(function()
-    -- ESP
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -469,7 +560,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
-    -- Big Head
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
             if BigHeadEnabled and targetPlayer.Character then
@@ -489,6 +579,18 @@ Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         UpdateESP()
         UpdateBigHead()
+        if MoveBeforeTimeEnabled then
+            local char = player.Character
+            if char then
+                local humanoid = char:FindFirstChild("Humanoid")
+                if humanoid then
+                    if originalWalkSpeed == nil then
+                        originalWalkSpeed = humanoid.WalkSpeed
+                    end
+                    humanoid.WalkSpeed = 16
+                end
+            end
+        end
     end)
 end)
 
@@ -497,20 +599,19 @@ Players.PlayerRemoving:Connect(function(player)
     RemoveBigHead(player)
 end)
 
--- === ЗАПУСК ===
 UpdateESP()
 UpdateBigHead()
 
--- === ОТКРЫТИЕ МЕНЮ ===
+-- === КНОПКА ОТКРЫТИЯ ===
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Parent = ScreenGui
 OpenBtn.Size = UDim2.new(0, 50, 0, 30)
 OpenBtn.Position = UDim2.new(0, 10, 0, 10)
-OpenBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 80)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 OpenBtn.BackgroundTransparency = 0
 OpenBtn.BorderSizePixel = 0
 OpenBtn.Text = "≡"
-OpenBtn.TextColor3 = Color3.fromRGB(220, 150, 255)
+OpenBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 OpenBtn.TextSize = 22
 OpenBtn.Font = Enum.Font.GothamBold
 
@@ -528,8 +629,8 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v4.6 | BloxStrike"
-Watermark.TextColor3 = Color3.fromRGB(180, 150, 200)
+Watermark.Text = "Zertyx v5.1 | BloxStrike"
+Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
@@ -542,7 +643,7 @@ FPS.Size = UDim2.new(0, 60, 0, 30)
 FPS.Position = UDim2.new(1, -70, 1, -40)
 FPS.BackgroundTransparency = 1
 FPS.Text = "60 FPS"
-FPS.TextColor3 = Color3.fromRGB(180, 150, 200)
+FPS.TextColor3 = Color3.fromRGB(150, 150, 150)
 FPS.TextSize = 13
 FPS.Font = Enum.Font.GothamMedium
 FPS.TextXAlignment = Enum.TextXAlignment.Right
@@ -563,6 +664,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v4.6 LOADED!")
+print("ZERTYX v5.1 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF | Third Person: OFF")
+print("ESP: ON | Big Head: OFF | Third Person: OFF | FOV: OFF | Move before time: OFF")
