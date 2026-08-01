@@ -1,11 +1,11 @@
--- Zertyx CHEAT v5.3 - MOVE BEFORE TIME (UNFREEZE FIX)
+-- Zertyx CHEAT v5.4 - MOVE BEFORE TIME (FULL UNFREEZE)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- НАСТРОЙКИ (всё выключено кроме ESP)
+-- НАСТРОЙКИ
 local ESPEnabled = true
 local BigHeadEnabled = false
 local FOVEnabled = false
@@ -16,6 +16,14 @@ local espObjects = {}
 local bigHeadObjects = {}
 local originalFOV = nil
 local originalWalkSpeed = nil
+local PlayerModule = nil
+local Controls = nil
+
+-- Пытаемся получить PlayerModule один раз
+pcall(function()
+    PlayerModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"))
+    Controls = PlayerModule:GetControls()
+end)
 
 -- УДАЛЯЕМ СТАРОЕ МЕНЮ
 pcall(function()
@@ -43,7 +51,6 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.Parent = MainFrame
 MainCorner.CornerRadius = UDim.new(0, 24)
 
--- Тень
 local Shadow = Instance.new("ImageLabel")
 Shadow.Parent = MainFrame
 Shadow.Size = UDim2.new(1, 20, 1, 20)
@@ -69,7 +76,6 @@ BottomLine.Position = UDim2.new(0, 0, 1, 0)
 BottomLine.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
 BottomLine.BorderSizePixel = 0
 
--- === ЗАГОЛОВОК (КРАСНЫЙ, СЛЕВА) ===
 local Title = Instance.new("TextLabel")
 Title.Parent = Header
 Title.Size = UDim2.new(0, 200, 1, 0)
@@ -87,7 +93,7 @@ Version.Parent = Header
 Version.Size = UDim2.new(0, 50, 0, 20)
 Version.Position = UDim2.new(0, 120, 0, 28)
 Version.BackgroundTransparency = 1
-Version.Text = "v5.3"
+Version.Text = "v5.4"
 Version.TextColor3 = Color3.fromRGB(150, 150, 150)
 Version.TextSize = 12
 Version.Font = Enum.Font.GothamMedium
@@ -151,13 +157,12 @@ for i = 1, 3 do
     end)
 end
 
--- Активируем первую вкладку
 if tabBtns["Visuals"] then
     tabBtns["Visuals"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
     tabBtns["Visuals"].TextColor3 = Color3.fromRGB(0, 0, 0)
 end
 
--- === ФУНКЦИИ ДЛЯ ЭЛЕМЕНТОВ ===
+-- === ЭЛЕМЕНТЫ UI ===
 local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     local row = Instance.new("Frame")
     row.Parent = parent
@@ -347,30 +352,48 @@ visualsContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 local miscContent = tabContents["Misc"]
 local miscY = 10
 
--- === ФУНКЦИЯ ДЛЯ РАЗМОРОЗКИ ПЕРСОНАЖА ===
+-- Функция разморозки (все методы)
 local function UnfreezeCharacter()
     local char = LocalPlayer.Character
     if not char then return end
-    
-    -- Снимаем Anchored со всех частей
+
+    -- 1. Снимаем Anchored
     for _, part in ipairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             part.Anchored = false
         end
     end
-    
-    -- Отключаем PlatformStand
+
+    -- 2. Отключаем PlatformStand и разблокируем состояния
     local humanoid = char:FindFirstChild("Humanoid")
     if humanoid then
         humanoid.PlatformStand = false
-        -- Если есть другие флаги, пробуем сбросить
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, true)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
         if humanoid:FindFirstChild("Freeze") then
             humanoid.Freeze.Value = false
         end
     end
+
+    -- 3. Принудительно включаем PlayerModule
+    pcall(function()
+        if Controls then
+            Controls:Enable()
+        end
+    end)
+
+    -- 4. Сбрасываем глобальные флаги (если есть)
+    pcall(function()
+        if _G.isFrozen ~= nil then _G.isFrozen = false end
+        if _G.FreezePlayers ~= nil then _G.FreezePlayers = false end
+        if _G.CanMove ~= nil then _G.CanMove = true end
+        if _G.FreezeAll ~= nil then _G.FreezeAll = false end
+    end)
 end
 
--- Переключатель Move before time (теперь с разморозкой)
+-- Переключатель Move before time
 CreateToggleRow(miscContent, "Move before time", MoveBeforeTimeEnabled, function(state)
     MoveBeforeTimeEnabled = state
     if state then
@@ -384,7 +407,6 @@ CreateToggleRow(miscContent, "Move before time", MoveBeforeTimeEnabled, function
                 humanoid.WalkSpeed = MoveSpeed
             end
         end
-        -- Сразу размораживаем
         UnfreezeCharacter()
     else
         local char = LocalPlayer.Character
@@ -403,18 +425,20 @@ CreateToggleRow(miscContent, "Move before time", MoveBeforeTimeEnabled, function
 end, miscY)
 miscY = miscY + 50
 
--- === ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КАЖДЫЙ КАДР (для разморозки) ===
+miscContent.CanvasSize = UDim2.new(0, 0, 0, miscY + 20)
+
+-- === ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КАЖДЫЙ КАДР ===
 RunService.RenderStepped:Connect(function()
     -- FOV
     if FOVEnabled then
         Camera.FieldOfView = FOVValue
     end
-    
-    -- Move before time: снимаем заморозку и держим скорость
+
+    -- Move before time – принудительно держим разморозку и скорость
     if MoveBeforeTimeEnabled then
         local char = LocalPlayer.Character
         if char then
-            -- Снимаем Anchored со всех частей
+            -- Снимаем Anchored
             for _, part in ipairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.Anchored = false
@@ -423,10 +447,18 @@ RunService.RenderStepped:Connect(function()
             local humanoid = char:FindFirstChild("Humanoid")
             if humanoid then
                 humanoid.PlatformStand = false
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
                 if humanoid.WalkSpeed ~= MoveSpeed then
                     humanoid.WalkSpeed = MoveSpeed
                 end
-                -- Дополнительно пытаемся сбросить фриз через глобальные переменные (если есть)
+                -- Пытаемся включить управление через PlayerModule каждый кадр
+                pcall(function()
+                    if Controls then
+                        Controls:Enable()
+                    end
+                end)
+                -- Сбрасываем флаги
                 pcall(function()
                     if _G.isFrozen ~= nil then _G.isFrozen = false end
                     if _G.FreezePlayers ~= nil then _G.FreezePlayers = false end
@@ -534,7 +566,7 @@ function ClearBigHead()
     bigHeadObjects = {}
 end
 
--- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ДЛЯ ESP И BIG HEAD ===
+-- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
 RunService.Heartbeat:Connect(function()
     for _, targetPlayer in ipairs(Players:GetPlayers()) do
         if targetPlayer ~= LocalPlayer then
@@ -614,7 +646,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v5.3 | BloxStrike"
+Watermark.Text = "Zertyx v5.4 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -649,6 +681,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v5.3 LOADED!")
+print("ZERTYX v5.4 LOADED!")
 print("Press ≡ to open menu")
 print("ESP: ON | Big Head: OFF | FOV: OFF | Move before time: OFF")
