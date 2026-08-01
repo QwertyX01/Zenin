@@ -1,4 +1,4 @@
--- Zertyx CHEAT v5.4 - MOVE BEFORE TIME (FULL UNFREEZE)
+-- Zertyx CHEAT v5.5 - MOVE BEFORE TIME (FULL FORCE)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -19,7 +19,7 @@ local originalWalkSpeed = nil
 local PlayerModule = nil
 local Controls = nil
 
--- Пытаемся получить PlayerModule один раз
+-- Получаем PlayerModule
 pcall(function()
     PlayerModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"))
     Controls = PlayerModule:GetControls()
@@ -36,7 +36,6 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
--- === ОСНОВНАЯ РАМКА (БЕЛЫЙ ФОН) ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -60,7 +59,7 @@ Shadow.Image = "rbxassetid://1317777270"
 Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
 Shadow.ImageTransparency = 0.5
 
--- === ВЕРХНЯЯ ПАНЕЛЬ (БЕЛАЯ) ===
+-- === ВЕРХНЯЯ ПАНЕЛЬ ===
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
 Header.Size = UDim2.new(1, 0, 0, 48)
@@ -93,7 +92,7 @@ Version.Parent = Header
 Version.Size = UDim2.new(0, 50, 0, 20)
 Version.Position = UDim2.new(0, 120, 0, 28)
 Version.BackgroundTransparency = 1
-Version.Text = "v5.4"
+Version.Text = "v5.5"
 Version.TextColor3 = Color3.fromRGB(150, 150, 150)
 Version.TextSize = 12
 Version.Font = Enum.Font.GothamMedium
@@ -162,7 +161,7 @@ if tabBtns["Visuals"] then
     tabBtns["Visuals"].TextColor3 = Color3.fromRGB(0, 0, 0)
 end
 
--- === ЭЛЕМЕНТЫ UI ===
+-- === UI ЭЛЕМЕНТЫ ===
 local function CreateToggleRow(parent, label, defaultState, callback, yPos)
     local row = Instance.new("Frame")
     row.Parent = parent
@@ -352,7 +351,7 @@ visualsContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 local miscContent = tabContents["Misc"]
 local miscY = 10
 
--- Функция разморозки (все методы)
+-- ОСНОВНАЯ ФУНКЦИЯ РАЗМОРОЗКИ (все методы)
 local function UnfreezeCharacter()
     local char = LocalPlayer.Character
     if not char then return end
@@ -364,7 +363,7 @@ local function UnfreezeCharacter()
         end
     end
 
-    -- 2. Отключаем PlatformStand и разблокируем состояния
+    -- 2. Отключаем PlatformStand, разблокируем состояния
     local humanoid = char:FindFirstChild("Humanoid")
     if humanoid then
         humanoid.PlatformStand = false
@@ -377,19 +376,44 @@ local function UnfreezeCharacter()
         end
     end
 
-    -- 3. Принудительно включаем PlayerModule
+    -- 3. Включаем PlayerModule
     pcall(function()
         if Controls then
             Controls:Enable()
         end
     end)
 
-    -- 4. Сбрасываем глобальные флаги (если есть)
+    -- 4. Удаляем физические ограничители
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        for _, obj in pairs(hrp:GetChildren()) do
+            if obj:IsA("BodyPosition") or obj:IsA("BodyVelocity") or obj:IsA("AlignPosition") or 
+               obj:IsA("VectorForce") or obj:IsA("BodyGyro") or obj:IsA("BodyAngularVelocity") then
+                obj:Destroy()
+            end
+        end
+    end
+
+    -- 5. Сбрасываем глобальные флаги
     pcall(function()
         if _G.isFrozen ~= nil then _G.isFrozen = false end
         if _G.FreezePlayers ~= nil then _G.FreezePlayers = false end
         if _G.CanMove ~= nil then _G.CanMove = true end
         if _G.FreezeAll ~= nil then _G.FreezeAll = false end
+    end)
+
+    -- 6. Пытаемся отключить скрипты, которые могут телепортировать (поиск по имени)
+    pcall(function()
+        for _, script in ipairs(char:GetDescendants()) do
+            if script:IsA("LocalScript") and (
+                script.Name:lower():match("freeze") or 
+                script.Name:lower():match("spawn") or 
+                script.Name:lower():match("reset") or 
+                script.Name:lower():match("position")
+            ) then
+                script.Disabled = true
+            end
+        end
     end)
 end
 
@@ -434,17 +458,29 @@ RunService.RenderStepped:Connect(function()
         Camera.FieldOfView = FOVValue
     end
 
-    -- Move before time – принудительно держим разморозку и скорость
+    -- Move before time – полная разморозка + CFrame-движение
     if MoveBeforeTimeEnabled then
         local char = LocalPlayer.Character
         if char then
-            -- Снимаем Anchored
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char:FindFirstChild("Humanoid")
+
+            -- Снимаем Anchored и удаляем ограничители
+            if hrp then
+                hrp.Anchored = false
+                for _, obj in pairs(hrp:GetChildren()) do
+                    if obj:IsA("BodyPosition") or obj:IsA("BodyVelocity") or obj:IsA("AlignPosition") or 
+                       obj:IsA("VectorForce") or obj:IsA("BodyGyro") or obj:IsA("BodyAngularVelocity") then
+                        obj:Destroy()
+                    end
+                end
+            end
             for _, part in ipairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.Anchored = false
                 end
             end
-            local humanoid = char:FindFirstChild("Humanoid")
+
             if humanoid then
                 humanoid.PlatformStand = false
                 humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
@@ -452,7 +488,7 @@ RunService.RenderStepped:Connect(function()
                 if humanoid.WalkSpeed ~= MoveSpeed then
                     humanoid.WalkSpeed = MoveSpeed
                 end
-                -- Пытаемся включить управление через PlayerModule каждый кадр
+                -- Включаем управление
                 pcall(function()
                     if Controls then
                         Controls:Enable()
@@ -464,6 +500,13 @@ RunService.RenderStepped:Connect(function()
                     if _G.FreezePlayers ~= nil then _G.FreezePlayers = false end
                     if _G.CanMove ~= nil then _G.CanMove = true end
                 end)
+            end
+
+            -- === РАДИКАЛЬНЫЙ ОБХОД: CFrame-движение ===
+            if hrp and humanoid and humanoid.MoveDirection.Magnitude > 0 then
+                -- Двигаем персонажа в направлении джойстика
+                local moveVector = humanoid.MoveDirection * MoveSpeed * 0.06 -- 0.06 – коэффициент для плавности
+                hrp.CFrame = hrp.CFrame + moveVector
             end
         end
     end
@@ -646,7 +689,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v5.4 | BloxStrike"
+Watermark.Text = "Zertyx v5.5 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -681,6 +724,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v5.4 LOADED!")
+print("ZERTYX v5.5 LOADED!")
 print("Press ≡ to open menu")
 print("ESP: ON | Big Head: OFF | FOV: OFF | Move before time: OFF")
