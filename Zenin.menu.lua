@@ -1,9 +1,11 @@
--- Zertyx CHEAT v5.5 - MOVE BEFORE TIME (FULL FORCE)
+-- Zertyx CHEAT v5.6 - MOVE BEFORE TIME (FINAL FORCE)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local ContextActionService = game:GetService("ContextActionService")
+local UserInputService = game:GetService("UserInputService")
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
@@ -92,7 +94,7 @@ Version.Parent = Header
 Version.Size = UDim2.new(0, 50, 0, 20)
 Version.Position = UDim2.new(0, 120, 0, 28)
 Version.BackgroundTransparency = 1
-Version.Text = "v5.5"
+Version.Text = "v5.6"
 Version.TextColor3 = Color3.fromRGB(150, 150, 150)
 Version.TextSize = 12
 Version.Font = Enum.Font.GothamMedium
@@ -351,19 +353,19 @@ visualsContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 local miscContent = tabContents["Misc"]
 local miscY = 10
 
--- ОСНОВНАЯ ФУНКЦИЯ РАЗМОРОЗКИ (все методы)
+-- ФУНКЦИЯ РАЗМОРОЗКИ (полная)
 local function UnfreezeCharacter()
     local char = LocalPlayer.Character
     if not char then return end
 
-    -- 1. Снимаем Anchored
+    -- 1. Anchored
     for _, part in ipairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             part.Anchored = false
         end
     end
 
-    -- 2. Отключаем PlatformStand, разблокируем состояния
+    -- 2. Humanoid
     local humanoid = char:FindFirstChild("Humanoid")
     if humanoid then
         humanoid.PlatformStand = false
@@ -376,14 +378,14 @@ local function UnfreezeCharacter()
         end
     end
 
-    -- 3. Включаем PlayerModule
+    -- 3. PlayerModule
     pcall(function()
         if Controls then
             Controls:Enable()
         end
     end)
 
-    -- 4. Удаляем физические ограничители
+    -- 4. Удаляем физику
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp then
         for _, obj in pairs(hrp:GetChildren()) do
@@ -402,7 +404,7 @@ local function UnfreezeCharacter()
         if _G.FreezeAll ~= nil then _G.FreezeAll = false end
     end)
 
-    -- 6. Пытаемся отключить скрипты, которые могут телепортировать (поиск по имени)
+    -- 6. Отключаем скрипты с заморозкой
     pcall(function()
         for _, script in ipairs(char:GetDescendants()) do
             if script:IsA("LocalScript") and (
@@ -414,6 +416,15 @@ local function UnfreezeCharacter()
                 script.Disabled = true
             end
         end
+    end)
+
+    -- 7. Отключаем ContextActionService бинды (если есть)
+    pcall(function()
+        -- Пытаемся отвязать все действия, которые могут блокировать движение
+        ContextActionService:UnbindAction("Movement")
+        ContextActionService:UnbindAction("Jump")
+        ContextActionService:UnbindAction("Sit")
+        ContextActionService:UnbindAction("Freeze")
     end)
 end
 
@@ -458,15 +469,15 @@ RunService.RenderStepped:Connect(function()
         Camera.FieldOfView = FOVValue
     end
 
-    -- Move before time – полная разморозка + CFrame-движение
+    -- MOVE BEFORE TIME – радикальное CFrame-движение
     if MoveBeforeTimeEnabled then
         local char = LocalPlayer.Character
         if char then
             local hrp = char:FindFirstChild("HumanoidRootPart")
             local humanoid = char:FindFirstChild("Humanoid")
 
-            -- Снимаем Anchored и удаляем ограничители
-            if hrp then
+            if hrp and humanoid then
+                -- Снимаем Anchored и удаляем ограничители (на всякий случай)
                 hrp.Anchored = false
                 for _, obj in pairs(hrp:GetChildren()) do
                     if obj:IsA("BodyPosition") or obj:IsA("BodyVelocity") or obj:IsA("AlignPosition") or 
@@ -474,39 +485,51 @@ RunService.RenderStepped:Connect(function()
                         obj:Destroy()
                     end
                 end
-            end
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Anchored = false
-                end
-            end
 
-            if humanoid then
+                -- Разблокируем состояния
                 humanoid.PlatformStand = false
                 humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
                 humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-                if humanoid.WalkSpeed ~= MoveSpeed then
-                    humanoid.WalkSpeed = MoveSpeed
-                end
+
                 -- Включаем управление
                 pcall(function()
                     if Controls then
                         Controls:Enable()
                     end
                 end)
+
                 -- Сбрасываем флаги
                 pcall(function()
                     if _G.isFrozen ~= nil then _G.isFrozen = false end
                     if _G.FreezePlayers ~= nil then _G.FreezePlayers = false end
                     if _G.CanMove ~= nil then _G.CanMove = true end
                 end)
-            end
 
-            -- === РАДИКАЛЬНЫЙ ОБХОД: CFrame-движение ===
-            if hrp and humanoid and humanoid.MoveDirection.Magnitude > 0 then
-                -- Двигаем персонажа в направлении джойстика
-                local moveVector = humanoid.MoveDirection * MoveSpeed * 0.06 -- 0.06 – коэффициент для плавности
-                hrp.CFrame = hrp.CFrame + moveVector
+                -- Отключаем ContextActionService бинды (каждый кадр)
+                pcall(function()
+                    ContextActionService:UnbindAction("Movement")
+                    ContextActionService:UnbindAction("Jump")
+                    ContextActionService:UnbindAction("Sit")
+                    ContextActionService:UnbindAction("Freeze")
+                end)
+
+                -- === РАДИКАЛЬНОЕ CFrame-движение ===
+                local moveDirection = humanoid.MoveDirection
+                -- Если джойстик не даёт направление, используем направление камеры (вперёд)
+                if moveDirection.Magnitude < 0.1 then
+                    local cameraLook = Camera.CFrame.LookVector
+                    moveDirection = Vector3.new(cameraLook.X, 0, cameraLook.Z).Unit
+                end
+
+                if moveDirection.Magnitude > 0.1 then
+                    local speed = MoveSpeed * 0.06 -- 0.06 – коэффициент плавности
+                    local newPosition = hrp.Position + (moveDirection * speed)
+                    hrp.CFrame = CFrame.new(newPosition, newPosition + moveDirection)
+                end
+
+                -- Принудительно прыгаем, если нажата кнопка прыжка (для мобилки проверяем Touch)
+                -- (упрощённо: если джойстик показывает движение вверх, можно добавить вертикаль)
+                -- Но для простоты оставим только движение.
             end
         end
     end
@@ -689,7 +712,7 @@ Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v5.5 | BloxStrike"
+Watermark.Text = "Zertyx v5.6 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
@@ -724,6 +747,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v5.5 LOADED!")
+print("ZERTYX v5.6 LOADED!")
 print("Press ≡ to open menu")
 print("ESP: ON | Big Head: OFF | FOV: OFF | Move before time: OFF")
