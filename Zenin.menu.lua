@@ -1,33 +1,24 @@
--- Zertyx CHEAT v5.6 - MOVE BEFORE TIME (FINAL FORCE)
+-- Zertyx CHEAT v5.9 - SAFE MODE
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local ContextActionService = game:GetService("ContextActionService")
-local UserInputService = game:GetService("UserInputService")
 
 -- НАСТРОЙКИ
 local ESPEnabled = true
 local BigHeadEnabled = false
 local FOVEnabled = false
-local MoveBeforeTimeEnabled = false
+local GrenadeTrackerEnabled = false
 local FOVValue = 120
-local MoveSpeed = 16
+
+-- Хранилища объектов
 local espObjects = {}
 local bigHeadObjects = {}
 local originalFOV = nil
-local originalWalkSpeed = nil
-local PlayerModule = nil
-local Controls = nil
+local grenadeData = {}
 
--- Получаем PlayerModule
-pcall(function()
-    PlayerModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"))
-    Controls = PlayerModule:GetControls()
-end)
-
--- УДАЛЯЕМ СТАРОЕ МЕНЮ
+-- УДАЛЯЕМ СТАРОЕ МЕНЮ (безопасно)
 pcall(function()
     LocalPlayer.PlayerGui:FindFirstChild("Zertyx"):Destroy()
 end)
@@ -38,6 +29,7 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "Zertyx"
 ScreenGui.ResetOnSpawn = false
 
+-- === ОСНОВНОЙ ФРЕЙМ ===
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 640, 0, 420)
@@ -94,14 +86,14 @@ Version.Parent = Header
 Version.Size = UDim2.new(0, 50, 0, 20)
 Version.Position = UDim2.new(0, 120, 0, 28)
 Version.BackgroundTransparency = 1
-Version.Text = "v5.6"
+Version.Text = "v5.9"
 Version.TextColor3 = Color3.fromRGB(150, 150, 150)
 Version.TextSize = 12
 Version.Font = Enum.Font.GothamMedium
 Version.TextXAlignment = Enum.TextXAlignment.Left
 Version.TextYAlignment = Enum.TextYAlignment.Top
 
--- === ВКЛАДКИ ===
+-- === ВКЛАДКИ С АНИМАЦИЕЙ ===
 local TabContainer = Instance.new("Frame")
 TabContainer.Parent = MainFrame
 TabContainer.Size = UDim2.new(1, 0, 0, 40)
@@ -148,12 +140,18 @@ for i = 1, 3 do
 
     btn.MouseButton1Click:Connect(function()
         for name, b in pairs(tabBtns) do
-            b.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
-            b.TextColor3 = Color3.fromRGB(80, 80, 80)
-            tabContents[name].Visible = false
+            local tween = TweenService:Create(b, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(240, 240, 240),
+                TextColor3 = Color3.fromRGB(80, 80, 80)
+            })
+            tween:Play()
+            TabContents[name].Visible = false
         end
-        btn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-        btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        local tween = TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = Color3.fromRGB(200, 200, 200),
+            TextColor3 = Color3.fromRGB(0, 0, 0)
+        })
+        tween:Play()
         content.Visible = true
     end)
 end
@@ -325,355 +323,247 @@ local fovRow, fovToggle = CreateToggleRow(visualsContent, "FOV", FOVEnabled, fun
     FOVEnabled = state
     if state then 
         fovSlider.Visible = true
-        if originalFOV == nil then
-            originalFOV = Camera.FieldOfView
-        end
+        originalFOV = originalFOV or Camera.FieldOfView
         Camera.FieldOfView = FOVValue
     else 
         fovSlider.Visible = false
-        if originalFOV ~= nil then
-            Camera.FieldOfView = originalFOV
-        end
+        if originalFOV then Camera.FieldOfView = originalFOV end
     end
 end, yPos)
 yPos = yPos + 50
 
 local fovSlider = CreateSlider(visualsContent, "FOV Value", 70, 120, FOVValue, function(val)
     FOVValue = val
-    if FOVEnabled then
-        Camera.FieldOfView = FOVValue
-    end
+    if FOVEnabled then Camera.FieldOfView = FOVValue end
 end, yPos)
 fovSlider.Visible = false
 yPos = yPos + 50
 
+local grenadeRow, grenadeToggle = CreateToggleRow(visualsContent, "Trajectory Grenades", GrenadeTrackerEnabled, function(state)
+    GrenadeTrackerEnabled = state
+    if state then StartGrenadeTracking() else StopGrenadeTracking() end
+end, yPos)
+yPos = yPos + 50
+
 visualsContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 
--- === НАПОЛНЕНИЕ MISC ===
+-- === MISC TAB (пусто) ===
 local miscContent = tabContents["Misc"]
-local miscY = 10
+local miscLabel = Instance.new("TextLabel")
+miscLabel.Parent = miscContent
+miscLabel.Size = UDim2.new(1, 0, 1, 0)
+miscLabel.Position = UDim2.new(0, 0, 0, 0)
+miscLabel.BackgroundTransparency = 1
+miscLabel.Text = "MISC TAB"
+miscLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+miscLabel.TextSize = 24
+miscLabel.Font = Enum.Font.GothamBold
+miscLabel.TextXAlignment = Enum.TextXAlignment.Center
+miscLabel.TextYAlignment = Enum.TextYAlignment.Center
 
--- ФУНКЦИЯ РАЗМОРОЗКИ (полная)
-local function UnfreezeCharacter()
-    local char = LocalPlayer.Character
-    if not char then return end
+-- === TRACK GRENADES ===
+local grenadeTracked = {}
 
-    -- 1. Anchored
-    for _, part in ipairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Anchored = false
-        end
-    end
+local function GetGrenadeType(obj)
+    local name = obj.Name:lower()
+    if name:find("grenade") then return "Grenade"
+    elseif name:find("molotov") then return "Molotov"
+    elseif name:find("flash") then return "Flash"
+    else return nil end
+end
 
-    -- 2. Humanoid
-    local humanoid = char:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.PlatformStand = false
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, true)
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-        if humanoid:FindFirstChild("Freeze") then
-            humanoid.Freeze.Value = false
-        end
-    end
+local function CreateGrenadeUI(grenade)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Parent = grenade
+    billboard.Size = UDim2.new(0, 60, 0, 60)
+    billboard.Adornee = grenade
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 0, 0)
+    billboard.MaxDistance = 500
 
-    -- 3. PlayerModule
-    pcall(function()
-        if Controls then
-            Controls:Enable()
-        end
-    end)
+    local whiteCircle = Instance.new("Frame")
+    whiteCircle.Parent = billboard
+    whiteCircle.Size = UDim2.new(1, 0, 1, 0)
+    whiteCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    whiteCircle.BackgroundTransparency = 0
+    whiteCircle.BorderSizePixel = 0
+    whiteCircle.ZIndex = 1
+    local wc = Instance.new("UICorner"); wc.Parent = whiteCircle; wc.CornerRadius = UDim.new(1, 0)
 
-    -- 4. Удаляем физику
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        for _, obj in pairs(hrp:GetChildren()) do
-            if obj:IsA("BodyPosition") or obj:IsA("BodyVelocity") or obj:IsA("AlignPosition") or 
-               obj:IsA("VectorForce") or obj:IsA("BodyGyro") or obj:IsA("BodyAngularVelocity") then
-                obj:Destroy()
+    local blackCircle = Instance.new("Frame")
+    blackCircle.Parent = whiteCircle
+    blackCircle.Size = UDim2.new(0.85, 0, 0.85, 0)
+    blackCircle.Position = UDim2.new(0.075, 0, 0.075, 0)
+    blackCircle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    blackCircle.BackgroundTransparency = 0
+    blackCircle.BorderSizePixel = 0
+    blackCircle.ZIndex = 2
+    local bc = Instance.new("UICorner"); bc.Parent = blackCircle; bc.CornerRadius = UDim.new(1, 0)
+
+    local label = Instance.new("TextLabel")
+    label.Parent = blackCircle
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = GetGrenadeType(grenade) or "?"
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 12
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.TextYAlignment = Enum.TextYAlignment.Center
+
+    return billboard
+end
+
+local function StartGrenadeTracking()
+    StopGrenadeTracking()
+    RunService.Heartbeat:Connect(function()
+        if not GrenadeTrackerEnabled then return end
+        pcall(function()
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and not obj:IsA("Terrain") then
+                    local gType = GetGrenadeType(obj)
+                    if gType and obj.Parent and obj.Parent:IsA("Model") and not obj.Parent:FindFirstChild("Humanoid") then
+                        if not grenadeTracked[obj] then
+                            grenadeTracked[obj] = {billboard = CreateGrenadeUI(obj)}
+                        end
+                    end
+                end
             end
-        end
-    end
-
-    -- 5. Сбрасываем глобальные флаги
-    pcall(function()
-        if _G.isFrozen ~= nil then _G.isFrozen = false end
-        if _G.FreezePlayers ~= nil then _G.FreezePlayers = false end
-        if _G.CanMove ~= nil then _G.CanMove = true end
-        if _G.FreezeAll ~= nil then _G.FreezeAll = false end
-    end)
-
-    -- 6. Отключаем скрипты с заморозкой
-    pcall(function()
-        for _, script in ipairs(char:GetDescendants()) do
-            if script:IsA("LocalScript") and (
-                script.Name:lower():match("freeze") or 
-                script.Name:lower():match("spawn") or 
-                script.Name:lower():match("reset") or 
-                script.Name:lower():match("position")
-            ) then
-                script.Disabled = true
+            for grenade, data in pairs(grenadeTracked) do
+                if not grenade.Parent or not grenade:IsDescendantOf(workspace) then
+                    if data.billboard then data.billboard:Destroy() end
+                    grenadeTracked[grenade] = nil
+                end
             end
-        end
-    end)
-
-    -- 7. Отключаем ContextActionService бинды (если есть)
-    pcall(function()
-        -- Пытаемся отвязать все действия, которые могут блокировать движение
-        ContextActionService:UnbindAction("Movement")
-        ContextActionService:UnbindAction("Jump")
-        ContextActionService:UnbindAction("Sit")
-        ContextActionService:UnbindAction("Freeze")
+        end)
     end)
 end
 
--- Переключатель Move before time
-CreateToggleRow(miscContent, "Move before time", MoveBeforeTimeEnabled, function(state)
-    MoveBeforeTimeEnabled = state
-    if state then
-        local char = LocalPlayer.Character
-        if char then
-            local humanoid = char:FindFirstChild("Humanoid")
-            if humanoid then
-                if originalWalkSpeed == nil then
-                    originalWalkSpeed = humanoid.WalkSpeed
-                end
-                humanoid.WalkSpeed = MoveSpeed
-            end
-        end
-        UnfreezeCharacter()
-    else
-        local char = LocalPlayer.Character
-        if char then
-            local humanoid = char:FindFirstChild("Humanoid")
-            if humanoid then
-                if originalWalkSpeed ~= nil then
-                    humanoid.WalkSpeed = originalWalkSpeed
-                    originalWalkSpeed = nil
-                else
-                    humanoid.WalkSpeed = 16
-                end
-            end
-        end
+local function StopGrenadeTracking()
+    for _, data in pairs(grenadeTracked) do
+        if data.billboard then data.billboard:Destroy() end
     end
-end, miscY)
-miscY = miscY + 50
+    grenadeTracked = {}
+end
 
-miscContent.CanvasSize = UDim2.new(0, 0, 0, miscY + 20)
-
--- === ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КАЖДЫЙ КАДР ===
-RunService.RenderStepped:Connect(function()
-    -- FOV
-    if FOVEnabled then
-        Camera.FieldOfView = FOVValue
-    end
-
-    -- MOVE BEFORE TIME – радикальное CFrame-движение
-    if MoveBeforeTimeEnabled then
-        local char = LocalPlayer.Character
-        if char then
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            local humanoid = char:FindFirstChild("Humanoid")
-
-            if hrp and humanoid then
-                -- Снимаем Anchored и удаляем ограничители (на всякий случай)
-                hrp.Anchored = false
-                for _, obj in pairs(hrp:GetChildren()) do
-                    if obj:IsA("BodyPosition") or obj:IsA("BodyVelocity") or obj:IsA("AlignPosition") or 
-                       obj:IsA("VectorForce") or obj:IsA("BodyGyro") or obj:IsA("BodyAngularVelocity") then
-                        obj:Destroy()
-                    end
-                end
-
-                -- Разблокируем состояния
-                humanoid.PlatformStand = false
-                humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
-                humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-
-                -- Включаем управление
-                pcall(function()
-                    if Controls then
-                        Controls:Enable()
-                    end
-                end)
-
-                -- Сбрасываем флаги
-                pcall(function()
-                    if _G.isFrozen ~= nil then _G.isFrozen = false end
-                    if _G.FreezePlayers ~= nil then _G.FreezePlayers = false end
-                    if _G.CanMove ~= nil then _G.CanMove = true end
-                end)
-
-                -- Отключаем ContextActionService бинды (каждый кадр)
-                pcall(function()
-                    ContextActionService:UnbindAction("Movement")
-                    ContextActionService:UnbindAction("Jump")
-                    ContextActionService:UnbindAction("Sit")
-                    ContextActionService:UnbindAction("Freeze")
-                end)
-
-                -- === РАДИКАЛЬНОЕ CFrame-движение ===
-                local moveDirection = humanoid.MoveDirection
-                -- Если джойстик не даёт направление, используем направление камеры (вперёд)
-                if moveDirection.Magnitude < 0.1 then
-                    local cameraLook = Camera.CFrame.LookVector
-                    moveDirection = Vector3.new(cameraLook.X, 0, cameraLook.Z).Unit
-                end
-
-                if moveDirection.Magnitude > 0.1 then
-                    local speed = MoveSpeed * 0.06 -- 0.06 – коэффициент плавности
-                    local newPosition = hrp.Position + (moveDirection * speed)
-                    hrp.CFrame = CFrame.new(newPosition, newPosition + moveDirection)
-                end
-
-                -- Принудительно прыгаем, если нажата кнопка прыжка (для мобилки проверяем Touch)
-                -- (упрощённо: если джойстик показывает движение вверх, можно добавить вертикаль)
-                -- Но для простоты оставим только движение.
-            end
-        end
-    end
-end)
-
--- === ESP ===
+-- === ESP (защищено) ===
 function CreateESP(targetPlayer)
-    if espObjects[targetPlayer] then
-        espObjects[targetPlayer]:Destroy()
-        espObjects[targetPlayer] = nil
-    end
-    if not targetPlayer.Character then return end
-    local highlight = Instance.new("Highlight")
-    highlight.Parent = targetPlayer.Character
-    highlight.FillColor = Color3.fromRGB(50, 150, 255)
-    highlight.FillTransparency = 0.3
-    highlight.OutlineColor = Color3.fromRGB(100, 200, 255)
-    highlight.OutlineTransparency = 0.1
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    espObjects[targetPlayer] = highlight
+    pcall(function()
+        if espObjects[targetPlayer] then espObjects[targetPlayer]:Destroy() end
+        if not targetPlayer.Character then return end
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = targetPlayer.Character
+        highlight.FillColor = Color3.fromRGB(50, 150, 255)
+        highlight.FillTransparency = 0.3
+        highlight.OutlineColor = Color3.fromRGB(100, 200, 255)
+        highlight.OutlineTransparency = 0.1
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        espObjects[targetPlayer] = highlight
+    end)
 end
 
 function RemoveESP(targetPlayer)
-    if espObjects[targetPlayer] then
-        espObjects[targetPlayer]:Destroy()
-        espObjects[targetPlayer] = nil
-    end
+    pcall(function()
+        if espObjects[targetPlayer] then
+            espObjects[targetPlayer]:Destroy()
+            espObjects[targetPlayer] = nil
+        end
+    end)
 end
 
 function UpdateESP()
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                CreateESP(targetPlayer)
-            else
-                RemoveESP(targetPlayer)
+    pcall(function()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                if ESPEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    CreateESP(player)
+                else
+                    RemoveESP(player)
+                end
             end
         end
-    end
+    end)
 end
 
 function ClearESP()
-    for _, obj in pairs(espObjects) do
-        obj:Destroy()
-    end
-    espObjects = {}
+    pcall(function()
+        for _, obj in pairs(espObjects) do obj:Destroy() end
+        espObjects = {}
+    end)
 end
 
--- === BIG HEAD ===
+-- === BIG HEAD (защищено) ===
 function CreateBigHead(targetPlayer)
-    if bigHeadObjects[targetPlayer] then
-        bigHeadObjects[targetPlayer]:Destroy()
-        bigHeadObjects[targetPlayer] = nil
-    end
-    if not targetPlayer.Character then return end
-    local head = targetPlayer.Character:FindFirstChild("Head")
-    if not head then return end
-    if not head:GetAttribute("OriginalSize") then
-        head:SetAttribute("OriginalSize", head.Size)
-    end
-    head.Size = head.Size * 2
-    bigHeadObjects[targetPlayer] = head
+    pcall(function()
+        if bigHeadObjects[targetPlayer] then bigHeadObjects[targetPlayer]:Destroy() end
+        if not targetPlayer.Character then return end
+        local head = targetPlayer.Character:FindFirstChild("Head")
+        if not head then return end
+        if not head:GetAttribute("OriginalSize") then
+            head:SetAttribute("OriginalSize", head.Size)
+        end
+        head.Size = head.Size * 2
+        bigHeadObjects[targetPlayer] = head
+    end)
 end
 
 function RemoveBigHead(targetPlayer)
-    if bigHeadObjects[targetPlayer] then
-        local head = bigHeadObjects[targetPlayer]
-        local originalSize = head:GetAttribute("OriginalSize")
-        if originalSize then
-            head.Size = originalSize
+    pcall(function()
+        if bigHeadObjects[targetPlayer] then
+            local head = bigHeadObjects[targetPlayer]
+            local originalSize = head:GetAttribute("OriginalSize")
+            if originalSize then head.Size = originalSize end
+            head:SetAttribute("OriginalSize", nil)
+            bigHeadObjects[targetPlayer] = nil
         end
-        head:SetAttribute("OriginalSize", nil)
-        bigHeadObjects[targetPlayer] = nil
-    end
+    end)
 end
 
 function UpdateBigHead()
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if BigHeadEnabled and targetPlayer.Character then
-                local head = targetPlayer.Character:FindFirstChild("Head")
-                if head and not bigHeadObjects[targetPlayer] then
-                    CreateBigHead(targetPlayer)
+    pcall(function()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                if BigHeadEnabled and player.Character then
+                    local head = player.Character:FindFirstChild("Head")
+                    if head and not bigHeadObjects[player] then
+                        CreateBigHead(player)
+                    end
+                else
+                    RemoveBigHead(player)
                 end
-            else
-                RemoveBigHead(targetPlayer)
             end
         end
-    end
+    end)
 end
 
 function ClearBigHead()
-    for _, head in pairs(bigHeadObjects) do
-        local originalSize = head:GetAttribute("OriginalSize")
-        if originalSize then
-            head.Size = originalSize
+    pcall(function()
+        for _, head in pairs(bigHeadObjects) do
+            local originalSize = head:GetAttribute("OriginalSize")
+            if originalSize then head.Size = originalSize end
+            head:SetAttribute("OriginalSize", nil)
         end
-        head:SetAttribute("OriginalSize", nil)
-    end
-    bigHeadObjects = {}
+        bigHeadObjects = {}
+    end)
 end
 
--- === ПОСТОЯННОЕ ОБНОВЛЕНИЕ ===
+-- === ОБНОВЛЕНИЯ ===
+RunService.RenderStepped:Connect(function()
+    if FOVEnabled then pcall(function() Camera.FieldOfView = FOVValue end) end
+end)
+
 RunService.Heartbeat:Connect(function()
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if ESPEnabled and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                CreateESP(targetPlayer)
-            else
-                RemoveESP(targetPlayer)
-            end
-        end
-    end
-    for _, targetPlayer in ipairs(Players:GetPlayers()) do
-        if targetPlayer ~= LocalPlayer then
-            if BigHeadEnabled and targetPlayer.Character then
-                local head = targetPlayer.Character:FindFirstChild("Head")
-                if head and not bigHeadObjects[targetPlayer] then
-                    CreateBigHead(targetPlayer)
-                end
-            else
-                RemoveBigHead(targetPlayer)
-            end
-        end
-    end
+    if ESPEnabled then UpdateESP() end
+    if BigHeadEnabled then UpdateBigHead() end
 end)
 
 -- === СОБЫТИЯ ===
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
-        UpdateESP()
-        UpdateBigHead()
-        if MoveBeforeTimeEnabled then
-            local char = player.Character
-            if char then
-                local humanoid = char:FindFirstChild("Humanoid")
-                if humanoid then
-                    if originalWalkSpeed == nil then
-                        originalWalkSpeed = humanoid.WalkSpeed
-                    end
-                    humanoid.WalkSpeed = MoveSpeed
-                end
-            end
-        end
+        task.wait(0.3)
+        if ESPEnabled then UpdateESP() end
+        if BigHeadEnabled then UpdateBigHead() end
     end)
 end)
 
@@ -685,7 +575,7 @@ end)
 UpdateESP()
 UpdateBigHead()
 
--- === КНОПКА ОТКРЫТИЯ ===
+-- === ОТКРЫТИЕ МЕНЮ ===
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Parent = ScreenGui
 OpenBtn.Size = UDim2.new(0, 50, 0, 30)
@@ -706,20 +596,19 @@ OpenBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- === WATERMARK ===
+-- === WATERMARK + FPS ===
 local Watermark = Instance.new("TextLabel")
 Watermark.Parent = ScreenGui
 Watermark.Size = UDim2.new(0, 200, 0, 30)
 Watermark.Position = UDim2.new(0, 10, 1, -40)
 Watermark.BackgroundTransparency = 1
-Watermark.Text = "Zertyx v5.6 | BloxStrike"
+Watermark.Text = "Zertyx v5.9 | BloxStrike"
 Watermark.TextColor3 = Color3.fromRGB(150, 150, 150)
 Watermark.TextSize = 13
 Watermark.Font = Enum.Font.GothamBold
 Watermark.TextXAlignment = Enum.TextXAlignment.Left
 Watermark.TextYAlignment = Enum.TextYAlignment.Bottom
 
--- === FPS ===
 local FPS = Instance.new("TextLabel")
 FPS.Parent = ScreenGui
 FPS.Size = UDim2.new(0, 60, 0, 30)
@@ -747,6 +636,6 @@ _G.Zertyx = {
     ToggleMenu = function() MainFrame.Visible = not MainFrame.Visible end
 }
 
-print("ZERTYX v5.6 LOADED!")
+print("ZERTYX v5.9 LOADED!")
 print("Press ≡ to open menu")
-print("ESP: ON | Big Head: OFF | FOV: OFF | Move before time: OFF")
+print("ESP: ON | Big Head: OFF | FOV: OFF | Trajectory Grenades: OFF")
